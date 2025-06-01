@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Đăng nhập</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        .message-success {
+            color: green;
+            font-weight: bold;
+        }
+
+        .message-error {
+            color: red;
+            font-weight: bold;
+        }
+
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, #ffd6a5, #fdffb6);
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            color: #4b3b2b;
+        }
+
+        /* icon container above the box */
+        .icon-kindergarten {
+            width: 90px;
+            height: 90px;
+            background: #fedc97;
+            border-radius: 50%;
+            box-shadow: 0 4px 14px rgba(254, 172, 54, 0.6);
+            cursor: pointer;
+            margin-bottom: 26px;
+            position: relative;
+            overflow: visible;
+            transition: box-shadow 0.3s ease;
+        }
+
+        /* sunshine glow circle behind */
+        .icon-kindergarten::before {
+            content: "";
+            position: absolute;
+            top: -18px;
+            left: -18px;
+            width: 126px;
+            height: 126px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffe16a 0%, transparent 70%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .icon-kindergarten:hover::before,
+        .icon-kindergarten:focus::before {
+            opacity: 1;
+        }
+
+        /* brighten shadow on hover */
+        .icon-kindergarten:hover,
+        .icon-kindergarten:focus {
+            box-shadow: 0 0 40px 6px #ffd54c;
+        }
+
+        /* SVG styles */
+        svg {
+            display: block;
+            margin: auto;
+        }
+
+        /* Animate eyes and mouth */
+        .eye {
+            fill: #fff;
+            transition: fill 0.3s ease, transform 0.3s ease;
+        }
+
+        .eye-pupil {
+            fill: #795422;
+            transition: transform 0.3s ease;
+            transform-origin: center center;
+        }
+
+        .mouth {
+            stroke: #795422;
+            stroke-width: 3;
+            fill: none;
+            stroke-linecap: round;
+            transition: d 0.3s ease;
+        }
+
+        /* Group for the two eyes to scale */
+        .eyes-group {
+            transition: transform 0.3s ease;
+            transform-origin: center center;
+        }
+
+        .icon-kindergarten:hover .eye {
+            fill: #fff8c4;
+        }
+
+        .icon-kindergarten:hover .eye-pupil {
+            transform: scale(1.2);
+        }
+
+        .icon-kindergarten:hover .eyes-group {
+            transform: scale(1.15);
+        }
+
+        /* Mouth morphing simulated with scaleY */
+        .icon-kindergarten:hover .mouth {
+            transition: transform 0.3s ease;
+            transform-origin: center bottom;
+            transform: scaleY(1.5);
+        }
+
+        /* Login box */
+        .login-wrapper {
+            background: #ffffffcc;
+            max-width: 500px;
+            width: 90vw;
+            padding: 32px 28px 40px 28px;
+            border-radius: 28px;
+            box-shadow: 0 10px 20px rgba(253, 191, 53, 0.3);
+            text-align: center;
+            position: relative;
+        }
+
+        /* playful circles decoration */
+        .decor-circle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.15;
+        }
+
+        .decor-circle.one {
+            width: 110px;
+            height: 110px;
+            background: #fea82f;
+            top: -40px;
+            left: -40px;
+        }
+
+        .decor-circle.two {
+            width: 80px;
+            height: 80px;
+            background: #fece53;
+            bottom: -30px;
+            right: -30px;
+        }
+
+        h1 {
+            font-weight: 700;
+            margin-bottom: 24px;
+            font-size: 2.2rem;
+        }
+
+        form {
+            text-align: left;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #755035;
+            margin-bottom: 6px;
+            display: inline-block;
+        }
+
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 20px;
+            border: 2px solid #f7ca88;
+            font-size: 1rem;
+            font-family: Arial, sans-serif;
+            color: #4b3b2b;
+            margin-bottom: 22px;
+            transition: border-color 0.3s ease;
+            box-shadow: inset 1px 1px 6px #ffeec6;
+        }
+
+        input[type="email"]::placeholder,
+        input[type="password"]::placeholder {
+            color: #b9a27a;
+            font-style: italic;
+        }
+
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #ee8d0d;
+            box-shadow: 0 0 8px #ffb50988;
+            background-color: #fff9e9;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px 0;
+            background: linear-gradient(45deg, #feba2d, #ee8d0d);
+            border: none;
+            border-radius: 22px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #4b3b2b;
+            cursor: pointer;
+            box-shadow: 0 6px 15px #ffba3580;
+            transition: background 0.3s ease;
+            font-family: Arial, sans-serif;
+        }
+
+        button:hover,
+        button:focus {
+            background: linear-gradient(45deg, #ee8d0d, #feba2d);
+        }
+
+        .help-links {
+            margin-top: 18px;
+            font-size: 0.9rem;
+            color: #a97c50;
+            text-align: right;
+        }
+
+        .help-links a {
+            color: #d9860f;
+            text-decoration: none;
+            font-weight: 600;
+            font-family: Arial, sans-serif;
+        }
+
+        .help-links a:hover,
+        .help-links a:focus {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 400px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            input[type="email"],
+            input[type="password"] {
+                font-size: 0.95rem;
+                padding: 12px 15px;
+            }
+
+            button {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="login-wrapper" role="main" aria-label="Đăng nhập">
+        <div class="decor-circle one" aria-hidden="true"></div>
+        <div class="decor-circle two" aria-hidden="true"></div>
+        <h1>Đăng nhập</h1>
+        <% if (message) { %>
+            <p class="<%= messageType === 'error' ? 'message-error' : 'message-success' %>">
+                <%= message %>
+            </p>
+            <% } %>
+                <form action="/login" method="POST">
+                    <label for="email">Email người dùng</label>
+                    <input type="email"  name="email" placeholder="email@gmail.com" autocomplete="username"
+                        required />
+
+                    <label for="password">Mật khẩu</label>
+                    <input type="password"  name="mat_khau" placeholder="Nhập mật khẩu"
+                        autocomplete="current-password" required />
+                    <button type="submit" aria-label="Đăng nhập">Đăng nhập</button>
+                </form>
+                <nav class="help-links" aria-label="Liên kết hỗ trợ">
+                    <a href="#" tabindex="0">Quên mật khẩu?</a>
+                </nav>
+    </main>
+</body>
+
+</html>

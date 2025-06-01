@@ -1,0 +1,9 @@
+# Bỏ qua thư mục node_modules
+node_modules/
+
+# Bỏ qua thư mục config chứa thông tin nhạy cảm
+config/
+
+# Bỏ qua các file môi trường
+.env
+*.secret
