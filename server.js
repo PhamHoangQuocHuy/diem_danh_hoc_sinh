@@ -22,7 +22,9 @@ app.get('/', (req, res) => {
     const { message, messageType } = req.query;
     res.render('auth/login', { message, messageType });
 });
-
+app.get('/tongquan', (req, res) => {
+    res.render('partials/dashboard');
+});
 // Khởi động server
 app.listen(PORT, () => {
     console.log(`Server đang chạy trên http://localhost:${PORT}`);

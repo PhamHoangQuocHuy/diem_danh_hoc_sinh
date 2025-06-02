@@ -1,28 +1,34 @@
 <!-- Top bar -->
-<header class="flex items-center justify-between bg-white border-b border-gray-200 px-4 py-2">
+<header class="flex items-center justify-between bg-white border-b border-gray-200 px-4 py-3">
     <div class="flex items-center gap-2 text-lg font-semibold select-none">
-        <span>
-            Điểm danh
-        </span>
     </div>
     <div class="flex items-center gap-4">
-        <button class="hidden sm:flex items-center gap-1 bg-[#3a5ca8] text-white rounded px-3 py-1 text-sm">
-            <i class="fas fa-home">
-            </i>
-            <span class="select-text">
-                <!-- <%= locals.tenTruong || 'Tên trường mặc định' %> -->
-            </span>
-            <img alt="School logo placeholder, 20x20 px" class="rounded ml-1" height="20"
-                src="https://storage.googleapis.com/a1aa/image/88585dac-dc57-468a-fb96-97dfd078f0cd.jpg" width="20" />
-        </button>
-        <div class="flex items-center gap-2 cursor-pointer select-none">
-            <img alt="User avatar placeholder, 32x32 px" class="rounded-full" height="32"
-                src="https://storage.googleapis.com/a1aa/image/c80a5162-8837-41ac-c679-8e05cff1b886.jpg" width="32" />
-            <span class="hidden sm:inline text-gray-600 text-sm">
-                admin
-            </span>
-            <i class="fas fa-chevron-down text-gray-400 hidden sm:inline">
-            </i>
+        <div class="relative">
+            <div class="flex items-center px-5 gap-2 cursor-pointer select-none" onclick="toggleDropdown()">
+                <img alt="User avatar" class="rounded-full" height="32"
+                    src="https://storage.googleapis.com/a1aa/image/c80a5162-8837-41ac-c679-8e05cff1b886.jpg"
+                    width="32" />
+                <span class="hidden sm:inline text-gray-600 text-sm fw-bold">
+                    <%= taiKhoan.ho_ten %>
+                </span>
+                <i class="fas fa-chevron-down text-gray-400 hidden sm:inline"></i>
+            </div>
+            <div id="dropdownMenu" class="absolute right-0 mt-2 w-40 bg-white border rounded shadow-md hidden">
+                <a href="/settings" class="block px-4 py-2 hover:bg-gray-100">Cài đặt</a>
+                <a href="/logout" class="block px-4 py-2 hover:bg-gray-100">Đăng xuất</a>
+            </div>
         </div>
     </div>
 </header>
+<script>
+    function toggleDropdown() {
+        document.getElementById("dropdownMenu").classList.toggle("hidden");
+    }
+
+    document.addEventListener("click", function (event) {
+        const dropdown = document.getElementById("dropdownMenu");
+        if (!event.target.closest(".relative")) {
+            dropdown.classList.add("hidden");
+        }
+    });
+</script>

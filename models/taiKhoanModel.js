@@ -8,16 +8,19 @@ class TaiKhoan {
         const [rows] = await pool.query(sql, [email]);
         return rows.length > 0;
     }
+
     static async kiemTraSoDienThoaiTonTai(sdt) {
         const sql = `SELECT * FROM tai_khoan WHERE sdt = ?`;
         const [rows] = await pool.query(sql, [sdt]);
         return rows.length > 0;
     }
+
     static async kiemTraSoCMNDTonTai(so_cmnd) {
         const sql = `SELECT * FROM tai_khoan WHERE so_cmnd = ?`;
         const [rows] = await pool.query(sql, [so_cmnd]);
         return rows.length > 0;
     }
+
     static async themTaiKhoan(data) {
         const {
             ho_ten,
@@ -28,7 +31,7 @@ class TaiKhoan {
             sdt,
             email,
             mat_khau,
-            vai_tro_id,
+            ten_vai_tro,
             bang_cap // { loai_bang_cap }
         } = data;
 
@@ -51,7 +54,7 @@ class TaiKhoan {
                     sdt,
                     email,
                     mat_khau: hashedPassword,
-                    vai_tro_id
+                    ten_vai_tro
                 }
             );
             const tai_khoan_id = tkResult.insertId;
@@ -60,7 +63,7 @@ class TaiKhoan {
             let giao_vien_id = null;
             let phu_huynh_id = null;
 
-            if (vai_tro_id === 2) { // Giáo viên
+            if (ten_vai_tro === 'Giáo viên') {
                 const [gvResult] = await connection.query(
                     `INSERT INTO giao_vien SET ?`,
                     { tai_khoan_id }
@@ -77,7 +80,7 @@ class TaiKhoan {
                         }
                     );
                 }
-            } else if (vai_tro_id === 3) { // Phụ huynh
+            } else if (ten_vai_tro === 'Phụ huynh') {
                 const [phResult] = await connection.query(
                     `INSERT INTO phu_huynh SET ?`,
                     { tai_khoan_id }
@@ -94,6 +97,7 @@ class TaiKhoan {
             connection.release();
         }
     }
+
     // Lấy thông tin tài khoản theo ID
     static async layTaiKhoanTheoId(tai_khoan_id) {
         const sql = `
@@ -106,17 +110,14 @@ class TaiKhoan {
                 tk.dia_chi,
                 tk.sdt,
                 tk.email,
-                tk.vai_tro_id,
+                tk.ten_vai_tro,
                 tk.ngay_tao,
-                vt.ten_vai_tro,
                 gv.giao_vien_id,
                 ph.phu_huynh_id,
                 bc.bang_cap_id,
                 bc.loai_bang_cap
             FROM 
                 tai_khoan tk
-            JOIN 
-                vai_tro vt ON tk.vai_tro_id = vt.vai_tro_id
             LEFT JOIN 
                 giao_vien gv ON tk.tai_khoan_id = gv.tai_khoan_id
             LEFT JOIN 
@@ -143,6 +144,7 @@ class TaiKhoan {
         delete result.loai_bang_cap;
         return result;
     }
+
     // Lấy toàn bộ danh sách tài khoản
     static async layDanhSachTaiKhoan() {
         const sql = `
@@ -155,16 +157,13 @@ class TaiKhoan {
             tk.dia_chi,
             tk.sdt,
             tk.email,
-            tk.vai_tro_id,
+            tk.ten_vai_tro,
             tk.ngay_tao,
-            vt.ten_vai_tro,
             gv.giao_vien_id,
             ph.phu_huynh_id,
             bc.loai_bang_cap
         FROM 
             tai_khoan tk
-        JOIN 
-            vai_tro vt ON tk.vai_tro_id = vt.vai_tro_id
         LEFT JOIN 
             giao_vien gv ON tk.tai_khoan_id = gv.tai_khoan_id
         LEFT JOIN 
@@ -208,7 +207,7 @@ class TaiKhoan {
         const result = Object.values(grouped).map(item => {
             const formatted = {
                 ...item,
-                bang_cap: item.vai_tro_id === 2 ? item.bang_cap : null
+                bang_cap: item.ten_vai_tro === 'Giáo viên' ? item.bang_cap : null
             };
 
             delete formatted.loai_bang_cap;
@@ -218,6 +217,7 @@ class TaiKhoan {
 
         return result;
     }
+
     // Lấy danh sách tài khoản với vai trò là giáo viên
     static async layDanhSachTaiKhoanGiaoVien() {
         const sql = `
@@ -230,21 +230,18 @@ class TaiKhoan {
                 tk.dia_chi,
                 tk.sdt,
                 tk.email,
-                tk.vai_tro_id,
+                tk.ten_vai_tro,
                 tk.ngay_tao,
-                vt.ten_vai_tro,
                 gv.giao_vien_id,
                 bc.loai_bang_cap
             FROM 
                 tai_khoan tk
             JOIN 
-                vai_tro vt ON tk.vai_tro_id = vt.vai_tro_id
-            JOIN 
                 giao_vien gv ON tk.tai_khoan_id = gv.tai_khoan_id
             LEFT JOIN
                 bang_cap bc ON gv.giao_vien_id = bc.giao_vien_id
             WHERE 
-                tk.vai_tro_id = 2
+                tk.ten_vai_tro = 'Giáo viên'
         `;
         const [rows] = await pool.query(sql);
 
@@ -257,15 +254,15 @@ class TaiKhoan {
             dia_chi: row.dia_chi,
             sdt: row.sdt,
             email: row.email,
-            vai_tro_id: row.vai_tro_id,
-            ngay_tao: row.ngay_tao,
             ten_vai_tro: row.ten_vai_tro,
+            ngay_tao: row.ngay_tao,
             giao_vien_id: row.giao_vien_id,
             bang_cap: row.loai_bang_cap ? {
                 loai_bang_cap: row.loai_bang_cap
             } : null
         }));
     }
+
     // Lấy danh sách tài khoản với vai trò là phụ huynh
     static async layDanhSachTaiKhoanPhuHuynh() {
         const sql = `
@@ -278,18 +275,15 @@ class TaiKhoan {
                 tk.dia_chi,
                 tk.sdt,
                 tk.email,
-                tk.vai_tro_id,
+                tk.ten_vai_tro,
                 tk.ngay_tao,
-                vt.ten_vai_tro,
                 ph.phu_huynh_id
             FROM 
                 tai_khoan tk
             JOIN 
-                vai_tro vt ON tk.vai_tro_id = vt.vai_tro_id
-            JOIN 
                 phu_huynh ph ON tk.tai_khoan_id = ph.tai_khoan_id
             WHERE 
-                tk.vai_tro_id = 3
+                tk.ten_vai_tro = 'Phụ huynh'
         `;
         const [rows] = await pool.query(sql);
 
@@ -302,19 +296,16 @@ class TaiKhoan {
             dia_chi: row.dia_chi,
             sdt: row.sdt,
             email: row.email,
-            vai_tro_id: row.vai_tro_id,
-            ngay_tao: row.ngay_tao,
             ten_vai_tro: row.ten_vai_tro,
+            ngay_tao: row.ngay_tao,
             phu_huynh_id: row.phu_huynh_id
         }));
     }
+
     // Đăng nhập
     static async dangNhap(email, mat_khau) {
         const sql = `
-        SELECT tk.*, vt.ten_vai_tro 
-        FROM tai_khoan tk 
-        JOIN vai_tro vt ON tk.vai_tro_id = vt.vai_tro_id 
-        WHERE tk.email = ?`;
+        SELECT * FROM tai_khoan WHERE email = ?`;
         const [rows] = await pool.query(sql, [email]);
         if (rows.length === 0) {
             return null; // Không tìm thấy tài khoản
@@ -327,6 +318,25 @@ class TaiKhoan {
         }
         return taiKhoan;
     }
-}
+    // Lấy thông tin hiển thị trên dashboard
+    static async thongTinDashboard() {
+        try {
+            // Sử dụng Promise.all để chạy song song các truy vấn
+            const [giaoVien, hocSinh, phuHuynh] = await Promise.all([
+                pool.query("SELECT COUNT(*) as count FROM giao_vien"),
+                pool.query("SELECT COUNT(*) as count FROM hoc_sinh"),
+                pool.query("SELECT COUNT(*) as count FROM phu_huynh")
+            ]);
 
+            return {
+                soLuongGiaoVien: giaoVien[0][0].count,
+                soLuongHocSinh: hocSinh[0][0].count,
+                soLuongPhuHuynh: phuHuynh[0][0].count
+            };
+        } catch (error) {
+            console.error("Lỗi khi lấy thống kê dashboard:", error);
+            throw error;
+        }
+    }
+}
 module.exports = TaiKhoan;

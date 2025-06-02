@@ -6,7 +6,7 @@
             src="https://storage.googleapis.com/a1aa/image/8c121712-e1eb-449f-a9f3-9207173011f2.jpg" width="32" />
       </div>
       <span class="hidden sm:block font-semibold text-lg select-none">
-         Học sinh
+         <%= taiKhoan.ho_ten %>
       </span>
       <button aria-label="Toggle menu" class="sm:hidden ml-auto text-white text-xl focus:outline-none">
          <i class="fas fa-bars">
@@ -14,64 +14,73 @@
       </button>
    </div>
    <nav class="flex flex-col mt-2 space-y-1 px-2 sm:px-4 text-sm font-medium select-none">
-      <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] transition-colors" href="#">
+      <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] hover:text-[#3ad597] transition-colors"
+         href="#">
          <i class="fas fa-chart-bar text-lg">
+         </i>
+         <span class="hidden sm:inline">
+            Tổng quan
+         </span>
+      </a>
+      <a aria-current="page"
+         class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] hover:text-[#3ad597] transition-colors"
+         href="#">
+         <i class="fas fa-book-open text-lg">
          </i>
          <span class="hidden sm:inline">
             Quản lý trường học
          </span>
       </a>
-      <a aria-current="page"
-         class="flex items-center gap-3 py-3 px-2 rounded-md bg-[#2c3a6a] text-[#3ad597] font-semibold" href="#">
-         <i class="fas fa-book-open text-lg">
-         </i>
-         <span class="hidden sm:inline">
-            Quản lý năm học
-         </span>
-      </a>
-      <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] transition-colors" href="#">
+      <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] hover:text-[#3ad597] transition-colors"
+         href="#">
          <i class="fas fa-chalkboard-teacher text-lg">
          </i>
          <span class="hidden sm:inline">
             Quản lý học kỳ
          </span>
       </a>
-      <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] transition-colors" href="#">
+      <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] hover:text-[#3ad597] transition-colors"
+         href="#">
          <i class="fas fa-id-card text-lg">
          </i>
          <span class="hidden sm:inline">
             Quản lý tài khoản
          </span>
       </a>
-      <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] transition-colors" href="#">
+      <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] hover:text-[#3ad597] transition-colors"
+         href="#">
          <i class="fas fa-list-alt text-lg">
          </i>
          <span class="hidden sm:inline">
             Quản lý phụ huynh
          </span>
       </a>
-      <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] transition-colors" href="#">
+      <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] hover:text-[#3ad597] transition-colors"
+         href="#">
          <i class="fas fa-cogs text-lg">
          </i>
          <span class="hidden sm:inline">
             Quản lý giáo viên
          </span>
       </a>
-      <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] transition-colors" href="#">
+      <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] hover:text-[#3ad597] transition-colors"
+         href="#">
          <i class="fas fa-file-alt text-lg">
          </i>
          <span class="hidden sm:inline">
             Quản lý lớp học
          </span>
       </a>
-      <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] transition-colors" href="#">
+      <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] hover:text-[#3ad597] transition-colors"
+         href="#">
          <i class="fas fa-search text-lg">
          </i>
          <span class="hidden sm:inline">
             Quản lý học sinh
          </span>
       </a>
-      <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] transition-colors" href="#">
+      <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] hover:text-[#3ad597] transition-colors"
+         href="#">
          <i class="fas fa-comment-alt text-lg">
          </i>
          <span class="hidden sm:inline">

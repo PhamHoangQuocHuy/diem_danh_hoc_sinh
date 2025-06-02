@@ -114,43 +114,50 @@ class TaiKhoanController {
         try {
             const { email, mat_khau } = req.body;
             if (!email || !mat_khau) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Vui lòng nhập đầy đủ email và mật khẩu'
+                return res.render('auth/login', {
+                    message: 'Vui lòng nhập đầy đủ email và mật khẩu',
+                    messageType: 'error'
                 });
             }
+
             // Kiểm tra thông tin đăng nhập
             const taiKhoan = await TaiKhoan.dangNhap(email, mat_khau);
             if (!taiKhoan) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Email hoặc mật khẩu không đúng'
+                return res.render('auth/login', {
+                    message: 'Email hoặc mật khẩu không đúng',
+                    messageType: 'error'
                 });
             }
-            // Lấy thông tin chi tiết tài khoản
-            const chiTietTaiKhoan = await TaiKhoan.layTaiKhoanTheoId(taiKhoan.tai_khoan_id);
 
-            // Trả về thông tin tài khoản
-            return res.status(200).json({
-                success: true,
-                message: 'Đăng nhập thành công',
-                data: {
-                    tai_khoan_id: chiTietTaiKhoan.tai_khoan_id,
-                    ho_ten: chiTietTaiKhoan.ho_ten,
-                    email: chiTietTaiKhoan.email,
-                    vai_tro_id: chiTietTaiKhoan.vai_tro_id,
-                    ten_vai_tro: chiTietTaiKhoan.ten_vai_tro,
-                    giao_vien_id: chiTietTaiKhoan.giao_vien_id,
-                    phu_huynh_id: chiTietTaiKhoan.phu_huynh_id
-                }
-            });
+            // Kiểm tra vai trò và chuyển hướng
+            if (taiKhoan.ten_vai_tro === 'Admin') {
+                const thongTin = await TaiKhoan.thongTinDashboard();
+                return res.render('admin_index', { taiKhoan, thongTin });
+            }
+            else {
+                return res.render('auth/login', {
+                    message: 'Bạn không có quyền truy cập vào trang Admin',
+                    messageType: 'error'
+                });
+            }
         } catch (error) {
             console.error('Lỗi khi đăng nhập:', error);
-            return res.status(500).json({
-                success: false,
+            return res.render('auth/login', {
                 message: 'Lỗi server',
-                error: error.message
+                messageType: 'error'
             });
+        }
+    }
+    static async thongTinDashboard(req, res) {  // Thêm req, res vào tham số
+        try {
+            const thongTin = await TaiKhoan.thongTinDashboard();
+            res.render('partials/dashboard', {  // Render file dashboard.ejs
+                title: 'Dashboard Admin',
+                thongTin: thongTin
+            });
+        } catch (error) {
+            console.error('Lỗi khi lấy thông tin dashboard:', error);
+            res.status(500).send("Đã xảy ra lỗi khi tải dashboard");
         }
     }
 }

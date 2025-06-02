@@ -1,0 +1,65 @@
+<!-- views/partials/dashboard.ejs -->
+<main class="flex-1 p-6">
+    <h1 class="text-2xl font-bold">Tổng quan</h1>
+
+    <!-- Thống kê nhanh -->
+    <div class="grid grid-cols-3 gap-6 mt-6">
+        <div class="bg-white p-4 rounded shadow">
+            <p class="text-xl font-semibold">GIÁO VIÊN</p>
+            <p class="text-4xl font-bold text-blue-500">
+                <%= thongTin.soLuongGiaoVien %>
+            </p>
+        </div>
+        <div class="bg-white p-4 rounded shadow">
+            <p class="text-xl font-semibold">PHỤ HUYNH</p>
+            <p class="text-4xl font-bold text-green-500">
+                <%= thongTin.soLuongPhuHuynh %>
+            </p>
+        </div>
+        <div class="bg-white p-4 rounded shadow">
+            <p class="text-xl font-semibold">HỌC SINH</p>
+            <p class="text-4xl font-bold text-red-500">
+                <%= thongTin.soLuongHocSinh %>
+            </p>
+        </div>
+    </div>
+    <div class="mt-6 bg-white p-6 rounded shadow" style="height: calc(100vh - 300px);">
+        <h2 class="text-xl font-bold mb-4">Tổng quan hệ thống</h2>
+        <canvas id="dashboardChart" style="height: calc(100% - 30px);"></canvas>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="application/json" id="thongTinData">
+    <%- JSON.stringify(thongTin) %>
+</script>
+
+<script>
+    const thongTin = JSON.parse(document.getElementById("thongTinData").textContent);
+
+    const ctx = document.getElementById('dashboardChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['GIÁO VIÊN', 'PHỤ HUYNH', 'HỌC SINH'],
+            datasets: [{
+                label: 'Thống kê',
+                data: [
+                    20,// thongTin.soLuongGiaoVien,
+                    100,// thongTin.soLuongPhuHuynh,
+                    200// thongTin.soLuongHocSinh
+                ],
+                backgroundColor: ['#3B82F6', '#10B981', '#EF4444']
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
