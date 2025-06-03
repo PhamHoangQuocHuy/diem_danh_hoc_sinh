@@ -22,42 +22,90 @@
             </p>
         </div>
     </div>
-    <div class="mt-6 bg-white p-6 rounded shadow" style="height: calc(100vh - 300px);">
+    <div class="mt-6 bg-white p-6 rounded shadow" style="height: 400px;">
         <h2 class="text-xl font-bold mb-4">Tổng quan hệ thống</h2>
-        <canvas id="dashboardChart" style="height: calc(100% - 30px);"></canvas>
+        <canvas id="dashboardChart" style="height: 100%;"></canvas>
     </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script type="application/json" id="thongTinData">
-    <%- JSON.stringify(thongTin) %>
+<script id="chart-data" type="application/json">
+    <%- JSON.stringify({
+        soLuongGiaoVien: thongTin.soLuongGiaoVien || 0,
+        soLuongPhuHuynh: thongTin.soLuongPhuHuynh || 0,
+        soLuongHocSinh: thongTin.soLuongHocSinh || 0
+    }) %>
 </script>
-<script>
-    const thongTin = JSON.parse(document.getElementById("thongTinData").textContent);
 
-    const ctx = document.getElementById('dashboardChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['GIÁO VIÊN', 'PHỤ HUYNH', 'HỌC SINH'],
-            datasets: [{
-                label: 'Thống kê',
-                data: [
-                    20,// thongTin.soLuongGiaoVien,
-                    100,// thongTin.soLuongPhuHuynh,
-                    200// thongTin.soLuongHocSinh
-                ],
-                backgroundColor: ['#3B82F6', '#10B981', '#EF4444']
-            }]
-        },
-        options: {
-            maintainAspectRatio: false,
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const jsonData = document.getElementById('chart-data').textContent;
+        const thongTinChartData = JSON.parse(jsonData);
+
+        const ctx = document.getElementById('dashboardChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['GIÁO VIÊN', 'PHỤ HUYNH', 'HỌC SINH'],
+                datasets: [{
+                    label: 'Thống kê',
+                    data: [
+                        10,//thongTinChartData.soLuongGiaoVien,
+                        20,//thongTinChartData.soLuongPhuHuynh,
+                        30//thongTinChartData.soLuongHocSinh
+                    ],
+                    backgroundColor: ['#3B82F6', '#10B981', '#EF4444'],
+                    borderColor: ['#2563EB', '#059669', '#DC2626'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
                 }
             }
-        }
+        });
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('dashboardChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['GIÁO VIÊN', 'PHỤ HUYNH', 'HỌC SINH'],
+                datasets: [{
+                    label: 'Thống kê',
+                    data: thongTinChartData,
+                    backgroundColor: ['#3B82F6', '#10B981', '#EF4444'],
+                    borderColor: ['#2563EB', '#059669', '#DC2626'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
     });
 </script>

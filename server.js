@@ -5,8 +5,9 @@ const PORT = 3000;
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const cookieParser = require('cookie-parser'); 
-const getTaiKhoan = require('./middlewares/getTaiKhoanMiddleware');
-const authController = require('./controllers/authController');
+const AuthMiddleware = require('./middlewares/authMiddleWare');
+const dashboardRoutes = require('./routes/dashboardRoutes');
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -19,16 +20,22 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Routes
 app.use('/api/auth', authRoutes);
-
-app.get('/admin-dashboard', getTaiKhoan, (req, res) => {
-    res.render('admin_index');
+app.get('/admin-dashboard', AuthMiddleware.kiemTraToken, (req, res) => {
+    res.render('admin_index', {taiKhoan: req.taiKhoan}); 
 });
+app.use('/',  dashboardRoutes);
+
+
+
+
+
+
 app.get('/', (req, res) => { // Trang chủ
     const { message, messageType } = req.query;
     res.render('auth/login', { message, messageType });
 });
 app.get('/logout', (req, res) => { // Đăng xuất
-  res.clearCookie('token');
+  res.clearCookie('accessToken');
   res.redirect('/');
 });
 

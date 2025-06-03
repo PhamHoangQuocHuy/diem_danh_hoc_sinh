@@ -6,7 +6,7 @@
             src="https://storage.googleapis.com/a1aa/image/8c121712-e1eb-449f-a9f3-9207173011f2.jpg" width="32" />
       </div>
       <span class="hidden sm:block font-semibold text-lg select-none">
-       <%= taiKhoan?.ho_ten || 'Chưa đăng nhập' %>
+         <%= taiKhoan.ten_vai_tro %>
       </span>
       <button aria-label="Toggle menu" class="sm:hidden ml-auto text-white text-xl focus:outline-none">
          <i class="fas fa-bars">
@@ -15,7 +15,7 @@
    </div>
    <nav class="flex flex-col mt-2 space-y-1 px-2 sm:px-4 text-sm font-medium select-none">
       <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] hover:text-[#3ad597] transition-colors"
-         href="#">
+         href="/dashboard">
          <i class="fas fa-chart-bar text-lg">
          </i>
          <span class="hidden sm:inline">
@@ -24,7 +24,7 @@
       </a>
       <a aria-current="page"
          class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] hover:text-[#3ad597] transition-colors"
-         href="#">
+         href="/quan-ly-truong-hoc">
          <i class="fas fa-book-open text-lg">
          </i>
          <span class="hidden sm:inline">
@@ -32,7 +32,7 @@
          </span>
       </a>
       <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] hover:text-[#3ad597] transition-colors"
-         href="#">
+         href="/quan-ly-hoc-ky">
          <i class="fas fa-chalkboard-teacher text-lg">
          </i>
          <span class="hidden sm:inline">
@@ -40,7 +40,7 @@
          </span>
       </a>
       <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] hover:text-[#3ad597] transition-colors"
-         href="#">
+         href="/quan-ly-tai-khoan">
          <i class="fas fa-id-card text-lg">
          </i>
          <span class="hidden sm:inline">
@@ -48,7 +48,7 @@
          </span>
       </a>
       <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] hover:text-[#3ad597] transition-colors"
-         href="#">
+         href="quan-ly-phu-huynh">
          <i class="fas fa-list-alt text-lg">
          </i>
          <span class="hidden sm:inline">
@@ -56,7 +56,7 @@
          </span>
       </a>
       <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] hover:text-[#3ad597] transition-colors"
-         href="#">
+         href="quan-ly-giao-vien">
          <i class="fas fa-cogs text-lg">
          </i>
          <span class="hidden sm:inline">
@@ -64,7 +64,7 @@
          </span>
       </a>
       <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] hover:text-[#3ad597] transition-colors"
-         href="#">
+         href="quan-ly-lop-hoc">
          <i class="fas fa-file-alt text-lg">
          </i>
          <span class="hidden sm:inline">
@@ -72,7 +72,7 @@
          </span>
       </a>
       <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] hover:text-[#3ad597] transition-colors"
-         href="#">
+         href="quan-ly-hoc-sinh">
          <i class="fas fa-search text-lg">
          </i>
          <span class="hidden sm:inline">
@@ -80,7 +80,7 @@
          </span>
       </a>
       <a class="flex items-center gap-3 py-3 px-2 rounded-md hover:bg-[#2c3a6a] hover:text-[#3ad597] transition-colors"
-         href="#">
+         href="quan-ly-diem-danh">
          <i class="fas fa-comment-alt text-lg">
          </i>
          <span class="hidden sm:inline">
