@@ -6,7 +6,7 @@
             src="https://storage.googleapis.com/a1aa/image/8c121712-e1eb-449f-a9f3-9207173011f2.jpg" width="32" />
       </div>
       <span class="hidden sm:block font-semibold text-lg select-none">
-         <%= taiKhoan.ho_ten %>
+       <%= taiKhoan?.ho_ten || 'Chưa đăng nhập' %>
       </span>
       <button aria-label="Toggle menu" class="sm:hidden ml-auto text-white text-xl focus:outline-none">
          <i class="fas fa-bars">

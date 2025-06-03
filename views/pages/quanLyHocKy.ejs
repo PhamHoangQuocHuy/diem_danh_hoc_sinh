@@ -1,0 +1,112 @@
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6 text-center">Quản lý học kỳ</h1>
+
+    <div class="mb-4 flex justify-between items-center">
+        <div class="relative w-1/3">
+            <input type="text" id="search" placeholder="Tìm kiếm học kỳ..."
+                class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+            <button class="absolute right-0 top-0 mt-2 mr-2" aria-label="Search">
+                <i class="fas fa-search text-gray-500"></i>
+            </button>
+        </div>
+        <button onclick="toggleAddModal()"
+            class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors shadow-md focus:outline-none focus:ring focus:ring-blue-400 flex items-center gap-2">
+            <i class="fas fa-plus"></i> Thêm học kỳ
+        </button>
+    </div>
+
+    <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+        <thead>
+            <tr class="bg-gray-200">
+                <th class="py-2 px-4 border-b text-left">ID</th>
+                <th class="py-2 px-4 border-b text-left">Tên học kỳ</th>
+                <th class="py-2 px-4 border-b text-left">Năm học</th>
+                <th class="py-2 px-4 border-b text-left">Ngày bắt đầu</th>
+                <th class="py-2 px-4 border-b text-left">Ngày kết thúc</th>
+                <th class="py-2 px-4 border-b text-left">Hành động</th>
+            </tr>
+        </thead>
+        <tbody id="semesterTableBody">
+            <tr class="hover:bg-gray-50 transition-colors">
+                <td class="py-2 px-4 border-b">1</td>
+                <td class="py-2 px-4 border-b">Học kỳ 1</td>
+                <td class="py-2 px-4 border-b">2025</td>
+                <td class="py-2 px-4 border-b">2025-09-01</td>
+                <td class="py-2 px-4 border-b">2025-12-31</td>
+                <td class="py-2 px-4 border-b">
+                    <button
+                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
+                        aria-label="Sửa học kỳ 1">
+                        <i class="fas fa-edit mr-1"></i> Sửa
+                    </button>
+                    <button
+                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300 transition-colors"
+                        aria-label="Xóa học kỳ 1">
+                        <i class="fas fa-trash-alt mr-1"></i> Xóa
+                    </button>
+                </td>
+            </tr>
+            <tr class="hover:bg-gray-50 transition-colors">
+                <td class="py-2 px-4 border-b">2</td>
+                <td class="py-2 px-4 border-b">Học kỳ 2</td>
+                <td class="py-2 px-4 border-b">2025</td>
+                <td class="py-2 px-4 border-b">2026-01-01</td>
+                <td class="py-2 px-4 border-b">2026-05-31</td>
+                <td class="py-2 px-4 border-b">
+                    <button
+                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
+                        aria-label="Sửa học kỳ 2">
+                        <i class="fas fa-edit mr-1"></i> Sửa
+                    </button>
+                    <button
+                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300 transition-colors"
+                        aria-label="Xóa học kỳ 2">
+                        <i class="fas fa-trash-alt mr-1"></i> Xóa
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Modal thêm học kỳ -->
+    <div id="addModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white rounded-lg p-6 w-1/3 shadow-lg">
+            <h2 class="text-xl font-semibold mb-4">Thêm học kỳ</h2>
+            <form id="addSemesterForm">
+                <div class="mb-4">
+                    <label for="semesterName" class="block text-sm font-medium">Tên học kỳ</label>
+                    <input type="text" id="semesterName" required
+                        class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                </div>
+                <div class="mb-4">
+                    <label for="academicYear" class="block text-sm font-medium">Năm học</label>
+                    <input type="text" id="academicYear" required
+                        class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                </div>
+                <div class="mb-4">
+                    <label for="startDate" class="block text-sm font-medium">Ngày bắt đầu</label>
+                    <input type="date" id="startDate" required
+                        class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                </div>
+                <div class="mb-4">
+                    <label for="endDate" class="block text-sm font-medium">Ngày kết thúc</label>
+                    <input type="date" id="endDate" required
+                        class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                </div>
+                <div class="flex justify-end">
+                    <button type="button" onclick="toggleAddModal()"
+                        class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md mr-2 hover:bg-gray-400 transition-colors">Hủy</button>
+                    <button type="submit"
+                        class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors">Thêm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleAddModal() {
+        const modal = document.getElementById("addModal");
+        modal.classList.toggle("hidden");
+    }
+</script>

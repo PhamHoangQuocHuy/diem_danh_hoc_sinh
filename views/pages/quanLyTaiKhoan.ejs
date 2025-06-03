@@ -1,0 +1,207 @@
+<style>
+    .tag-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .tag {
+        background-color: #e2e8f0;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .tag-remove {
+        cursor: pointer;
+        color: #718096;
+    }
+    
+    .tag-remove:hover {
+        color: #e53e3e;
+    }
+    
+    .modal-hidden {
+        display: none;
+    }
+</style>
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6 text-center">Quản lý tài khoản</h1>
+
+    <div class="mb-4 flex justify-between items-center">
+        <div class="relative w-1/3">
+            <input type="text" id="search" placeholder="Tìm kiếm tài khoản..."
+                class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+            <button class="absolute right-0 top-0 mt-2 mr-2" aria-label="Search">
+                <i class="fas fa-search text-gray-500"></i>
+            </button>
+        </div>
+        <button onclick="toggleAddModal()"
+            class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors shadow-md focus:outline-none focus:ring focus:ring-blue-400 flex items-center gap-2">
+            <i class="fas fa-plus"></i> Thêm tài khoản
+        </button>
+    </div>
+
+    <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+        <thead>
+            <tr class="bg-gray-200">
+                <th class="py-2 px-4 border-b text-left">ID</th>
+                <th class="py-2 px-4 border-b text-left">Họ tên</th>
+                <th class="py-2 px-4 border-b text-left">Email</th>
+                <th class="py-2 px-4 border-b text-left">Số điện thoại</th>
+                <th class="py-2 px-4 border-b text-left">Vai trò</th>
+                <th class="py-2 px-4 border-b text-left">Hành động</th>
+            </tr>
+        </thead>
+        <tbody id="accountTableBody">
+            <!-- Dữ liệu tài khoản sẽ được thêm ở đây -->
+        </tbody>
+    </table>
+
+    <!-- Modal thêm tài khoản -->
+    <div id="addModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden overflow-auto p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-4xl shadow-lg max-h-full overflow-auto">
+            <h2 class="text-xl font-semibold mb-4">Thêm tài khoản</h2>
+            <form id="addAccountForm">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label for="fullName" class="block text-sm font-medium">Họ tên</label>
+                        <input type="text" id="fullName" name="fullName" required
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    </div>
+                    <div class="mb-4">
+                        <label for="email" class="block text-sm font-medium">Email</label>
+                        <input type="email" id="email" name="email" required
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    </div>
+                    <div class="mb-4">
+                        <label for="phone" class="block text-sm font-medium">Số điện thoại</label>
+                        <input type="tel" id="phone" name="phone" required
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    </div>
+                    <div class="mb-4">
+                        <label for="dob" class="block text-sm font-medium">Ngày sinh</label>
+                        <input type="date" id="dob" name="dob" required
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    </div>
+                    <div class="mb-4">
+                        <label for="gender" class="block text-sm font-medium">Giới tính</label>
+                        <select id="gender" name="gender" required
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500">
+                            <option value="" disabled selected>Chọn giới tính</option>
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label for="role" class="block text-sm font-medium">Vai trò</label>
+                        <select id="role" name="role" required onchange="toggleDegreeField()"
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500">
+                            <option value="" disabled selected>Chọn vai trò</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Giáo viên">Giáo viên</option>
+                            <option value="Phụ huynh">Phụ huynh</option>
+                            <option value="Hiệu trưởng">Hiệu trưởng</option>
+                        </select>
+                    </div>
+                    <div class="mb-4 col-span-2">
+                        <label for="address" class="block text-sm font-medium">Địa chỉ</label>
+                        <input type="text" id="address" name="address" required
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    </div>
+                    <div class="mb-4 col-span-2">
+                        <label for="idNumber" class="block text-sm font-medium">Số CMND/CCCD</label>
+                        <input type="text" id="idNumber" name="idNumber" required
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    </div>
+                    <div class="mb-4 col-span-2">
+                        <label for="password" class="block text-sm font-medium">Mật khẩu</label>
+                        <input type="password" id="password" name="password" required
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    </div>
+                    
+                    <!-- Phần bằng cấp chỉ hiển thị khi chọn vai trò là Giáo viên -->
+                    <div id="degreeSection" class="mb-4 col-span-2 hidden">
+                        <div class="flex items-end gap-2">
+                            <div class="flex-grow">
+                                <label for="degree" class="block text-sm font-medium">Bằng cấp</label>
+                                <input type="text" id="degree" name="degree"
+                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                            </div>
+                            <button type="button" onclick="addDegree()"
+                                class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors h-[42px]">
+                                Thêm bằng cấp
+                            </button>
+                        </div>
+                        <div id="degreeTags" class="tag-container">
+                            <!-- Các tag bằng cấp sẽ được thêm vào đây -->
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-6">
+                    <button type="button" onclick="toggleAddModal()"
+                        class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md mr-2 hover:bg-gray-400 transition-colors">Hủy</button>
+                    <button type="submit"
+                        class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors">Thêm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleAddModal() {
+        const modal = document.getElementById('addModal');
+        modal.classList.toggle('hidden');
+        // Reset form khi mở modal
+        if (!modal.classList.contains('hidden')) {
+            document.getElementById('addAccountForm').reset();
+            document.getElementById('degreeTags').innerHTML = '';
+            document.getElementById('degreeSection').classList.add('hidden');
+        }
+    }
+
+    function toggleDegreeField() {
+        const role = document.getElementById('role').value;
+        const degreeSection = document.getElementById('degreeSection');
+        
+        if (role === 'Giáo viên') {
+            degreeSection.classList.remove('hidden');
+        } else {
+            degreeSection.classList.add('hidden');
+            document.getElementById('degreeTags').innerHTML = '';
+        }
+    }
+
+    function addDegree() {
+        const degreeInput = document.getElementById('degree');
+        const degreeValue = degreeInput.value.trim();
+        
+        if (degreeValue) {
+            const degreeTags = document.getElementById('degreeTags');
+            
+            // Tạo tag mới
+            const tag = document.createElement('div');
+            tag.className = 'tag';
+            tag.innerHTML = `
+                <span>${degreeValue}</span>
+                <span class="tag-remove" onclick="removeDegree(this)">×</span>
+                <input type="hidden" name="degrees[]" value="${degreeValue}">
+            `;
+            
+            degreeTags.appendChild(tag);
+            degreeInput.value = ''; // Xóa nội dung input sau khi thêm
+        }
+    }
+
+    function removeDegree(element) {
+        element.parentElement.remove(); // Xóa tag khi click vào dấu ×
+    }
+
+    function viewDetails(accountId) {
+        alert("Xem chi tiết tài khoản: " + accountId);
+    }
+</script>
