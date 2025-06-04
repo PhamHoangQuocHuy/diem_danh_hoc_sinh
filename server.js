@@ -15,6 +15,7 @@ const hocSinhRoutes = require('./routes/hocSinhRoutes');
 const phuHuynhRoutes = require('./routes/phuHuynhRoutes');
 const giaoVienRoutes = require('./routes/giaoVienRoutes');
 const diemDanhRoutes = require('./routes/diemDanhRoutes');
+const baoCaoRoutes = require('./routes/baoCaoRoutes');
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -30,17 +31,21 @@ app.use('/api/auth', authRoutes);
 app.get('/admin-dashboard', AuthMiddleware.kiemTraToken, (req, res) => {
     res.render('admin_index'); 
 });
-app.use('/', AuthMiddleware.kiemTraToken,  dashboardRoutes);
-app.use('/', AuthMiddleware.kiemTraToken ,truongHocRoutes);
-app.use('/', AuthMiddleware.kiemTraToken, taiKhoanRoutes);
-app.use('/', AuthMiddleware.kiemTraToken, lopHocRoutes);
-app.use('/', AuthMiddleware.kiemTraToken, hocKyRoutes);
-app.use('/', AuthMiddleware.kiemTraToken, hocSinhRoutes);
-app.use('/', AuthMiddleware.kiemTraToken, giaoVienRoutes);
-app.use('/', AuthMiddleware.kiemTraToken, phuHuynhRoutes);
-app.use('/', AuthMiddleware.kiemTraToken, diemDanhRoutes);
+app.get('/user-dashboard', AuthMiddleware.kiemTraToken, (req, res) => {
+    res.render('user_index'); 
+});
+app.use('/dashboard', AuthMiddleware.kiemTraToken,  dashboardRoutes);
+app.use('/truong-hoc', AuthMiddleware.kiemTraToken ,truongHocRoutes);
+app.use('/tai-khoan', AuthMiddleware.kiemTraToken, taiKhoanRoutes);
+app.use('/lop-hoc', AuthMiddleware.kiemTraToken, lopHocRoutes);
+app.use('/hoc-ky', AuthMiddleware.kiemTraToken, hocKyRoutes);
+app.use('/hoc-sinh', AuthMiddleware.kiemTraToken, hocSinhRoutes);
+app.use('/giao-vien', AuthMiddleware.kiemTraToken, giaoVienRoutes);
+app.use('/phu-huynh', AuthMiddleware.kiemTraToken, phuHuynhRoutes);
+app.use('/diem-danh', AuthMiddleware.kiemTraToken, diemDanhRoutes);
+app.use('/bao-cao', AuthMiddleware.kiemTraToken, baoCaoRoutes);
 
-
+app.post('/tai-khoan/them', AuthMiddleware.kiemTraToken, taiKhoanRoutes); // Thêm tài khoản
 
 app.get('/', (req, res) => { // Trang chủ
     const { message, messageType } = req.query;

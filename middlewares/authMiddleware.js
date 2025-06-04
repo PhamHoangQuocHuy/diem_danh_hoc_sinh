@@ -25,6 +25,7 @@ class AuthMiddleware {
             next();
         }
         catch (err) {
+            console.log('Lỗi xác thực token:', err);
             return res.status(401).render('auth/login', { message: 'Token không hợp lệ hoặc đã hết hạn', messageType: 'error' });
         }
     }

@@ -40,6 +40,10 @@ class AuthController {
             });
             if (taiKhoan.ten_vai_tro === 'Admin') {
                 return res.redirect('/admin-dashboard');
+            }else if (taiKhoan.ten_vai_tro === 'Giáo viên' || taiKhoan.ten_vai_tro === 'Phụ huynh' || taiKhoan.ten_vai_tro === 'Hiệu trưởng') {
+                return res.redirect('/user-dashboard');
+            }else {
+                return res.status(403).render('auth/login', { message: 'Bạn không có quyền truy cập', messageType: 'error' });
             }
         }
     }

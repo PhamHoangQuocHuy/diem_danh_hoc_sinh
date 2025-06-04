@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const hocKyController = require('../controllers/hocKyController');
+const BaoCaoController = require('../controllers/baoCaoController');
 const AuthMiddleware = require('../middlewares/authMiddleWare');
 
-router.get('/', AuthMiddleware.kiemTraToken, hocKyController.hienThiHocKy);
+router.get('/', AuthMiddleware.kiemTraToken, BaoCaoController.hienThiBaoCao);
+
 
 module.exports = router;
