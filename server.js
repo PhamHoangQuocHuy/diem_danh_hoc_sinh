@@ -7,7 +7,14 @@ const authRoutes = require('./routes/authRoutes');
 const cookieParser = require('cookie-parser'); 
 const AuthMiddleware = require('./middlewares/authMiddleWare');
 const dashboardRoutes = require('./routes/dashboardRoutes');
-
+const truongHocRoutes = require('./routes/truongHocRoutes');
+const taiKhoanRoutes = require('./routes/taiKhoanRoutes');
+const lopHocRoutes = require('./routes/lopHocRoutes');
+const hocKyRoutes = require('./routes/hocKyRoutes');
+const hocSinhRoutes = require('./routes/hocSinhRoutes');
+const phuHuynhRoutes = require('./routes/phuHuynhRoutes');
+const giaoVienRoutes = require('./routes/giaoVienRoutes');
+const diemDanhRoutes = require('./routes/diemDanhRoutes');
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -21,12 +28,17 @@ app.set('views', path.join(__dirname, 'views'));
 // Routes
 app.use('/api/auth', authRoutes);
 app.get('/admin-dashboard', AuthMiddleware.kiemTraToken, (req, res) => {
-    res.render('admin_index', {taiKhoan: req.taiKhoan}); 
+    res.render('admin_index'); 
 });
-app.use('/',  dashboardRoutes);
-
-
-
+app.use('/', AuthMiddleware.kiemTraToken,  dashboardRoutes);
+app.use('/', AuthMiddleware.kiemTraToken ,truongHocRoutes);
+app.use('/', AuthMiddleware.kiemTraToken, taiKhoanRoutes);
+app.use('/', AuthMiddleware.kiemTraToken, lopHocRoutes);
+app.use('/', AuthMiddleware.kiemTraToken, hocKyRoutes);
+app.use('/', AuthMiddleware.kiemTraToken, hocSinhRoutes);
+app.use('/', AuthMiddleware.kiemTraToken, giaoVienRoutes);
+app.use('/', AuthMiddleware.kiemTraToken, phuHuynhRoutes);
+app.use('/', AuthMiddleware.kiemTraToken, diemDanhRoutes);
 
 
 

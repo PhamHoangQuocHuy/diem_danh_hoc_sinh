@@ -30,14 +30,14 @@
 <body class="bg-[#f8fafc] text-[#1e293b]">
   <div class="flex min-h-screen">
     <!-- Sidebar -->
-    <%- include('partials/sidebar', { taiKhoan: taiKhoan }) %>
+    <%- include('partials/sidebar') %>
       <main class="flex-1 flex flex-col">
         <!-- header -->
         <%- include('partials/header') %>
 
           <!-- main -->
           <% if (typeof page !=='undefined' ) { %>
-            <%- include(page, { thongTin: thongTin, taiKhoan: taiKhoan }) %>
+            <%- include(page) %>
               <% } else { %>
                 <!-- <h1>Không tìm thấy nội dung</h1> -->
                 <% } %>
