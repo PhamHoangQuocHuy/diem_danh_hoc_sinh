@@ -1,12 +1,22 @@
 <style>
+    .message-box {
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+        font-size: 25px;
+        border: 1px solid transparent;
+    }
+
     .message-success {
-        color: green;
-        font-weight: bold;
+        background-color: #d4edda;
+        color: #155724;
+        border-color: #c3e6cb;
     }
 
     .message-error {
-        color: red;
-        font-weight: bold;
+        background-color: #f8d7da;
+        color: #721c24;
+        border-color: #f5c6cb;
     }
 
     .tag-container {
@@ -42,21 +52,24 @@
     <h1 class="text-3xl font-bold mb-6 text-center">Quản lý tài khoản</h1>
     <div class="mb-4 flex justify-between items-center">
         <div class="relative w-1/3">
-            <input type="text" id="search" placeholder="Tìm kiếm tài khoản..."
-                class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-            <button class="absolute right-0 top-0 mt-2 mr-2" aria-label="Search">
-                <i class="fas fa-search text-gray-500"></i>
-            </button>
+            <!-- TÌM -->
+            <form action="/tai-khoan/tim" method="get">
+                <input type="text" id="search" name="tim_kiem" placeholder="Tìm kiếm tài khoản..."
+                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                <button class="absolute right-0 top-0 mt-2 mr-2" aria-label="Search">
+                    <i class="fas fa-search text-gray-500"></i>
+                </button>
+            </form>
         </div>
         <button onclick="toggleAddModal()"
             class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors shadow-md focus:outline-none focus:ring focus:ring-blue-400 flex items-center gap-2">
             <i class="fas fa-plus"></i> Thêm tài khoản
         </button>
     </div>
-    <% if (typeof message !=='undefined' && message) { %>
-        <h2 class="<%= messageType === 'error' ? 'message-error' : 'message-success' %>">
+    <% if (message) { %>
+        <div class="message-box message-<%= messageType %>">
             <%= message %>
-        </h2>
+        </div>
         <% } %>
 
             <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
@@ -100,7 +113,8 @@
                                         data-email="<%= tk.email %>" data-sdt="<%= tk.sdt %>"
                                         data-ngaysinh="<%= new Date(tk.ngaysinh).toLocaleDateString('vi-VN') %>"
                                         data-gioi_tinh="<%= tk.gioi_tinh %>" data-dia_chi="<%= tk.dia_chi %>"
-                                        data-so_cmnd="<%= tk.so_cmnd %>" data-ten_vai_tro="<%= tk.ten_vai_tro %>">
+                                        data-so_cmnd="<%= tk.so_cmnd %>" data-ten_vai_tro="<%= tk.ten_vai_tro %>"
+                                        data-bang-cap="<%= JSON.stringify(tk.loai_bang_cap || []) %>">
                                         <i class="fas fa-edit mr-1"></i> Sửa
                                     </button>
                                     <!-- XÓA -->
@@ -134,7 +148,8 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div class="mb-4">
                                 <label for="fullName" class="block text-sm font-medium">Họ tên</label>
-                                <input type="text" id="fullName" name="ho_ten" required
+                                <input type="text" id="fullName" name="ho_ten" required pattern="^[a-zA-ZÀ-ỹ\s]+$"
+                                    title="Họ tên chỉ được chứa chữ cái và khoảng trắng"
                                     class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
                             </div>
                             <div class="mb-4">
@@ -214,7 +229,7 @@
                                 class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-gray-400">
                                 Hủy
                             </button>
-                            <button type="submit" id="saveButton"
+                            <button type="submit"
                                 class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-blue-400">
                                 Lưu
                             </button>
@@ -222,9 +237,149 @@
                     </form>
                 </div>
             </div>
+            <!-- Modal sửa tài khoản -->
+            <div id="editModal"
+                class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden overflow-auto p-4">
+                <div class="bg-white rounded-lg p-6 w-full max-w-4xl shadow-lg max-h-full overflow-auto">
+                    <h2 class="text-xl font-semibold mb-4">Sửa tài khoản</h2>
+                    <form id="editAccountForm" method="post" action="/tai-khoan/sua">
+                        <input type="hidden" id="editAccountId" name="id" />
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="mb-4">
+                                <label for="editFullName" class="block text-sm font-medium">Họ tên</label>
+                                <input type="text" id="editFullName" name="ho_ten" required pattern="^[a-zA-ZÀ-ỹ\s]+$"
+                                    title="Họ tên chỉ được chứa chữ cái và khoảng trắng"
+                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                            </div>
+                            <div class="mb-4">
+                                <label for="editEmail" class="block text-sm font-medium">Email</label>
+                                <input type="email" id="editEmail" name="email" required
+                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                            </div>
+                            <div class="mb-4">
+                                <label for="editPhone" class="block text-sm font-medium">Số điện thoại</label>
+                                <input type="tel" id="editPhone" name="sdt" required pattern="^0\d{9}$"
+                                    title="Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số"
+                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                            </div>
+                            <div class="mb-4">
+                                <label for="editDob" class="block text-sm font-medium">Ngày sinh</label>
+                                <input type="date" id="editDob" name="ngaysinh" required
+                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                            </div>
+                            <div class="mb-4">
+                                <label for="editGender" class="block text-sm font-medium">Giới tính</label>
+                                <select id="editGender" name="gioi_tinh" required
+                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500">
+                                    <option value="" disabled>Chọn giới tính</option>
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label for="editRoleDisplay" class="block text-sm font-medium">Vai trò</label>
+                                <input type="text" id="editRoleDisplay" readonly
+                                    class="border border-gray-200 bg-gray-100 rounded-md px-4 py-2 w-full text-gray-600" />
+                                <input type="hidden" id="editRole" name="ten_vai_tro" />
+                            </div>
+                            <div class="mb-4 col-span-2">
+                                <label for="editAddress" class="block text-sm font-medium">Địa chỉ</label>
+                                <input type="text" id="editAddress" name="dia_chi" required
+                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                            </div>
+                            <div class="mb-4 col-span-2">
+                                <label for="editIdNumber" class="block text-sm font-medium">Số CMND/CCCD</label>
+                                <input type="text" id="editIdNumber" name="so_cmnd" required pattern="^079\d{9}$"
+                                    title="CMND/CCCD phải bắt đầu bằng 079 và có đúng 12 chữ số"
+                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                            </div>
+
+                            <!-- Phần bằng cấp chỉ hiển thị khi chọn vai trò là Giáo viên -->
+                            <div id="degreeSectionEdit" class="mb-4 col-span-2 hidden">
+                                <div class="flex items-end gap-2">
+                                    <div class="flex-grow">
+                                        <label for="editDegree" class="block text-sm font-medium">Bằng cấp</label>
+                                        <input type="text" id="editDegree"
+                                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                                    </div>
+                                    <button type="button" onclick="addDegreeEdit()"
+                                        class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors h-[42px]">
+                                        Thêm bằng cấp
+                                    </button>
+                                </div>
+                                <div id="degreeTagsEdit" class="tag-container">
+                                    <!-- Các tag bằng cấp sẽ được thêm vào đây -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex justify-end gap-4">
+                            <button type="button" onclick="toggleEditModal()"
+                                class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-gray-400">
+                                Hủy
+                            </button>
+                            <button type="submit"
+                                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-blue-400">
+                                Lưu
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- Modal xem chi tiết tài khoản -->
+            <div id="viewModal"
+                class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden overflow-auto p-4">
+                <div class="bg-white rounded-lg p-6 w-full max-w-4xl shadow-lg max-h-full overflow-auto">
+                    <h2 class="text-xl font-semibold mb-4">Chi tiết tài khoản</h2>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Họ tên</label>
+                            <p id="viewFullName" class="border border-gray-300 rounded-md px-4 py-2"></p>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Email</label>
+                            <p id="viewEmail" class="border border-gray-300 rounded-md px-4 py-2"></p>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Số điện thoại</label>
+                            <p id="viewPhone" class="border border-gray-300 rounded-md px-4 py-2"></p>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Ngày sinh</label>
+                            <p id="viewDob" class="border border-gray-300 rounded-md px-4 py-2"></p>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Giới tính</label>
+                            <p id="viewGender" class="border border-gray-300 rounded-md px-4 py-2"></p>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Vai trò</label>
+                            <p id="viewRole" class="border border-gray-300 rounded-md px-4 py-2"></p>
+                        </div>
+                        <div class="mb-4 col-span-2">
+                            <label class="block text-sm font-medium text-gray-700">Địa chỉ</label>
+                            <p id="viewAddress" class="border border-gray-300 rounded-md px-4 py-2"></p>
+                        </div>
+                        <div class="mb-4 col-span-2">
+                            <label class="block text-sm font-medium text-gray-700">Số CMND/CCCD</label>
+                            <p id="viewIdNumber" class="border border-gray-300 rounded-md px-4 py-2"></p>
+                        </div>
+                        <!-- Nếu có thêm phần bằng cấp (nếu cần) có thể thêm ở đây -->
+                    </div>
+
+                    <div class="mt-6 flex justify-end gap-4">
+                        <button onclick="toggleViewModal()"
+                            class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-gray-400">
+                            Đóng
+                        </button>
+                    </div>
+                </div>
+            </div>
+
 </div>
 
-
+<!-- SCRIPT THÊM -->
 <script>
     function toggleAddModal() {
         const modal = document.getElementById('addModal');
@@ -243,16 +398,6 @@
             document.getElementById('password').required = true;
         }
     }
-    const modal = document.getElementById('addModal');
-    modal.classList.toggle('hidden');
-
-    if (!modal.classList.contains('hidden')) {
-        // Khi mở modal: reset form và ẩn phần bằng cấp
-        document.getElementById('addAccountForm').reset();
-        document.getElementById('degreeTags').innerHTML = '';
-        document.getElementById('degreeSection').classList.add('hidden');
-    }
-
 
     function toggleDegreeField() {
         const roleSelect = document.getElementById('role');
@@ -305,53 +450,147 @@
         element.parentElement.remove();
     }
 </script>
+<!-- SCRIPT SỬA -->
 <script>
+    // Hàm toggle để ẩn/hiện modal sửa
+    function toggleEditModal() {
+        const modal = document.getElementById('editModal');
+        modal.classList.toggle('hidden');
+    }
+
+    // Hàm bật/tắt phần bằng cấp khi chọn vai trò Giáo viên trong modal sửa
+    function toggleDegreeFieldEdit(ten_vai_tro) {
+        const degreeSection = document.getElementById('degreeSectionEdit');
+        if (ten_vai_tro === 'Giáo viên') {
+            degreeSection.classList.remove('hidden');
+        } else {
+            degreeSection.classList.add('hidden');
+            document.getElementById('degreeTagsEdit').innerHTML = '';
+        }
+    }
+
+    // Hàm thêm bằng cấp cho modal sửa (nếu có dùng tính năng này)
+    function addDegreeEdit() {
+        const degreeInput = document.getElementById('editDegree');
+        const degreeTags = document.getElementById('degreeTagsEdit');
+        const value = degreeInput.value.trim();
+        if (value === '') return;
+
+        // Tạo container tag có cả hidden input để gửi về server
+        const tag = document.createElement('div');
+        tag.className = 'inline-flex items-center bg-blue-100 text-blue-700 px-3 py-1 rounded-full mr-2 mb-2';
+        tag.innerHTML = `
+        <span class="mr-2">${value}</span>
+        <span class="cursor-pointer text-red-500" onclick="this.parentElement.remove()">×</span>
+        <input type="hidden" name="loai_bang_cap[]" value="${value}">
+    `;
+        degreeTags.appendChild(tag);
+        degreeInput.value = '';
+    }
+
+    // Hàm chính để mở modal sửa và điền dữ liệu từ button
     function editAccount(button) {
-        const data = {
-            id: button.dataset.id,
-            ho_ten: button.dataset.ho_ten,
-            email: button.dataset.email,
-            sdt: button.dataset.sdt,
-            ngaysinh: button.dataset.ngaysinh,
-            gioi_tinh: button.dataset.gioi_tinh,
-            dia_chi: button.dataset.dia_chi,
-            so_cmnd: button.dataset.so_cmnd,
-            ten_vai_tro: button.dataset.ten_vai_tro
-        };
+        // Lấy dữ liệu từ thuộc tính data- của button
+        const id = button.getAttribute('data-id');
+        const ho_ten = button.getAttribute('data-ho_ten');
+        const email = button.getAttribute('data-email');
+        const sdt = button.getAttribute('data-sdt');
+        const ngaysinh = button.getAttribute('data-ngaysinh');
+        const gioi_tinh = button.getAttribute('data-gioi_tinh');
+        const dia_chi = button.getAttribute('data-dia_chi');
+        const so_cmnd = button.getAttribute('data-so_cmnd');
+        const ten_vai_tro = button.getAttribute('data-ten_vai_tro');
 
-        // Hiển thị modal thêm tài khoản như modal sửa
-        toggleAddModal();
+        // Gán dữ liệu vào form sửa
+        document.getElementById('editAccountId').value = id;
+        document.getElementById('editAccountForm').action = `/tai-khoan/sua/${id}`;
+        document.getElementById('editFullName').value = ho_ten;
+        document.getElementById('editEmail').value = email;
+        document.getElementById('editPhone').value = sdt;
 
-        // Gán dữ liệu vào form
-        document.getElementById('fullName').value = data.ho_ten;
-        document.getElementById('email').value = data.email;
-        document.getElementById('phone').value = data.sdt;
-
-        // Format lại ngày sinh thành yyyy-MM-dd để gán vào input[type="date"]
-        const parts = data.ngaysinh.split('/');
-        if (parts.length === 3) {
-            const formattedDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-            document.getElementById('dob').value = formattedDate;
+        // Xử lý ngày sinh: chuyển từ format "dd/mm/yyyy" sang yyyy-mm-dd để input type=date hiểu đúng
+        if (ngaysinh) {
+            const parts = ngaysinh.split('/');
+            if (parts.length === 3) {
+                // parts[2] = year, parts[1] = month, parts[0] = day
+                const formattedDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                document.getElementById('editDob').value = formattedDate;
+            } else {
+                document.getElementById('editDob').value = '';
+            }
         }
 
-        document.getElementById('gender').value = data.gioi_tinh;
-        document.getElementById('role').value = data.ten_vai_tro;
-        document.getElementById('address').value = data.dia_chi;
-        document.getElementById('idNumber').value = data.so_cmnd;
+        document.getElementById('editGender').value = gioi_tinh || '';
+        document.getElementById('editAddress').value = dia_chi;
+        document.getElementById('editIdNumber').value = so_cmnd;
+        document.getElementById('editRole').value = ten_vai_tro || '';
+        document.getElementById('editRoleDisplay').value = ten_vai_tro || '';
 
-        // Hiển thị hoặc ẩn phần bằng cấp nếu là Giáo viên
-        toggleDegreeField();
+        // Xử lý phần bằng cấp (ẩn/hiện)
+        toggleDegreeFieldEdit(ten_vai_tro);
 
-        // Đổi URL và phương thức form để gửi đến route sửa tài khoản
-        const form = document.getElementById('addAccountForm');
-        form.action = `/tai-khoan/sua/${data.id}`;
+        // Nếu bạn có dữ liệu bằng cấp ở đâu đó, bạn có thể load ở đây, hiện tại để trống
+        document.getElementById('degreeTagsEdit').innerHTML = '';
+        // Lấy bằng cấp cũ
+        const bangCapsStr = button.getAttribute('data-bang-cap');
+        let bangCaps = [];
+        try {
+            bangCaps = JSON.parse(bangCapsStr);
+            if (!Array.isArray(bangCaps)) bangCaps = [];
+        } catch (e) {
+            bangCaps = [];
+        }
 
-        // Ẩn trường mật khẩu nếu không muốn cập nhật
-        document.getElementById('password').required = false;
-        document.getElementById('password').value = ''; // Bỏ trống nếu không đổi mật khẩu
+        // Xóa sạch tag hiện tại
+        const degreeTagsEdit = document.getElementById('degreeTagsEdit');
+        degreeTagsEdit.innerHTML = '';
 
-        // Đổi tiêu đề modal và nút
-        document.querySelector('#addModal h2').innerText = 'Sửa tài khoản';
-        document.getElementById('saveButton').innerText = 'Cập nhật';
+        // Thêm tag cho từng bằng cấp
+        bangCaps.forEach(bc => {
+            const tag = document.createElement('div');
+            tag.className = 'tag';  // bạn nhớ copy style CSS 'tag' từ modal thêm nếu chưa có
+            tag.innerHTML = `
+        <span>${bc}</span>
+        <span class="tag-remove" onclick="this.parentElement.remove()">×</span>
+        <input type="hidden" name="loai_bang_cap[]" value="${bc}">
+        `;
+            degreeTagsEdit.appendChild(tag);
+        });
+        // Mở modal sửa
+        toggleEditModal();
     }
+
+</script>
+<!-- SCRIPT XEM CHI TIẾT -->
+ <script>
+  function toggleViewModal() {
+    const modal = document.getElementById('viewModal');
+    modal.classList.toggle('hidden');
+  }
+
+  async function viewDetails(id) {
+    try {
+      const response = await fetch(`/tai-khoan/api/chi-tiet/${id}`);
+      if (!response.ok) {
+        alert('Không tìm thấy tài khoản');
+        return;
+      }
+      const data = await response.json();
+
+      // Gán dữ liệu vào các thẻ <p>
+      document.getElementById('viewFullName').innerText = data.ho_ten || '';
+      document.getElementById('viewEmail').innerText = data.email || '';
+      document.getElementById('viewPhone').innerText = data.sdt || '';
+      document.getElementById('viewDob').innerText = data.ngaysinh || '';
+      document.getElementById('viewGender').innerText = data.gioi_tinh || '';
+      document.getElementById('viewRole').innerText = data.ten_vai_tro || '';
+      document.getElementById('viewAddress').innerText = data.dia_chi || '';
+      document.getElementById('viewIdNumber').innerText = data.so_cmnd || '';
+
+      toggleViewModal();
+    } catch (error) {
+      alert('Lỗi tải thông tin tài khoản');
+      console.error(error);
+    }
+  }
 </script>

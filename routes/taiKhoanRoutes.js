@@ -7,4 +7,7 @@ router.get('/', AuthMiddleware.kiemTraToken, taiKhoanController.hienThiDanhSachT
 router.post('/them', AuthMiddleware.kiemTraToken, taiKhoanController.themTaiKhoan);
 router.post('/xoa/:id', AuthMiddleware.kiemTraToken, taiKhoanController.xoaTaiKhoan);
 router.post('/sua/:id', AuthMiddleware.kiemTraToken, taiKhoanController.suaTaiKhoan);
+router.get('/tim', AuthMiddleware.kiemTraToken, taiKhoanController.timTaiKhoan);
+router.get('/chi-tiet/:id', AuthMiddleware.kiemTraToken, taiKhoanController.chiTietTaiKhoan);
+
 module.exports = router;

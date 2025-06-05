@@ -63,12 +63,12 @@ class TaiKhoanModel {
                 await conn.execute(queryPhuHuynh, [taiKhoanId]);
             }
             await conn.commit();
-            return { success: true, message: 'Thêm tài khoản thành công',messageType: 'success' };
+            return { success: true, message: 'Thêm tài khoản thành công', messageType: 'success' };
         }
         catch (error) {
             await conn.rollback();
             console.error('Lỗi khi thêm tài khoản:', error);
-            return { success: false, message: 'Đã xảy ra lỗi khi thêm tài khoản',messageType: 'error' };
+            return { success: false, message: 'Đã xảy ra lỗi khi thêm tài khoản', messageType: 'error' };
         }
         finally {
             conn.release();
@@ -134,13 +134,13 @@ class TaiKhoanModel {
     static async suaTaiKhoan(id, taiKhoan) {
         const conn = await pool.getConnection();
         try {
-            const sql =`
+            await conn.beginTransaction();
+            const sql = `
             UPDATE tai_khoan
-            SET ho_ten = ?, ngaysinh = ?, gioi_tinh = ?, so_cmnd = ?, dia_chi = ?, email = ?, sdt = ?, ten_vai_tro = ?, loai_bang_cap = ?
+            SET ho_ten = ?, ngaysinh = ?, gioi_tinh = ?, so_cmnd = ?, dia_chi = ?, email = ?, sdt = ?
             WHERE tai_khoan_id = ?
             `
-            const loaiBangCap = taiKhoan.loai_bang_cap ? JSON.stringify(taiKhoan.loai_bang_cap) : null;
-            const params = [
+            await conn.query(sql, [
                 taiKhoan.ho_ten,
                 taiKhoan.ngaysinh,
                 taiKhoan.gioi_tinh,
@@ -148,11 +148,84 @@ class TaiKhoanModel {
                 taiKhoan.dia_chi,
                 taiKhoan.email,
                 taiKhoan.sdt,
-                taiKhoan.ten_vai_tro,
-                loaiBangCap,
                 id
-            ];
-            await conn.query(sql, params);
+            ]);
+            // Cập nhật bảng giao_vien nếu là giáo viên
+            if (taiKhoan.ten_vai_tro === 'Giáo viên') {
+                const [rows] = await conn.query('SELECT giao_vien_id FROM giao_vien WHERE tai_khoan_id = ?', [id]);
+                if (rows.length > 0) {
+                    const giaoVienId = rows[0].giao_vien_id;
+                    // Lấy danh sách bằng cấp cũ từ DB
+                    const [oldRows] = await conn.query('SELECT loai_bang_cap FROM bang_cap WHERE giao_vien_id = ?', [giaoVienId]);
+                    const oldBangCaps = oldRows.map(row => row.loai_bang_cap);
+
+                    // Lấy danh sách bằng cấp mới từ form
+                    const newBangCaps = Array.isArray(taiKhoan.loai_bang_cap)
+                        ? taiKhoan.loai_bang_cap
+                        : (taiKhoan.loai_bang_cap ? [taiKhoan.loai_bang_cap] : []);
+
+                    // Tìm bằng cấp cần thêm
+                    const toAdd = newBangCaps.filter(cap => !oldBangCaps.includes(cap));
+                    // Tìm bằng cấp cần xoá
+                    const toDelete = oldBangCaps.filter(cap => !newBangCaps.includes(cap));
+                    // Thêm mới
+                    for (const cap of toAdd) {
+                        await conn.query('INSERT INTO bang_cap (loai_bang_cap, giao_vien_id) VALUES (?, ?)', [cap, giaoVienId]);
+                    }
+                    // Xoá
+                    for (const cap of toDelete) {
+                        await conn.query('DELETE FROM bang_cap WHERE giao_vien_id = ? AND loai_bang_cap = ?', [giaoVienId, cap]);
+                    }
+                }
+            }
+            await conn.commit();
+            return { success: true, message: 'Cập nhật tài khoản thành công', messageType: 'success' };
+        } catch (error) {
+            await conn.rollback();
+            console.error('Lỗi khi sửa tài khoản:', error);
+            return { success: false, message: 'Đã xảy ra lỗi khi sửa tài khoản', messageType: 'error' };
+        } finally {
+            conn.release();
+        }
+    }
+    static async timTaiKhoanTheoTen(tim_kiem) {
+        const conn = await pool.getConnection();
+        try {
+            const [rows] = await conn.query(`
+                SELECT * FROM tai_khoan
+                WHERE ho_ten LIKE ?
+                `, [`%${tim_kiem}%`])
+            return rows
+        }
+        catch (error) {
+            console.error('Lỗi khi tìm tài khoản', error)
+            return []
+        } finally {
+            conn.release();
+        }
+    }
+    static async layTaiKhoanTheoId(id) {
+        const conn = await pool.getConnection();
+        try {
+            // Lấy thông tin tài khoản
+            const [rows] = await conn.query(`SELECT * FROM tai_khoan WHERE tai_khoan_id = ?`, [id]);
+            if (rows.length === 0) {
+                return null; // không tìm thấy tài khoản
+            }
+
+            const taiKhoan = rows[0];
+
+            // Nếu là Giáo viên thì lấy thêm bằng cấp
+            if (taiKhoan.ten_vai_tro === "Giáo viên") {
+                const [bangCaps] = await conn.query(`SELECT * FROM bang_cap WHERE tai_khoan_id = ?`, [id]);
+                taiKhoan.bang_cap = bangCaps; // thêm thuộc tính bang_cap vào đối tượng tài khoản
+            }
+
+            return taiKhoan;
+
+        } catch (error) {
+            console.error('Lỗi lấy tài khoản theo ID:', error);
+            return null;
         } finally {
             conn.release();
         }
