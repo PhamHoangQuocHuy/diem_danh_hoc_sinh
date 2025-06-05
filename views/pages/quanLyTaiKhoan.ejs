@@ -365,7 +365,13 @@
                             <label class="block text-sm font-medium text-gray-700">Số CMND/CCCD</label>
                             <p id="viewIdNumber" class="border border-gray-300 rounded-md px-4 py-2"></p>
                         </div>
-                        <!-- Nếu có thêm phần bằng cấp (nếu cần) có thể thêm ở đây -->
+                        <!-- Thêm phần bằng cấp trong modal -->
+                        <div class="mb-4 col-span-2" id="viewDegreesSection" style="display: none;">
+                            <label class="block text-sm font-medium text-gray-700">Bằng cấp</label>
+                            <ul id="viewDegreesList"
+                                class="border border-gray-300 rounded-md px-4 py-2 list-disc list-inside"></ul>
+                        </div>
+
                     </div>
 
                     <div class="mt-6 flex justify-end gap-4">
@@ -562,35 +568,61 @@
 
 </script>
 <!-- SCRIPT XEM CHI TIẾT -->
- <script>
-  function toggleViewModal() {
-    const modal = document.getElementById('viewModal');
-    modal.classList.toggle('hidden');
-  }
-
-  async function viewDetails(id) {
-    try {
-      const response = await fetch(`/tai-khoan/api/chi-tiet/${id}`);
-      if (!response.ok) {
-        alert('Không tìm thấy tài khoản');
-        return;
-      }
-      const data = await response.json();
-
-      // Gán dữ liệu vào các thẻ <p>
-      document.getElementById('viewFullName').innerText = data.ho_ten || '';
-      document.getElementById('viewEmail').innerText = data.email || '';
-      document.getElementById('viewPhone').innerText = data.sdt || '';
-      document.getElementById('viewDob').innerText = data.ngaysinh || '';
-      document.getElementById('viewGender').innerText = data.gioi_tinh || '';
-      document.getElementById('viewRole').innerText = data.ten_vai_tro || '';
-      document.getElementById('viewAddress').innerText = data.dia_chi || '';
-      document.getElementById('viewIdNumber').innerText = data.so_cmnd || '';
-
-      toggleViewModal();
-    } catch (error) {
-      alert('Lỗi tải thông tin tài khoản');
-      console.error(error);
+<script>
+    function toggleViewModal() {
+        const modal = document.getElementById('viewModal');
+        modal.classList.toggle('hidden');
     }
-  }
+
+    async function viewDetails(id) {
+        try {
+            const response = await fetch(`/tai-khoan/chi-tiet/${id}`);
+            if (!response.ok) {
+                alert('Không tìm thấy tài khoản');
+                return;
+            }
+            const data = await response.json();
+
+            // Gán dữ liệu vào các thẻ <p>
+            document.getElementById('viewFullName').innerText = data.ho_ten || '';
+            document.getElementById('viewEmail').innerText = data.email || '';
+            document.getElementById('viewPhone').innerText = data.sdt || '';
+            if (data.ngaysinh) {
+                const dob = new Date(data.ngaysinh);
+                const formattedDob = dob.toLocaleDateString('vi-VN'); // "dd/mm/yyyy"
+                document.getElementById('viewDob').innerText = formattedDob;
+            } else {
+                document.getElementById('viewDob').innerText = '';
+            }
+
+            document.getElementById('viewGender').innerText = data.gioi_tinh || '';
+            document.getElementById('viewRole').innerText = data.ten_vai_tro || '';
+            document.getElementById('viewAddress').innerText = data.dia_chi || '';
+            document.getElementById('viewIdNumber').innerText = data.so_cmnd || '';
+
+
+
+            // Xử lý phần bằng cấp (nếu có)
+            const degreesSection = document.getElementById('viewDegreesSection');
+            const degreesList = document.getElementById('viewDegreesList');
+            if (data.bang_cap && data.bang_cap.length > 0) {
+                degreesSection.style.display = 'block';
+                degreesList.innerHTML = '';
+                data.bang_cap.forEach(degree => {
+                    const li = document.createElement('li');
+                    // Giả sử trường bằng cấp có tên là ten_bang_cap
+                    li.textContent = degree.loai_bang_cap || 'Không rõ bằng cấp';
+                    degreesList.appendChild(li);
+                });
+            } else {
+                degreesSection.style.display = 'none';
+                degreesList.innerHTML = '';
+            }
+
+            toggleViewModal();
+        } catch (error) {
+            alert('Lỗi tải thông tin tài khoản');
+            console.error(error);
+        }
+    }
 </script>

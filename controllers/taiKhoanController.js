@@ -222,11 +222,17 @@ class TaiKhoanController {
             });
         }
     }
-    static async chiTietTaiKhoan(req,res){
-        const {id} = req.params;
-        try{
+    static async chiTietTaiKhoan(req, res) {
+        const { id } = req.params;
+        try {
             const taiKhoan = await TaiKhoanModel.layTaiKhoanTheoId(id);
-            return res.
+            if (!taiKhoan) {
+                return res.status(404).json({ message: 'Không tìm thấy tài khoản' });
+            }
+            res.json(taiKhoan);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Lỗi server' });
         }
     }
 }
