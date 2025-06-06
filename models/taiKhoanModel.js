@@ -217,7 +217,10 @@ class TaiKhoanModel {
 
             // Nếu là Giáo viên thì lấy thêm bằng cấp
             if (taiKhoan.ten_vai_tro === "Giáo viên") {
-                const [bangCaps] = await conn.query(`SELECT * FROM bang_cap WHERE tai_khoan_id = ?`, [id]);
+                const [bangCaps] = await conn.query(`
+                    SELECT * 
+                    FROM bang_cap JOIN giao_vien on bang_cap.giao_vien_id = giao_vien.giao_vien_id
+                    WHERE giao_vien.tai_khoan_id = ?`, [id]);
                 taiKhoan.bang_cap = bangCaps; // thêm thuộc tính bang_cap vào đối tượng tài khoản
             }
 

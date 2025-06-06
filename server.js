@@ -45,7 +45,6 @@ app.use('/phu-huynh', AuthMiddleware.kiemTraToken, phuHuynhRoutes);
 app.use('/diem-danh', AuthMiddleware.kiemTraToken, diemDanhRoutes);
 app.use('/bao-cao', AuthMiddleware.kiemTraToken, baoCaoRoutes);
 
-app.post('/tai-khoan/them', AuthMiddleware.kiemTraToken, taiKhoanRoutes); // Thêm tài khoản
 
 app.get('/', (req, res) => { // Trang chủ
     const { message, messageType } = req.query;

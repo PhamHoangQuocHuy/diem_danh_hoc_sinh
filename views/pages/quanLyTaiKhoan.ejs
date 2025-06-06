@@ -66,6 +66,11 @@
             <i class="fas fa-plus"></i> Thêm tài khoản
         </button>
     </div>
+    <button id="sendMailBtn" style="float: right; margin-bottom: 20px; font-size: 15px;"
+        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" onclick="sendMail()">
+        Gửi mail
+    </button>
+
     <% if (message) { %>
         <div class="message-box message-<%= messageType %>">
             <%= message %>
@@ -75,6 +80,9 @@
             <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
                 <thead>
                     <tr class="bg-gray-200">
+                        <th class="py-2 px-4 border-b text-left text-center">
+                            <input type="checkbox" onclick="toggleSelectAll(this)" id="selectAll">
+                        </th>
                         <th class="py-2 px-4 border-b text-left text-center">ID</th>
                         <th class="py-2 px-4 border-b text-left text-center">Họ tên</th>
                         <th class="py-2 px-4 border-b text-left text-center">Ngày sinh</th>
@@ -82,10 +90,14 @@
                         <th class="py-2 px-4 border-b text-left text-center">Hành động</th>
                     </tr>
                 </thead>
+                <!-- BODY -->
                 <tbody id="accountTableBody">
                     <% if (danhSachTaiKhoan && danhSachTaiKhoan.length> 0) { %>
                         <% danhSachTaiKhoan.forEach(tk=> { %>
                             <tr>
+                                <td class="py-2 px-4 border-b text-center">
+                                    <input type="checkbox" name="selectedIds" value="<%= tk.tai_khoan_id %>">
+                                </td>
                                 <td class="py-2 px-4 border-b text-center">
                                     <%= tk.tai_khoan_id %>
                                 </td>
@@ -100,9 +112,10 @@
                                 </td>
                                 <td class="py-2 px-4 border-b text-center">
                                     <!-- XEM CHI TIẾT -->
-                                    <button
+                                    <button data-id="<%= tk.tai_khoan_id %>"
                                         class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                                        aria-label="Xem chi tiết tài khoản 1" onclick="viewDetails(1)">
+                                        aria-label="Xem chi tiết tài khoản <%= tk.tai_khoan_id %>"
+                                        onclick="viewDetails(this.dataset.id)">
                                         <i class="fas fa-eye mr-1"></i> Xem chi tiết
                                     </button>
                                     <!-- SỬA -->
@@ -624,5 +637,38 @@
             alert('Lỗi tải thông tin tài khoản');
             console.error(error);
         }
+    }
+</script>
+<!-- CHECKBOX -->
+<script>
+    function toggleSelectAll(source) {
+        const checkboxes = document.querySelectorAll('input[name="selectedIds"]');
+        checkboxes.forEach(checkbox => checkbox.checked = source.checked);
+    }
+    function sendMail() {
+        const selectedCheckboxes = document.querySelectorAll('input[name="selectedIds"]:checked')
+        if (selectedCheckboxes.length === 0) {
+            alert("Vui lòng chọn 1 tài khoản để gửi mail")
+            return
+        }
+        const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value)
+        fetch('/tai-khoan/send-mail', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ ids: selectedIds }),
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Gửi mail thành công!')
+                } else {
+                    alert('Gửi mail thất bại: ' + (data.message || ''))
+                }
+            })
+            .catch(err => {
+                alert('Lỗi gửi mail: ' + err.message)
+            })
     }
 </script>
