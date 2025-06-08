@@ -1,4 +1,6 @@
 const pool = require('../config/connect_database');
+const fs = require('fs');
+const path = require('path');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 class TaiKhoanModel {
@@ -27,6 +29,7 @@ class TaiKhoanModel {
             email,
             sdt,
             mat_khau,
+            anh_dai_dien,
             ten_vai_tro,
             loai_bang_cap = [],
         } = taiKhoan;
@@ -35,7 +38,7 @@ class TaiKhoanModel {
             await conn.beginTransaction();
             // Mã hóa mật khẩu
             const hashedPassword = await bcrypt.hash(mat_khau, saltRounds);
-            const query = 'INSERT INTO tai_khoan (ho_ten,ngaysinh,gioi_tinh,so_cmnd,dia_chi,email,sdt,mat_khau,ten_vai_tro) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+            const query = 'INSERT INTO tai_khoan (ho_ten,ngaysinh,gioi_tinh,so_cmnd,dia_chi,email,sdt,mat_khau,anh_dai_dien,ten_vai_tro) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?)';
             const [result] = await conn.execute(query, [
                 ho_ten,
                 ngaysinh,
@@ -45,6 +48,7 @@ class TaiKhoanModel {
                 email,
                 sdt,
                 hashedPassword,
+                anh_dai_dien,
                 ten_vai_tro,
             ]);
             const taiKhoanId = result.insertId;
@@ -63,7 +67,7 @@ class TaiKhoanModel {
                 await conn.execute(queryPhuHuynh, [taiKhoanId]);
             }
             await conn.commit();
-            return { success: true, message: 'Thêm tài khoản thành công', messageType: 'success' };
+            return { success: true, insertId: result.insertId, message: 'Thêm tài khoản thành công', messageType: 'success' };
         }
         catch (error) {
             await conn.rollback();
@@ -73,6 +77,7 @@ class TaiKhoanModel {
         finally {
             conn.release();
         }
+
     }
     static async hienThiTaiKhoan() {
         const query = 'SELECT * FROM tai_khoan';
@@ -84,49 +89,71 @@ class TaiKhoanModel {
         try {
             await conn.beginTransaction();
 
-            // 1. Kiểm tra nếu là giáo viên và đang chủ nhiệm lớp
-            const [rowsGiaoVien] = await conn.execute('SELECT giao_vien_id FROM giao_vien WHERE tai_khoan_id = ?', [id]);
-            if (rowsGiaoVien.length > 0) {
-                const giaoVienId = rowsGiaoVien[0].giao_vien_id;
-                const [rowsLopHoc] = await conn.execute('SELECT * FROM lop_hoc WHERE giao_vien_id = ?', [giaoVienId]);
-                if (rowsLopHoc.length > 0) {
-                    await conn.rollback();
-                    return { success: false, message: 'Giáo viên đang chủ nhiệm lớp không thể xóa', messageType: 'error' };
-                }
+            // 1. Lấy vai trò và ảnh đại diện của tài khoản
+            const [rows] = await conn.execute('SELECT ten_vai_tro, anh_dai_dien FROM tai_khoan WHERE tai_khoan_id = ?', [id]);
+            if (rows.length === 0) {
+                await conn.rollback();
+                return { success: false, message: 'Tài khoản không tồn tại', messageType: 'error' };
             }
 
-            // 2. Kiểm tra nếu là phụ huynh và có con đang học
-            const [rowsPhuHuynh] = await conn.execute('SELECT phu_huynh_id FROM phu_huynh WHERE tai_khoan_id = ?', [id]);
-            if (rowsPhuHuynh.length > 0) {
-                const phuHuynhId = rowsPhuHuynh[0].phu_huynh_id;
-                const [rowsCon] = await conn.execute('SELECT * FROM phu_huynh_hoc_sinh WHERE phu_huynh_id = ?', [phuHuynhId]);
-                if (rowsCon.length > 0) {
-                    await conn.rollback();
-                    return { success: false, message: 'Phụ huynh có con đang học', messageType: 'error' };
-                }
-            }
+            const { ten_vai_tro, anh_dai_dien } = rows[0];
 
-            // 3. Kiểm tra không cho xóa tài khoản Admin
-            const [rowsAdmin] = await conn.execute('SELECT ten_vai_tro FROM tai_khoan WHERE tai_khoan_id = ?', [id]);
-            if (rowsAdmin.length > 0 && rowsAdmin[0].ten_vai_tro === 'Admin') {
+            // 2. Kiểm tra ràng buộc đặc biệt theo vai trò
+            if (ten_vai_tro === 'Admin') {
                 await conn.rollback();
                 return { success: false, message: 'Không thể xóa tài khoản quản trị viên', messageType: 'error' };
             }
 
-            // 4. Xóa các bảng liên quan
-            await conn.execute('DELETE FROM giao_vien WHERE tai_khoan_id = ?', [id]);
-            await conn.execute('DELETE FROM phu_huynh WHERE tai_khoan_id = ?', [id]);
+            if (ten_vai_tro === 'Giáo viên') {
+                const [rowsGiaoVien] = await conn.execute('SELECT giao_vien_id FROM giao_vien WHERE tai_khoan_id = ?', [id]);
+                if (rowsGiaoVien.length > 0) {
+                    const giaoVienId = rowsGiaoVien[0].giao_vien_id;
+                    const [rowsLopHoc] = await conn.execute('SELECT 1 FROM lop_hoc WHERE giao_vien_id = ? LIMIT 1', [giaoVienId]);
+                    if (rowsLopHoc.length > 0) {
+                        await conn.rollback();
+                        return { success: false, message: 'Giáo viên đang chủ nhiệm lớp không thể xóa', messageType: 'error' };
+                    }
+                }
+            }
 
-            // 5. Xóa tài khoản chính
+            if (ten_vai_tro === 'Phụ huynh') {
+                const [rowsPhuHuynh] = await conn.execute('SELECT phu_huynh_id FROM phu_huynh WHERE tai_khoan_id = ?', [id]);
+                if (rowsPhuHuynh.length > 0) {
+                    const phuHuynhId = rowsPhuHuynh[0].phu_huynh_id;
+                    const [rowsCon] = await conn.execute('SELECT 1 FROM phu_huynh_hoc_sinh WHERE phu_huynh_id = ? LIMIT 1', [phuHuynhId]);
+                    if (rowsCon.length > 0) {
+                        await conn.rollback();
+                        return { success: false, message: 'Phụ huynh có con đang học không thể xóa', messageType: 'error' };
+                    }
+                }
+            }
+
+            if (ten_vai_tro === 'Giáo viên') {
+                await conn.execute('DELETE FROM giao_vien WHERE tai_khoan_id = ?', [id]);
+            }
+
+            if (ten_vai_tro === 'Phụ huynh') {
+                await conn.execute('DELETE FROM phu_huynh WHERE tai_khoan_id = ?', [id]);
+            }
+
+            // Xóa tài khoản
             await conn.execute('DELETE FROM tai_khoan WHERE tai_khoan_id = ?', [id]);
+
+            // 4. Nếu có ảnh đại diện riêng thì xóa file
+            if (anh_dai_dien && anh_dai_dien !== 'default_avatar.jpg') {
+                const imagePath = path.join(__dirname, '..', 'images', anh_dai_dien);
+                if (fs.existsSync(imagePath)) {
+                    fs.unlinkSync(imagePath);
+                }
+            }
 
             await conn.commit();
             return { success: true, message: 'Xóa tài khoản thành công', messageType: 'success' };
 
         } catch (error) {
-            await conn.rollback();
             console.error('Lỗi khi xóa tài khoản:', error);
-            return { success: false, message: 'Đã xảy ra lỗi khi xóa tài khoản' };
+            await conn.rollback();
+            return { success: false, message: 'Lỗi khi xóa tài khoản', messageType: 'error' };
         } finally {
             conn.release();
         }
@@ -137,9 +164,9 @@ class TaiKhoanModel {
             await conn.beginTransaction();
             const sql = `
             UPDATE tai_khoan
-            SET ho_ten = ?, ngaysinh = ?, gioi_tinh = ?, so_cmnd = ?, dia_chi = ?, email = ?, sdt = ?
+            SET ho_ten = ?, ngaysinh = ?, gioi_tinh = ?, so_cmnd = ?, dia_chi = ?, email = ?, sdt = ?, anh_dai_dien = ?
             WHERE tai_khoan_id = ?
-            `
+        `;
             await conn.query(sql, [
                 taiKhoan.ho_ten,
                 taiKhoan.ngaysinh,
@@ -148,31 +175,27 @@ class TaiKhoanModel {
                 taiKhoan.dia_chi,
                 taiKhoan.email,
                 taiKhoan.sdt,
+                taiKhoan.anh_dai_dien,
                 id
             ]);
-            // Cập nhật bảng giao_vien nếu là giáo viên
+
             if (taiKhoan.ten_vai_tro === 'Giáo viên') {
                 const [rows] = await conn.query('SELECT giao_vien_id FROM giao_vien WHERE tai_khoan_id = ?', [id]);
                 if (rows.length > 0) {
                     const giaoVienId = rows[0].giao_vien_id;
-                    // Lấy danh sách bằng cấp cũ từ DB
                     const [oldRows] = await conn.query('SELECT loai_bang_cap FROM bang_cap WHERE giao_vien_id = ?', [giaoVienId]);
                     const oldBangCaps = oldRows.map(row => row.loai_bang_cap);
 
-                    // Lấy danh sách bằng cấp mới từ form
                     const newBangCaps = Array.isArray(taiKhoan.loai_bang_cap)
                         ? taiKhoan.loai_bang_cap
                         : (taiKhoan.loai_bang_cap ? [taiKhoan.loai_bang_cap] : []);
 
-                    // Tìm bằng cấp cần thêm
                     const toAdd = newBangCaps.filter(cap => !oldBangCaps.includes(cap));
-                    // Tìm bằng cấp cần xoá
                     const toDelete = oldBangCaps.filter(cap => !newBangCaps.includes(cap));
-                    // Thêm mới
+
                     for (const cap of toAdd) {
                         await conn.query('INSERT INTO bang_cap (loai_bang_cap, giao_vien_id) VALUES (?, ?)', [cap, giaoVienId]);
                     }
-                    // Xoá
                     for (const cap of toDelete) {
                         await conn.query('DELETE FROM bang_cap WHERE giao_vien_id = ? AND loai_bang_cap = ?', [giaoVienId, cap]);
                     }
@@ -233,5 +256,50 @@ class TaiKhoanModel {
             conn.release();
         }
     }
+    static async layTaiKhoanTheoVaiTro(ten_vai_tro) {
+        let query = `SELECT * FROM tai_khoan`;
+        const params = []
+        if (ten_vai_tro) {
+            query += ` WHERE ten_vai_tro = ?`;
+            params.push(ten_vai_tro);
+        }
+        try {
+            const conn = await pool.getConnection();
+            const [rows] = await conn.execute(query, params);
+            conn.release();
+            return rows;
+        }
+        catch (error) {
+            console.error('Lỗi khi lấy tài khoản theo vai trò: ', error);
+            return []
+        }
+    }
+    static async capNhatAnhDaiDien(taiKhoanId, tenFileAnh) {
+        const sql = 'UPDATE tai_khoan SET anh_dai_dien = ? WHERE tai_khoan_id = ?';
+        try {
+            const [result] = await pool.execute(sql, [tenFileAnh, taiKhoanId]);
+
+            if (result.affectedRows > 0) {
+                return {
+                    success: true,
+                    message: 'Cập nhật ảnh đại diện thành công',
+                    affectedRows: result.affectedRows
+                };
+            } else {
+                return {
+                    success: false,
+                    message: 'Không tìm thấy tài khoản để cập nhật ảnh'
+                };
+            }
+        } catch (error) {
+            console.error('Lỗi cập nhật ảnh đại diện:', error);
+            return {
+                success: false,
+                message: 'Cập nhật ảnh thất bại',
+                error: error.message
+            };
+        }
+    }
+    
 }
 module.exports = TaiKhoanModel;

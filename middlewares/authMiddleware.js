@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
 const authModel = require('../models/authModel');
 const DashboardModel = require('../models/dashboardModel');
 
@@ -28,6 +27,7 @@ class AuthMiddleware {
             console.log('Lỗi xác thực token:', err);
             return res.status(401).render('auth/login', { message: 'Token không hợp lệ hoặc đã hết hạn', messageType: 'error' });
         }
+
     }
 }
 module.exports = AuthMiddleware;

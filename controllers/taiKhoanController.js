@@ -1,10 +1,14 @@
 const pool = require('../config/connect_database');
 const TaiKhoanModel = require('../models/taiKhoanModel');
+const { toAlias } = require('../config/multerTaiKhoan');
+const path = require('path');
+const fs = require('fs');
 class TaiKhoanController {
     static async hienThiDanhSachTaiKhoan(req, res) {
+        let conn;
         try {
             const danhSachTaiKhoan = await TaiKhoanModel.hienThiTaiKhoan();
-            const conn = await pool.getConnection();
+            conn = await pool.getConnection();
             for (let taiKhoan of danhSachTaiKhoan) {
                 if (taiKhoan.ten_vai_tro === 'Giáo viên') {
                     // Lấy giao_vien_id từ bảng giao_vien theo tai_khoan_id
@@ -20,7 +24,7 @@ class TaiKhoanController {
                     taiKhoan.loai_bang_cap = [];
                 }
             }
-            res.status(200).render('admin_index', {
+            return res.status(200).render('admin_index', {
                 page: 'pages/quanLyTaiKhoan',
                 danhSachTaiKhoan,
                 message: req.query.message || '',
@@ -28,15 +32,19 @@ class TaiKhoanController {
             });
         } catch (error) {
             console.error(error);
-            res.status(500).render('admin_index', {
+            return res.status(500).render('admin_index', {
                 page: 'pages/quanLyTaiKhoan',
                 danhSachTaiKhoan: [],
                 message: 'Đã xảy ra lỗi khi lấy thông tin.',
                 messageType: 'error'
             });
+        } finally {
+            if (conn)
+                conn.release();
         }
     }
     static async themTaiKhoan(req, res) {
+        let tempFilePath = null;
         try {
             const {
                 ho_ten,
@@ -51,7 +59,13 @@ class TaiKhoanController {
                 loai_bang_cap,
             } = req.body;
 
+            if (req.file) {
+                tempFilePath = path.join(__dirname, '../images', req.file.filename);
+            }
             if (await TaiKhoanModel.kiemTraEmail(email)) {
+                if (tempFilePath && fs.existsSync(tempFilePath)) {
+                    fs.unlinkSync(tempFilePath);
+                }
                 const danhSachTaiKhoan = await TaiKhoanModel.hienThiTaiKhoan();
                 return res.render('admin_index', {
                     page: 'pages/quanLyTaiKhoan',
@@ -63,6 +77,9 @@ class TaiKhoanController {
             }
 
             if (await TaiKhoanModel.kiemTraSoDienThoai(sdt)) {
+                if (tempFilePath && fs.existsSync(tempFilePath)) {
+                    fs.unlinkSync(tempFilePath);
+                }
                 const danhSachTaiKhoan = await TaiKhoanModel.hienThiTaiKhoan();
                 return res.render('admin_index', {
                     page: 'pages/quanLyTaiKhoan',
@@ -74,6 +91,9 @@ class TaiKhoanController {
             }
 
             if (await TaiKhoanModel.kiemTraSoCMND(so_cmnd)) {
+                if (tempFilePath && fs.existsSync(tempFilePath)) {
+                    fs.unlinkSync(tempFilePath);
+                }
                 const danhSachTaiKhoan = await TaiKhoanModel.hienThiTaiKhoan();
                 return res.render('admin_index', {
                     page: 'pages/quanLyTaiKhoan',
@@ -88,6 +108,9 @@ class TaiKhoanController {
             let loaiBangCapArray = [];
             if (ten_vai_tro === 'Giáo viên') {
                 if (!loai_bang_cap || (Array.isArray(loai_bang_cap) && loai_bang_cap.length === 0) || (typeof loai_bang_cap === 'string' && loai_bang_cap.trim() === '')) {
+                    if (tempFilePath && fs.existsSync(tempFilePath)) {
+                        fs.unlinkSync(tempFilePath);
+                    }
                     const danhSachTaiKhoan = await TaiKhoanModel.hienThiTaiKhoan();
                     return res.render('admin_index', {
                         page: 'pages/quanLyTaiKhoan',
@@ -112,16 +135,57 @@ class TaiKhoanController {
                 mat_khau,
                 ten_vai_tro,
                 loai_bang_cap: loaiBangCapArray,
+                anh_dai_dien: 'default_avatar.jpg'
             });
-
-            if (result.success) {
-                return res.redirect(`/tai-khoan?message=Thêm tài khoản thành công&messageType=success`);
-            } else {
+            //console.log('Kết quả thêm tài khoản:', result);
+            if (!result.success) {
+                if (tempFilePath && fs.existsSync(tempFilePath)) {
+                    fs.unlinkSync(tempFilePath);
+                }
                 return res.redirect(`/tai-khoan?message=Thêm tài khoản thất bại&messageType=error`);
             }
+            if (!result.insertId) {
+                throw new Error('Không lấy được insertId sau khi thêm tài khoản');
+            }
+            // Xử lý ảnh đại diện sau khi có ID tài khoản
+            let finalImageName = 'default_avatar.jpg';
+            if (req.file) {
+                try {
+                    const taiKhoanId = result.insertId;
+                    const extension = path.extname(req.file.originalname).toLowerCase();
+                    // Tạo tên file mới theo format: taiKhoanId_hoTen.jpg
+                    const cleanName = toAlias(ho_ten);
+                    finalImageName = `${taiKhoanId}_${cleanName}${extension}`;
+                    // Đường dẫn file cuối cùng
+                    const finalPath = path.join(__dirname, '../images', finalImageName);
+                    // Di chuyển và đổi tên file từ tạm sang tên cuối cùng
+                    fs.renameSync(tempFilePath, finalPath);
+                    // Cập nhật tên ảnh trong database
+                    await TaiKhoanModel.capNhatAnhDaiDien(taiKhoanId, finalImageName);
+                    //console.log(`Ảnh đã được lưu: ${finalImageName}`);
+                } catch (imageError) {
+                    console.error('Lỗi xử lý ảnh:', imageError);
+                    // Xóa file tạm nếu có lỗi
+                    if (tempFilePath && fs.existsSync(tempFilePath)) {
+                        fs.unlinkSync(tempFilePath);
+                    }
+                    // Vẫn giữ tài khoản nhưng dùng ảnh mặc định
+                    //console.log('Sử dụng ảnh mặc định do lỗi xử lý ảnh upload');
+                }
+            }
+            return res.redirect(`/tai-khoan?message=Thêm tài khoản thành công&messageType=success`);
+
         } catch (error) {
-            console.error(error);
-            res.redirect(`/tai-khoan?message=Thêm tài khoản thất bại&messageType=error`);
+            console.error('Lỗi thêm tài khoản:', error);
+
+            if (tempFilePath && fs.existsSync(tempFilePath)) {
+                try {
+                    fs.unlinkSync(tempFilePath);
+                } catch (unlinkError) {
+                    console.error('Lỗi xóa file tạm:', unlinkError);
+                }
+            }
+            return res.redirect(`/tai-khoan?message=Thêm tài khoản thất bại&messageType=error`);
         }
     }
     static async xoaTaiKhoan(req, res) {
@@ -146,6 +210,8 @@ class TaiKhoanController {
                 ? req.body.loai_bang_cap
                 : (req.body.loai_bang_cap ? [req.body.loai_bang_cap] : []),
         };
+        let tempFilePath = null;
+
         try {
             const danhSachTaiKhoan = await TaiKhoanModel.hienThiTaiKhoan();
             if (danhSachTaiKhoan.some(tk => tk.email === taiKhoan.email && tk.tai_khoan_id != id)) {
@@ -178,10 +244,37 @@ class TaiKhoanController {
                 });
             }
 
+            let oldAvatar = req.body.current_anh_dai_dien || 'default_avatar.jpg';
+            let anhDaiDien = oldAvatar;
+            if (req.file) {
+                tempFilePath = path.join(__dirname, '../images', req.file.filename);
+                const extension = path.extname(req.file.originalname).toLowerCase();
+                const cleanName = toAlias(taiKhoan.ho_ten);
+                if (oldAvatar === 'default_avatar.jpg') {
+                    anhDaiDien = `${id}_${cleanName}${extension}`;
+                    const finalPath = path.join(__dirname, '../images', anhDaiDien);
+                    fs.renameSync(tempFilePath, finalPath);
+                } else {
+                    // Overwrite the old custom avatar file
+                    const oldImagePath = path.join(__dirname, '../images', oldAvatar);
+                    if (fs.existsSync(oldImagePath)) {
+                        fs.unlinkSync(oldImagePath);
+                    }
+                    fs.renameSync(tempFilePath, oldImagePath);
+                    anhDaiDien = oldAvatar;
+                }
+            }
+
+            // Thêm anhDaiDien vào taiKhoan để cập nhật
+            taiKhoan.anh_dai_dien = anhDaiDien;
             await TaiKhoanModel.suaTaiKhoan(id, taiKhoan);
+
             res.redirect('/tai-khoan?message=Cập nhật thành công&messageType=success');
         } catch (error) {
             console.error(error);
+            if (tempFilePath && fs.existsSync(tempFilePath)) {
+                fs.unlinkSync(tempFilePath); // Xóa file tạm nếu có lỗi
+            }
             res.redirect(`/tai-khoan?message=Cập nhật thất bại&messageType=error`);
         }
     }
@@ -229,10 +322,28 @@ class TaiKhoanController {
             if (!taiKhoan) {
                 return res.status(404).json({ message: 'Không tìm thấy tài khoản' });
             }
+            const anhDaiDien = taiKhoan.anh_dai_dien || 'default_avatar.jpg';
+            taiKhoan.anh_dai_dien = `/images/${anhDaiDien}`;
             res.json(taiKhoan);
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: 'Lỗi server' });
+        }
+    }
+    static async locTheoVaiTro(req, res) {
+        try {
+            const ten_vai_tro = req.query.ten_vai_tro || '';
+            const dsTaiKhoan = await TaiKhoanModel.layTaiKhoanTheoVaiTro(ten_vai_tro);
+            return res.render('admin_index', {
+                page: 'pages/quanLyTaiKhoan',
+                danhSachTaiKhoan: dsTaiKhoan || [],
+                message: '',
+                messageType: 'info'
+            })
+        }
+        catch (error) {
+            console.error();
+            res.status(500).send('Lỗi');
         }
     }
 }

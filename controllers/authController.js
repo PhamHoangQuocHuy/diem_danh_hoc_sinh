@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
 const authModel = require('../models/authModel');
-require('dotenv').config();
 
 class AuthController {
     static async dangNhap(req, res) {
@@ -18,7 +17,7 @@ class AuthController {
                     ten_vai_tro: taiKhoan.ten_vai_tro
                 },
                 process.env.JWT_ACCESS_SECRET,
-                { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
+                { expiresIn: process.env.ACCESS_TOKEN_EXPIRY },
             )
             // Tạo refresh token
             const refreshToken = jwt.sign(
@@ -40,9 +39,9 @@ class AuthController {
             });
             if (taiKhoan.ten_vai_tro === 'Admin') {
                 return res.redirect('/admin-dashboard');
-            }else if (taiKhoan.ten_vai_tro === 'Giáo viên' || taiKhoan.ten_vai_tro === 'Phụ huynh' || taiKhoan.ten_vai_tro === 'Hiệu trưởng') {
+            } else if (taiKhoan.ten_vai_tro === 'Giáo viên' || taiKhoan.ten_vai_tro === 'Phụ huynh' || taiKhoan.ten_vai_tro === 'Hiệu trưởng') {
                 return res.redirect('/user-dashboard');
-            }else {
+            } else {
                 return res.status(403).render('auth/login', { message: 'Bạn không có quyền truy cập', messageType: 'error' });
             }
         }

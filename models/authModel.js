@@ -1,6 +1,5 @@
 const pool = require('../config/connect_database');
 const bcrypt = require('bcrypt');
-const saltRounds = 10;
 
 class AuthModel {
     static async kiemTraDangNhap(email, mat_khau) {
