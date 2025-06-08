@@ -78,12 +78,23 @@
             <i class="fas fa-plus"></i> Thêm tài khoản
         </button>
     </div>
-
-    <% if (message) { %>
+    <div style="float: right;" class="inline-flex">
+        <!-- Thêm input file và nút upload -->
+        <div class="mb-4 col-span-2">
+            <label for="excelFile" class="block text-sm font-medium mb-2">Tải lên file Excel</label>
+            <input type="file" id="excelFile" name="excelFile" accept=".xlsx, .xls" style="margin-right: 40px; width: 480px;"
+                class="border border-gray-300 rounded-md px-4 py-2 w-200px focus:outline-none focus:ring focus:ring-blue-500" />
+        </div>
+        <button type="button" onclick="uploadExcel()" style="padding-left:35px;padding-right: 20px; height: 50px; margin-top: 20px;"
+            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-green-400 mt-4">
+            Thêm hàng loạt
+        </button>
+    </div>
+    <!-- <% if (message) { %>
         <div class="message-box message-<%= messageType %>">
             <%= message %>
         </div>
-        <% } %>
+        <% } %> -->
 
             <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
                 <thead>
@@ -699,5 +710,48 @@
     const tenVaiTro = urlParams.get('ten_vai_tro');
     if (tenVaiTro) {
         document.getElementById('vaiTroSelect').value = tenVaiTro;
+    }
+</script>
+<!-- THÊM HÀNG LOẠT -->
+<script>
+    async function uploadExcel() {
+        const fileInput = document.getElementById('excelFile');
+        const file = fileInput.files[0];
+        if (!file) {
+            alert('Vui lòng chọn file Excel!');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async function (e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+            // Gửi dữ liệu lên server
+            try {
+                const response = await fetch('/tai-khoan/them-hang-loat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(jsonData),
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert('Thêm tài khoản thành công!');
+                    toggleAddModal(); // Đóng modal
+                    location.reload(); // Tải lại trang
+                } else {
+                    alert('Lỗi: ' + result.message);
+                }
+            } catch (error) {
+                alert('Lỗi khi tải lên: ' + error.message);
+            }
+        };
+        reader.readAsArrayBuffer(file);
     }
 </script>

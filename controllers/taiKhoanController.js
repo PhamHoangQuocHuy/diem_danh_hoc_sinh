@@ -3,6 +3,8 @@ const TaiKhoanModel = require('../models/taiKhoanModel');
 const { toAlias } = require('../config/multerTaiKhoan');
 const path = require('path');
 const fs = require('fs');
+const { guiMailTaiKhoan } = require('../config/mailConfig')
+
 class TaiKhoanController {
     static async hienThiDanhSachTaiKhoan(req, res) {
         let conn;
@@ -147,6 +149,15 @@ class TaiKhoanController {
             if (!result.insertId) {
                 throw new Error('Không lấy được insertId sau khi thêm tài khoản');
             }
+            // Gửi mail
+            //console.log('Đang gửi mail tới:', email);
+            await guiMailTaiKhoan({
+                to: email,
+                name: ho_ten,
+                email: email,
+                password: mat_khau,
+            })
+
             // Xử lý ảnh đại diện sau khi có ID tài khoản
             let finalImageName = 'default_avatar.jpg';
             if (req.file) {

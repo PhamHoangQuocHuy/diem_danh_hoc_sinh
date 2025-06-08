@@ -1,34 +1,296 @@
-<!-- Top bar -->
+<style>
+    .message-box {
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+        font-size: 25px;
+        border: 1px solid transparent;
+    }
+
+    .message-success {
+        background-color: #d4edda;
+        color: #155724;
+        border-color: #c3e6cb;
+    }
+
+    .message-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border-color: #f5c6cb;
+    }
+
+    .tabs {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .tab-buttons {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .tab-button {
+        padding: 10px 20px;
+        background: #f0f0f0;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+
+    .tab-button.active {
+        background: #007bff;
+        color: white;
+    }
+
+    .tab-pane {
+        display: none;
+    }
+
+    .tab-pane.active {
+        display: block;
+    }
+</style>
+
 <header class="flex items-center justify-between bg-white border-b border-gray-200 px-4 py-3">
     <div class="flex items-center gap-2 text-lg font-semibold select-none">
+        <% if (message) { %>
+        <div class="message-box message-<%= messageType %>">
+            <%= message %>
+        </div>
+        <% } %>
     </div>
     <div class="flex items-center gap-4">
         <div class="relative">
             <div class="flex items-center px-5 gap-2 cursor-pointer select-none" onclick="toggleDropdown()">
                 <img alt="User avatar" class="rounded-full" height="32"
-                    src="https://storage.googleapis.com/a1aa/image/c80a5162-8837-41ac-c679-8e05cff1b886.jpg"
+                    src="/images/<%= taiKhoan.anh_dai_dien ? taiKhoan.anh_dai_dien : 'default_avatar.jpg' %>"
                     width="32" />
-                <span class="hidden sm:inline text-gray-600 text-sm fw-bold">
+                <span class="hidden sm:inline text-gray-600 text-sm fw-bold"
+                    style="font-size: 20px; font-weight: bold;padding-left: 10px;">
                     <%= taiKhoan.ho_ten %>
                 </span>
                 <i class="fas fa-chevron-down text-gray-400 hidden sm:inline"></i>
             </div>
             <div id="dropdownMenu" class="absolute right-0 mt-2 w-40 bg-white border rounded shadow-md hidden">
-                <a href="/settings" class="block px-4 py-2 hover:bg-gray-100">Cài đặt</a>
+                <a href="#" onclick="event.preventDefault(); toggleSettingsModal();"
+                    class="block px-4 py-2 hover:bg-gray-100">Cài đặt</a>
                 <a href="/logout" class="block px-4 py-2 hover:bg-gray-100">Đăng xuất</a>
+            </div>
+
+            <!-- Modal Cài đặt tài khoản -->
+            <div id="settingsModal"
+                class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden overflow-auto p-4">
+                <div class="bg-white rounded-lg p-6 w-full max-w-4xl shadow-lg max-h-[90vh] overflow-auto">
+                    <h2 class="text-xl font-semibold mb-4">Cài đặt tài khoản</h2>
+                    <form id="settingsForm" method="post"
+                        action="/settings/tai-khoan-cap-nhat/<%= taiKhoan.tai_khoan_id %>"
+                        enctype="multipart/form-data">
+                        <input type="hidden" id="settingsAccountId" name="id" value="<%= taiKhoan.tai_khoan_id %>" />
+                        <div class="tabs">
+                            <div class="tab-buttons">
+                                <button type="button" class="tab-button active" onclick="openTab('tab1')">Thông tin cá
+                                    nhân</button>
+                                <button type="button" class="tab-button" onclick="openTab('tab2')">Đổi mật khẩu</button>
+                            </div>
+                            <div class="tab-content">
+                                <!-- Tab 1: Thông tin cá nhân -->
+                                <div id="tab1" class="tab-pane active">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="mb-4">
+                                            <label for="settingsFullName" class="block text-sm font-medium">Họ
+                                                tên</label>
+                                            <input type="text" id="settingsFullName" name="ho_ten"
+                                                value="<%= taiKhoan.ho_ten %>" readonly
+                                                class="border border-gray-200 bg-gray-100 rounded-md px-4 py-2 w-full text-gray-600" />
+                                        </div>
+                                        <div class="mb-4">
+                                            <label for="settingsEmail" class="block text-sm font-medium">Email</label>
+                                            <input type="email" id="settingsEmail" name="email"
+                                                value="<%= taiKhoan.email %>" readonly
+                                                class="border border-gray-200 bg-gray-100 rounded-md px-4 py-2 w-full text-gray-600" />
+                                        </div>
+                                        <div class="mb-4">
+                                            <label for="settingsPhone" class="block text-sm font-medium">Số điện
+                                                thoại</label>
+                                            <input type="tel" id="settingsPhone" name="sdt"
+                                                value="<%= taiKhoan.sdt || '' %>" required pattern="^0\d{9}$"
+                                                title="Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số"
+                                                class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                                        </div>
+                                        <div class="mb-4">
+                                            <label for="settingsDob" class="block text-sm font-medium">Ngày sinh</label>
+                                            <input type="date" id="settingsDob" name="ngaysinh"
+                                                value="<%= taiKhoan.ngaysinh ? new Date(taiKhoan.ngaysinh).toISOString().split('T')[0] : '' %>"
+                                                readonly
+                                                class="border border-gray-200 bg-gray-100 rounded-md px-4 py-2 w-full text-gray-600" />
+                                        </div>
+                                        <div class="mb-4">
+                                            <label for="settingsGender" class="block text-sm font-medium">Giới
+                                                tính</label>
+                                            <input type="text" id="settingsGender"
+                                                value="<%= taiKhoan.gioi_tinh || '' %>" readonly
+                                                class="border border-gray-200 bg-gray-100 rounded-md px-4 py-2 w-full text-gray-600" />
+                                        </div>
+                                        <div class="mb-4">
+                                            <label for="settingsAddress" class="block text-sm font-medium">Địa
+                                                chỉ</label>
+                                            <input type="text" id="settingsAddress" name="dia_chi"
+                                                value="<%= taiKhoan.dia_chi || '' %>" required
+                                                class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                                        </div>
+                                        <div class="mb-4 col-span-2">
+                                            <label for="settingsIdNumber" class="block text-sm font-medium">Số
+                                                CMND/CCCD</label>
+                                            <input type="text" id="settingsIdNumber"
+                                                value="<%= taiKhoan.so_cmnd || '' %>" readonly
+                                                class="border border-gray-200 bg-gray-100 rounded-md px-4 py-2 w-full text-gray-600" />
+                                        </div>
+                                        <% if (taiKhoan.ten_vai_tro==='Giáo viên' && taiKhoan.bang_cap) { %>
+                                            <div class="mb-4 col-span-2">
+                                                <label for="settingsQualifications"
+                                                    class="block text-sm font-medium">Bằng cấp</label>
+                                                <input type="text" id="settingsQualifications"
+                                                    value="<%= taiKhoan.bang_cap.map(bc => bc.loai_bang_cap).join(', ') %>"
+                                                    readonly
+                                                    class="border border-gray-200 bg-gray-100 rounded-md px-4 py-2 w-full text-gray-600" />
+                                            </div>
+                                            <% } %>
+                                                <div class="mb-4 col-span-2">
+                                                    <label for="settingsAvatar"
+                                                        class="block text-sm font-medium mb-2">Hình đại diện</label>
+                                                    <label
+                                                        class="image-placeholder w-32 h-32 border-2 border-dashed border-gray-700 rounded-md flex items-center justify-center cursor-pointer hover:border-blue-700 transition"
+                                                        for="settingsAvatarInput" title="Click để chọn ảnh">
+                                                        <span id="settingsAvatarPreviewText" class="text-gray-400">Chọn
+                                                            ảnh</span>
+                                                        <img id="settingsAvatarPreview"
+                                                            class="mt-2 w-32 h-32 object-cover rounded-md hidden"
+                                                            src="<%= taiKhoan.anh_dai_dien || '/images/default_avatar.jpg' %>"
+                                                            onerror="this.onerror=null;this.src='/images/default_avatar.jpg'" />
+                                                        <input type="file" id="settingsAvatarInput" name="anh_dai_dien"
+                                                            accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="hidden"
+                                                            onchange="previewSettingsAvatar(this)" />
+                                                    </label>
+                                                    <input type="hidden" id="settingsCurrentAvatar"
+                                                        name="current_anh_dai_dien"
+                                                        value="<%= taiKhoan.anh_dai_dien || 'default_avatar.jpg' %>" />
+                                                </div>
+                                    </div>
+                                </div>
+                                <!-- Tab 2: Đổi mật khẩu -->
+                                <div id="tab2" class="tab-pane hidden">
+                                    <div class="grid grid-cols-1 gap-4">
+                                        <div class="mb-4">
+                                            <label for="settingsCurrentPassword"
+                                                class="block text-sm font-medium text-gray-700">Mật khẩu cũ</label>
+                                            <input type="password" id="settingsCurrentPassword" name="mat_khau_cu"
+                                                class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                                        </div>
+                                        <div class="mb-4">
+                                            <label for="settingsNewPassword"
+                                                class="block text-sm font-medium text-gray-700">Mật khẩu mới</label>
+                                            <input type="password" id="settingsNewPassword" name="mat_khau_moi"
+                                                class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                                        </div>
+                                        <div class="mb-4">
+                                            <label for="settingsConfirmPassword"
+                                                class="block text-sm font-medium text-gray-700">Xác nhận mật
+                                                khẩu</label>
+                                            <input type="password" id="settingsConfirmPassword" name="mat_khau_xac_nhan"
+                                                class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex justify-end gap-4">
+                            <button type="button" onclick="toggleSettingsModal()"
+                                class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-gray-400">
+                                Hủy
+                            </button>
+                            <button type="submit"
+                                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-blue-400">
+                                Lưu
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </header>
+
+
 <script>
+    function toggleSettingsModal() {
+        const modal = document.getElementById('settingsModal');
+        modal.classList.toggle('hidden');
+
+        if (!modal.classList.contains('hidden')) {
+            document.getElementById('settingsAccountId').value = "<%= taiKhoan.tai_khoan_id %>";
+            document.getElementById('settingsFullName').value = "<%= taiKhoan.ho_ten %>";
+            document.getElementById('settingsEmail').value = "<%= taiKhoan.email %>";
+            document.getElementById('settingsPhone').value = "<%= taiKhoan.sdt || '' %>";
+            if ("<%= taiKhoan.ngaysinh %>") {
+                const dob = new Date("<%= taiKhoan.ngaysinh %>").toISOString().split('T')[0];
+                document.getElementById('settingsDob').value = dob;
+            }
+            document.getElementById('settingsGender').value = "<%= taiKhoan.gioi_tinh || '' %>";
+            document.getElementById('settingsAddress').value = "<%= taiKhoan.dia_chi || '' %>";
+            document.getElementById('settingsIdNumber').value = "<%= taiKhoan.so_cmnd || '' %>";
+
+            const avatarPreview = document.getElementById('settingsAvatarPreview');
+            const avatarPreviewText = document.getElementById('settingsAvatarPreviewText');
+            const currentAvatar = document.getElementById('settingsCurrentAvatar');
+            const anhDaiDien = "<%= taiKhoan.anh_dai_dien ? taiKhoan.anh_dai_dien : 'default_avatar.jpg' %>";
+            if (anhDaiDien) {
+                avatarPreview.src = `/images/${anhDaiDien}`;
+                avatarPreview.classList.remove('hidden');
+                avatarPreviewText.classList.add('hidden');
+            } else {
+                avatarPreview.src = '/images/default_avatar.jpg';
+                avatarPreview.classList.remove('hidden');
+                avatarPreviewText.classList.add('hidden');
+            }
+            currentAvatar.value = anhDaiDien;
+
+            document.getElementById('settingsCurrentPassword').value = '';
+            document.getElementById('settingsNewPassword').value = '';
+            document.getElementById('settingsConfirmPassword').value = '';
+        }
+    }
+
     function toggleDropdown() {
         document.getElementById("dropdownMenu").classList.toggle("hidden");
     }
 
-    document.addEventListener("click", function (event) {
-        const dropdown = document.getElementById("dropdownMenu");
-        if (!event.target.closest(".relative")) {
-            dropdown.classList.add("hidden");
+    function openTab(tabId) {
+        const tabPanes = document.getElementsByClassName('tab-pane');
+        const tabButtons = document.getElementsByClassName('tab-button');
+        for (let i = 0; i < tabPanes.length; i++) {
+            tabPanes[i].classList.remove('active');
         }
-    });
+        for (let i = 0; i < tabButtons.length; i++) {
+            tabButtons[i].classList.remove('active');
+        }
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+    function previewSettingsAvatar(input) {
+        const preview = document.getElementById('settingsAvatarPreview');
+        const text = document.getElementById('settingsAvatarPreviewText');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+                text.classList.add('hidden');
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
 </script>

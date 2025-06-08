@@ -300,6 +300,22 @@ class TaiKhoanModel {
             };
         }
     }
-    
+    static async soDienThoaiDaTonTai(sdt, taiKhoanId = null) {
+        let sql = 'SELECT tai_khoan_id FROM tai_khoan WHERE sdt = ?';
+        const params = [sdt];
+
+        if (taiKhoanId) {
+            sql += ' AND tai_khoan_id != ?';
+            params.push(taiKhoanId);
+        }
+
+        const [rows] = await pool.execute(sql, params);
+
+        if (rows.length > 0) {
+            // Có tồn tại số điện thoại trùng (ngoại trừ tài khoản hiện tại nếu có)
+            return true;
+        }
+        return false; // Không trùng
+    }    
 }
 module.exports = TaiKhoanModel;
