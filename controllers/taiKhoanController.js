@@ -372,15 +372,10 @@ class TaiKhoanController {
             const filePath = req.file.path;
             const workbook = xlsx.readFile(filePath);
             const sheetName = workbook.SheetNames[0];
-            const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '' });
+            const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
             const danhSachTaiKhoan = [];
             const danhSachLoi = [];
-
-            for (const [index, row] of data.entries()) {
-                console.log(`Dòng ${index + 1} keys:`, Object.keys(row));
-                console.log(`ten_vai_tro của dòng ${index + 1}:`, row.ten_vai_tro);
-            }
             for (const row of data) {
                 const {
                     ho_ten,
@@ -395,7 +390,7 @@ class TaiKhoanController {
                     loai_bang_cap,
                 } = row;
                 // Xử lý định dạng ngày sinh
-                console.log('Dòng đang đọc:', row);
+                //console.log('Dòng đang đọc:', row);
 
                 let ngaySinhFormatted = '';
                 if (typeof ngaysinh === 'number') {
@@ -441,9 +436,9 @@ class TaiKhoanController {
                     loai_bang_cap: []
                 };
 
-                console.log(`Đọc tài khoản: ${ho_ten}, email: ${email}, ngày sinh: ${ngaySinhFormatted}`);
+                //console.log(`Đọc tài khoản: ${ho_ten}, email: ${email}, ngày sinh: ${ngaySinhFormatted}`);
 
-                if (ten_vai_tro.toLowerCase() === 'giáo viên' && loai_bang_cap) {
+                if (ten_vai_tro === 'Giáo viên' && loai_bang_cap) {
                     taiKhoan.loai_bang_cap = loai_bang_cap.split(',').map(bc => bc.trim());
                 }
 
@@ -455,18 +450,15 @@ class TaiKhoanController {
                 await TaiKhoanModel.themHangLoat(danhSachTaiKhoan);
 
                 // Gửi email cho từng tài khoản
-                // for (const tk of danhSachTaiKhoan) {
-                //     await guiMailTaiKhoan({
-                //         to: tk.email,
-                //         name: tk.ho_ten,
-                //         email: tk.email,
-                //         password: tk.mat_khau,
-                //     });
-                // }
+                for (const tk of danhSachTaiKhoan) {
+                    await guiMailTaiKhoan({
+                        to: tk.email,
+                        name: tk.ho_ten,
+                        email: tk.email,
+                        password: tk.mat_khau,
+                    });
+                }
             }
-
-            //const danhSachHienThi = await TaiKhoanModel.hienThiTaiKhoan();
-
             return res.status(200).json({
                 message: `Đã thêm ${danhSachTaiKhoan.length} tài khoản. Có ${danhSachLoi.length} lỗi.`,
                 soLuongThanhCong: danhSachTaiKhoan.length,

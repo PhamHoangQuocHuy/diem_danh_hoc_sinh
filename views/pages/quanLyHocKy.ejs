@@ -2,13 +2,27 @@
     <h1 class="text-3xl font-bold mb-6 text-center">Quản lý học kỳ</h1>
 
     <div class="mb-4 flex justify-between items-center">
+        <!-- TÌM KIẾM -->
         <div class="relative w-1/3">
-            <input type="text" id="search" placeholder="Tìm kiếm học kỳ..."
-                class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-            <button class="absolute right-0 top-0 mt-2 mr-2" aria-label="Search">
-                <i class="fas fa-search text-gray-500"></i>
-            </button>
+            <form action="/hoc-ky/tim" method="get">
+                <input type="text" id="search" name="tim_kiem" placeholder="Nhập năm học cần tìm..."
+                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                <button class="absolute right-0 top-0 mt-2 mr-2" aria-label="Search">
+                    <i class="fas fa-search text-gray-500"></i>
+                </button>
+            </form>
         </div>
+        <!-- LỌC -->
+        <form id="filterForm" action="/hoc-ky/loc" method="get">
+            <select id="hocKySelect" name="ten_hoc_ky"
+                class="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring focus:ring-blue-500">
+                <option value="" selected disabled>Chọn học kỳ</option>
+                <option value="Học kỳ 1">Học kỳ 1</option>
+                <option value="Học kỳ 2">Học kỳ 2</option>
+            </select>
+            <button type="submit" class="ml-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Lọc</button>
+        </form>
+
         <button onclick="toggleAddModal()"
             class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors shadow-md focus:outline-none focus:ring focus:ring-blue-400 flex items-center gap-2">
             <i class="fas fa-plus"></i> Thêm học kỳ
@@ -19,6 +33,7 @@
         <thead>
             <tr class="bg-gray-200">
                 <th class="py-2 px-4 border-b text-left">ID</th>
+                <th class="py-2 px-4 border-b text-left">Tên trường</th>
                 <th class="py-2 px-4 border-b text-left">Tên học kỳ</th>
                 <th class="py-2 px-4 border-b text-left">Năm học</th>
                 <th class="py-2 px-4 border-b text-left">Ngày bắt đầu</th>
@@ -27,44 +42,58 @@
             </tr>
         </thead>
         <tbody id="semesterTableBody">
-            <tr class="hover:bg-gray-50 transition-colors">
-                <td class="py-2 px-4 border-b">1</td>
-                <td class="py-2 px-4 border-b">Học kỳ 1</td>
-                <td class="py-2 px-4 border-b">2025</td>
-                <td class="py-2 px-4 border-b">2025-09-01</td>
-                <td class="py-2 px-4 border-b">2025-12-31</td>
-                <td class="py-2 px-4 border-b">
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                        aria-label="Sửa học kỳ 1">
-                        <i class="fas fa-edit mr-1"></i> Sửa
-                    </button>
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300 transition-colors"
-                        aria-label="Xóa học kỳ 1">
-                        <i class="fas fa-trash-alt mr-1"></i> Xóa
-                    </button>
-                </td>
-            </tr>
-            <tr class="hover:bg-gray-50 transition-colors">
-                <td class="py-2 px-4 border-b">2</td>
-                <td class="py-2 px-4 border-b">Học kỳ 2</td>
-                <td class="py-2 px-4 border-b">2025</td>
-                <td class="py-2 px-4 border-b">2026-01-01</td>
-                <td class="py-2 px-4 border-b">2026-05-31</td>
-                <td class="py-2 px-4 border-b">
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                        aria-label="Sửa học kỳ 2">
-                        <i class="fas fa-edit mr-1"></i> Sửa
-                    </button>
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300 transition-colors"
-                        aria-label="Xóa học kỳ 2">
-                        <i class="fas fa-trash-alt mr-1"></i> Xóa
-                    </button>
-                </td>
-            </tr>
+            <% if(danhSachHocKy && danhSachHocKy.length> 0) { %>
+                <% danhSachHocKy.forEach(hocKy=> { %>
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="py-2 px-4 border-b">
+                            <%= hocKy.hoc_ky_id %>
+                        </td>
+                        <td class="py-2 px-4 border-b">
+                            <%= danhSachTruongHoc.find(truongHoc=> truongHoc.truong_hoc_id ===
+                                hocKy.truong_hoc_id).ten_truong %>
+                        </td>
+                        <td class="py-2 px-4 border-b">
+                            <%= hocKy.ten_hoc_ky %>
+                        </td>
+                        <td class="py-2 px-4 border-b">
+                            <%= hocKy.nam_hoc %>
+                        </td>
+                        <td class="py-2 px-4 border-b">
+                            <%= formatDate(hocKy.ngay_bat_dau) %>
+                        </td>
+                        <td class="py-2 px-4 border-b">
+                            <%= formatDate(hocKy.ngay_ket_thuc) %>
+                        </td>
+                        <td class="py-2 px-4 border-b">
+                            <!-- SỬA -->
+                            <button onclick="toggleEditModal(this)" data-id="<%= hocKy.hoc_ky_id %>"
+                                data-ten_truong_hoc="<%= danhSachTruongHoc.find(truongHoc => truongHoc.truong_hoc_id === hocKy.truong_hoc_id).ten_truong %>"
+                                data-ten_hoc_ky="<%= hocKy.ten_hoc_ky %>" data-nam_hoc="<%= hocKy.nam_hoc %>"
+                                data-ngay_bat_dau="<%= hocKy.ngay_bat_dau %>"
+                                data-ngay_ket_thuc="<%= hocKy.ngay_ket_thuc %>"
+                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
+                                aria-label="Sửa học kỳ 1">
+                                <i class="fas fa-edit mr-1"></i> Sửa
+                            </button>
+                            <!-- XÓA -->
+                            <form action="/hoc-ky/xoa/<%= hocKy.hoc_ky_id %>" method="post" class="inline-block"
+                                onsubmit="return confirm('Bạn có chắc chắn muốn xóa học kỳ này không?')">
+                                <button
+                                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300 transition-colors"
+                                    aria-label="Xóa học kỳ 1">
+                                    <i class="fas fa-trash-alt mr-1"></i> Xóa
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="6" class="py-4 px-6 border-b text-center">
+                                    Không có học kỳ
+                                </td>
+                            </tr>
+                            <% } %>
         </tbody>
     </table>
 
@@ -72,27 +101,46 @@
     <div id="addModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
         <div class="bg-white rounded-lg p-6 w-1/3 shadow-lg">
             <h2 class="text-xl font-semibold mb-4">Thêm học kỳ</h2>
-            <form id="addSemesterForm">
+            <form id="addSemesterForm" method="post" action="/hoc-ky/them">
                 <div class="mb-4">
                     <label for="semesterName" class="block text-sm font-medium">Tên học kỳ</label>
-                    <input type="text" id="semesterName" required
-                        class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    <select id="semesterName" name="ten_hoc_ky" required
+                        class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500">
+                        <option value="" disabled selected>-- Chọn học kỳ --</option>
+                        <option value="Học kỳ 1">Học kỳ 1</option>
+                        <option value="Học kỳ 2">Học kỳ 2</option>
+                    </select>
                 </div>
                 <div class="mb-4">
                     <label for="academicYear" class="block text-sm font-medium">Năm học</label>
-                    <input type="text" id="academicYear" required
+                    <input type="text" id="academicYear" name="nam_hoc" required
                         class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
                 </div>
                 <div class="mb-4">
                     <label for="startDate" class="block text-sm font-medium">Ngày bắt đầu</label>
-                    <input type="date" id="startDate" required
+                    <input type="date" id="startDate" name="ngay_bat_dau" required
                         class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
                 </div>
                 <div class="mb-4">
                     <label for="endDate" class="block text-sm font-medium">Ngày kết thúc</label>
-                    <input type="date" id="endDate" required
+                    <input type="date" id="endDate" name="ngay_ket_thuc" required
                         class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
                 </div>
+                <div class="mb-4">
+                    <label for="schoolSelect" class="block text-sm font-medium">Chọn trường</label>
+                    <select name="truong_hoc_id" id="schoolSelect" required
+                        class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500"
+                        onchange="updateSelectedSchoolName()">
+                        <option value="" selected disabled>-- Chọn trường --</option>
+                        <% danhSachTruongHoc.forEach(truong=> { %>
+                            <option value="<%= truong.truong_hoc_id %>">
+                                <%= truong.ten_truong %>
+                            </option>
+                            <% }) %>
+                    </select>
+
+                </div>
+
                 <div class="flex justify-end">
                     <button type="button" onclick="toggleAddModal()"
                         class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md mr-2 hover:bg-gray-400 transition-colors">Hủy</button>
@@ -102,11 +150,118 @@
             </form>
         </div>
     </div>
-</div>
+    <!-- Modal Sửa học kỳ -->
+    <div id="editModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+        <div class="bg-white rounded-lg p-6 w-1/3 shadow-lg">
+            <h2 class="text-xl font-semibold mb-4">Sửa học kỳ</h2>
+            <form id="editSemesterForm" method="post" action="/hoc-ky/sua/">
+                <input type="hidden" id="editSemesterId" name="id">
+                <div class="mb-4">
+                    <label for="editSemesterName" class="block text-sm font-medium">Tên học kỳ</label>
+                    <select id="editSemesterName" name="ten_hoc_ky" required
+                        class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500">
+                        <option value="Học kỳ 1">Học kỳ 1</option>
+                        <option value="Học kỳ 2">Học kỳ 2</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="editAcademicYear" class="block text-sm font-medium">Năm học</label>
+                    <input type="text" id="editAcademicYear" name="nam_hoc" required
+                        class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                </div>
+                <div class="mb-4">
+                    <label for="editStartDate" class="block text-sm font-medium">Ngày bắt đầu</label>
+                    <input type="date" id="editStartDate" name="ngay_bat_dau" required
+                        class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                </div>
+                <div class="mb-4">
+                    <label for="editEndDate" class="block text-sm font-medium">Ngày kết thúc</label>
+                    <input type="date" id="editEndDate" name="ngay_ket_thuc" required
+                        class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                </div>
+                <div class="mb-4">
+                    <label for="editSchoolSelect" class="block text-sm font-medium">Chọn trường</label>
+                    <select name="truong_hoc_id" id="editSchoolSelect" required
+                        class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500">
+                        <% danhSachTruongHoc.forEach(truong=> { %>
+                            <option value="<%= truong.truong_hoc_id %>">
+                                <%= truong.ten_truong %>
+                            </option>
+                            <% }) %>
+                    </select>
+                </div>
+                <div class="flex justify-end">
+                    <button type="button" onclick="toggleEditModal()"
+                        class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md mr-2 hover:bg-gray-400 transition-colors">Hủy</button>
+                    <button type="submit"
+                        class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors">Cập
+                        nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
+</div>
+<!-- THÊM -->
 <script>
     function toggleAddModal() {
         const modal = document.getElementById("addModal");
         modal.classList.toggle("hidden");
     }
 </script>
+<!-- SỬA -->
+<script>
+    function toggleEditModal(button = null, event) {
+        if (event) event.preventDefault();
+
+        const modal = document.getElementById("editModal");
+        modal.classList.toggle("hidden");
+
+        if (button) {
+            const id = button.getAttribute('data-id');
+
+            // Lấy dữ liệu từ dòng bảng
+            const row = button.closest("tr");
+            const cells = row.querySelectorAll("td");
+
+            const tenHocKy = cells[2].innerText.trim();
+            const namHoc = cells[3].innerText.trim();
+            const ngayBatDau = convertToInputDate(cells[4].innerText.trim());
+            const ngayKetThuc = convertToInputDate(cells[5].innerText.trim());
+            const tenTruong = cells[1].innerText.trim();
+
+            // Gán dữ liệu vào form sửa
+            document.getElementById("editSemesterId").value = id;
+            document.getElementById("editSemesterName").value = tenHocKy;
+            document.getElementById("editAcademicYear").value = namHoc;
+            document.getElementById("editStartDate").value = ngayBatDau;
+            document.getElementById("editEndDate").value = ngayKetThuc;
+
+            const truongSelect = document.getElementById("editSchoolSelect");
+            for (let option of truongSelect.options) {
+                option.selected = (option.text.trim() === tenTruong);
+            }
+
+            // Cập nhật action form động
+            document.getElementById("editSemesterForm").action = `/hoc-ky/sua/${id}`;
+        }
+    }
+
+
+    function convertToInputDate(dateStr) {
+        const [day, month, year] = dateStr.split("/");
+        return `${year}-${month}-${day}`;
+    }
+</script>
+<script>
+    // Set lại option đã chọn nếu có trên URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const tenHocKy = urlParams.get('ten_hoc_ky');
+    if (tenHocKy) {
+        document.getElementById('hocKySelect').value = tenHocKy;
+    }
+</script>
+
+<% function formatDate(dateStr) { if (!dateStr) return '' ; const d=new Date(dateStr); const
+    day=String(d.getDate()).padStart(2, '0' ); const month=String(d.getMonth() + 1).padStart(2, '0' ); const
+    year=d.getFullYear(); return `${day}/${month}/${year}`; } %>
