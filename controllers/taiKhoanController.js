@@ -3,6 +3,7 @@ const TaiKhoanModel = require('../models/taiKhoanModel');
 const { toAlias } = require('../config/multerTaiKhoan');
 const path = require('path');
 const fs = require('fs');
+const xlsx = require('xlsx');
 const { guiMailTaiKhoan } = require('../config/mailConfig')
 
 class TaiKhoanController {
@@ -254,6 +255,15 @@ class TaiKhoanController {
                     formData: req.body,
                 });
             }
+            if (taiKhoan.ten_vai_tro === 'Giáo viên' && taiKhoan.loai_bang_cap.length === 0) {
+                return res.render('admin_index', {
+                    page: 'pages/quanLyTaiKhoan',
+                    message: 'Giáo viên phải có ít nhất một bằng cấp',
+                    danhSachTaiKhoan,
+                    messageType: 'error',
+                    formData: req.body,
+                });
+            }
 
             let oldAvatar = req.body.current_anh_dai_dien || 'default_avatar.jpg';
             let anhDaiDien = oldAvatar;
@@ -357,5 +367,120 @@ class TaiKhoanController {
             res.status(500).send('Lỗi');
         }
     }
+    static async themHangLoat(req, res) {
+        try {
+            const filePath = req.file.path;
+            const workbook = xlsx.readFile(filePath);
+            const sheetName = workbook.SheetNames[0];
+            const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '' });
+
+            const danhSachTaiKhoan = [];
+            const danhSachLoi = [];
+
+            for (const [index, row] of data.entries()) {
+                console.log(`Dòng ${index + 1} keys:`, Object.keys(row));
+                console.log(`ten_vai_tro của dòng ${index + 1}:`, row.ten_vai_tro);
+            }
+            for (const row of data) {
+                const {
+                    ho_ten,
+                    ngaysinh,
+                    gioi_tinh,
+                    so_cmnd,
+                    dia_chi,
+                    email,
+                    sdt,
+                    mat_khau,
+                    ten_vai_tro,
+                    loai_bang_cap,
+                } = row;
+                // Xử lý định dạng ngày sinh
+                console.log('Dòng đang đọc:', row);
+
+                let ngaySinhFormatted = '';
+                if (typeof ngaysinh === 'number') {
+                    const dateObj = new Date(Math.round((ngaysinh - 25569) * 86400 * 1000));
+                    ngaySinhFormatted = dateObj.toISOString().split('T')[0];
+                } else if (typeof ngaysinh === 'string') {
+                    ngaySinhFormatted = new Date(ngaysinh).toISOString().split('T')[0];
+                } else {
+                    ngaySinhFormatted = '';
+                }
+
+                // Kiểm tra dữ liệu thiếu
+                if (!ho_ten || !ngaysinh || !gioi_tinh || !so_cmnd || !dia_chi || !email || !sdt || !mat_khau || !ten_vai_tro) {
+                    danhSachLoi.push({ email, loi: 'Thiếu dữ liệu' });
+                    continue;
+                }
+
+                // Kiểm tra trùng lặp
+                if (await TaiKhoanModel.kiemTraEmail(email)) {
+                    danhSachLoi.push({ email, loi: 'Email đã tồn tại' });
+                    continue;
+                }
+                if (await TaiKhoanModel.kiemTraSoCMND(so_cmnd)) {
+                    danhSachLoi.push({ email, loi: 'CMND đã tồn tại' });
+                    continue;
+                }
+                if (await TaiKhoanModel.kiemTraSoDienThoai(sdt)) {
+                    danhSachLoi.push({ email, loi: 'Số điện thoại đã tồn tại' });
+                    continue;
+                }
+
+                // Chuẩn bị tài khoản
+                const taiKhoan = {
+                    ho_ten,
+                    ngaysinh: ngaySinhFormatted,
+                    gioi_tinh,
+                    so_cmnd,
+                    dia_chi,
+                    email,
+                    sdt,
+                    mat_khau,
+                    ten_vai_tro,
+                    loai_bang_cap: []
+                };
+
+                console.log(`Đọc tài khoản: ${ho_ten}, email: ${email}, ngày sinh: ${ngaySinhFormatted}`);
+
+                if (ten_vai_tro.toLowerCase() === 'giáo viên' && loai_bang_cap) {
+                    taiKhoan.loai_bang_cap = loai_bang_cap.split(',').map(bc => bc.trim());
+                }
+
+                danhSachTaiKhoan.push(taiKhoan);
+            }
+
+            // Thêm tất cả tài khoản hợp lệ
+            if (danhSachTaiKhoan.length > 0) {
+                await TaiKhoanModel.themHangLoat(danhSachTaiKhoan);
+
+                // Gửi email cho từng tài khoản
+                // for (const tk of danhSachTaiKhoan) {
+                //     await guiMailTaiKhoan({
+                //         to: tk.email,
+                //         name: tk.ho_ten,
+                //         email: tk.email,
+                //         password: tk.mat_khau,
+                //     });
+                // }
+            }
+
+            //const danhSachHienThi = await TaiKhoanModel.hienThiTaiKhoan();
+
+            return res.status(200).json({
+                message: `Đã thêm ${danhSachTaiKhoan.length} tài khoản. Có ${danhSachLoi.length} lỗi.`,
+                soLuongThanhCong: danhSachTaiKhoan.length,
+                soLuongLoi: danhSachLoi.length,
+                danhSachLoi
+            });
+        } catch (error) {
+            console.error('Lỗi khi thêm hàng loạt:', error);
+            return res.status(500).json({
+                message: 'Lỗi khi thêm tài khoản hàng loạt',
+                error: error.message,
+            });
+        }
+    }
+
 }
 module.exports = TaiKhoanController;

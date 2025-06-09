@@ -80,9 +80,20 @@ class TaiKhoanModel {
 
     }
     static async hienThiTaiKhoan() {
-        const query = 'SELECT * FROM tai_khoan';
-        const [rows] = await pool.execute(query);
-        return rows; // Trả về danh sách tài khoản
+        const conn = await pool.getConnection();
+        try {
+            const [rows] = await conn.execute(`
+            SELECT * FROM tai_khoan
+        `);
+            return rows;
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách tài khoản:', error);
+            return [];
+        } finally {
+            conn.release();
+        }
+
+
     }
     static async xoaTaiKhoan(id) {
         const conn = await pool.getConnection();
@@ -300,22 +311,53 @@ class TaiKhoanModel {
             };
         }
     }
-    static async soDienThoaiDaTonTai(sdt, taiKhoanId = null) {
-        let sql = 'SELECT tai_khoan_id FROM tai_khoan WHERE sdt = ?';
-        const params = [sdt];
-
-        if (taiKhoanId) {
-            sql += ' AND tai_khoan_id != ?';
-            params.push(taiKhoanId);
+    static async themHangLoat(danhSachTaiKhoan) {
+        const conn = await pool.getConnection();
+        try {
+            await conn.beginTransaction();
+            for (const taiKhoan of danhSachTaiKhoan) {
+                const {
+                    ho_ten,
+                    ngaysinh,
+                    gioi_tinh,
+                    so_cmnd,
+                    dia_chi,
+                    email,
+                    sdt,
+                    mat_khau,
+                    anh_dai_dien = 'default_avatar.jpg',
+                    ten_vai_tro,
+                    loai_bang_cap = [],
+                } = taiKhoan
+                //console.log('Mat khau truoc khi hash:', mat_khau, 'Kieu du lieu:', typeof mat_khau);
+                const hashedPassword = await bcrypt.hash(mat_khau?.toString() || '', saltRounds);
+                const [result] = await conn.execute(`
+                    INSERT INTO tai_khoan (ho_ten, ngaysinh, gioi_tinh, so_cmnd, dia_chi, email, sdt, mat_khau, anh_dai_dien, ten_vai_tro)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    `, [ho_ten, ngaysinh, gioi_tinh, so_cmnd, dia_chi, email, sdt, hashedPassword, anh_dai_dien, ten_vai_tro]);
+                const taiKhoanId = result.insertId;
+                if (ten_vai_tro === 'Giáo viên') {
+                    const [gvResult] = await conn.execute('INSERT INTO giao_vien (tai_khoan_id) VALUES (?)', [taiKhoanId]);
+                    const giaoVienId = gvResult.insertId;
+                    for (const bangCap of loai_bang_cap) {
+                        await conn.execute('INSERT INTO bang_cap (giao_vien_id, loai_bang_cap) VALUES (?, ?)', [giaoVienId, bangCap]);
+                    }
+                }
+                else if (ten_vai_tro === 'Phụ huynh') {
+                    await conn.execute('INSERT INTO phu_huynh (tai_khoan_id) VALUES (?)', [taiKhoanId]);
+                }
+            }
+            await conn.commit();
+            return { success: true, message: 'Thêm hàng loạt tài khoản thành công', messageType: 'success' }
         }
-
-        const [rows] = await pool.execute(sql, params);
-
-        if (rows.length > 0) {
-            // Có tồn tại số điện thoại trùng (ngoại trừ tài khoản hiện tại nếu có)
-            return true;
+        catch (error) {
+            await conn.rollback();
+            console.error('Lỗi khi thêm hàng lớt tài khoản: ', error);
+            return { success: false, message: 'Thêm hàng loạt tài khoản thất bại', messageType: 'error' }
         }
-        return false; // Không trùng
-    }    
+        finally {
+            conn.release();
+        }
+    }
 }
 module.exports = TaiKhoanModel;

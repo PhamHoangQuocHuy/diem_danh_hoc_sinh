@@ -48,6 +48,7 @@
         display: none;
     }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <div class="container mx-auto p-6">
     <h1 class="text-3xl font-bold mb-6 text-center">Quản lý tài khoản</h1>
     <div class="mb-4 flex justify-between items-center">
@@ -80,385 +81,375 @@
     </div>
     <div style="float: right;" class="inline-flex">
         <!-- Thêm input file và nút upload -->
-        <div class="mb-4 col-span-2">
-            <label for="excelFile" class="block text-sm font-medium mb-2">Tải lên file Excel</label>
-            <input type="file" id="excelFile" name="excelFile" accept=".xlsx, .xls" style="margin-right: 40px; width: 480px;"
-                class="border border-gray-300 rounded-md px-4 py-2 w-200px focus:outline-none focus:ring focus:ring-blue-500" />
-        </div>
-        <button type="button" onclick="uploadExcel()" style="padding-left:35px;padding-right: 20px; height: 50px; margin-top: 20px;"
-            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-green-400 mt-4">
-            Thêm hàng loạt
-        </button>
+        <form action="/tai-khoan/them-hang-loat" method="post" style="display: flex;">
+            <div class="mb-4 col-span-2">
+                <label for="excelFile" class="block text-sm font-medium mb-2">Tải lên file Excel</label>
+                <input type="file" id="excelFile" name="excelFile" accept=".xlsx, .xls"
+                    style="margin-right: 40px; width: 480px;"
+                    class="border border-gray-300 rounded-md px-4 py-2 w-200px focus:outline-none focus:ring focus:ring-blue-500" />
+            </div>
+            <button type="button" onclick="uploadExcel()"
+                style="padding-left:35px;padding-right: 20px; height: 50px; margin-top: 20px;"
+                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-green-400 mt-4">
+                Thêm hàng loạt
+            </button>
+        </form>
     </div>
-    <!-- <% if (message) { %>
-        <div class="message-box message-<%= messageType %>">
-            <%= message %>
-        </div>
-        <% } %> -->
-
-            <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
-                <thead>
-                    <tr class="bg-gray-200">
-                        <th class="py-2 px-4 border-b text-left text-center">ID</th>
-                        <th class="py-2 px-4 border-b text-left text-center">Họ tên</th>
-                        <th class="py-2 px-4 border-b text-left text-center">Ảnh đại diện</th>
-                        <th class="py-2 px-4 border-b text-left text-center">Ngày sinh</th>
-                        <th class="py-2 px-4 border-b text-left text-center">Giới tính</th>
-                        <th class="py-2 px-4 border-b text-left text-center">Hành động</th>
+    <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+        <thead>
+            <tr class="bg-gray-200">
+                <th class="py-2 px-4 border-b text-left text-center">ID</th>
+                <th class="py-2 px-4 border-b text-left text-center">Họ tên</th>
+                <th class="py-2 px-4 border-b text-left text-center">Ảnh đại diện</th>
+                <th class="py-2 px-4 border-b text-left text-center">Ngày sinh</th>
+                <th class="py-2 px-4 border-b text-left text-center">Giới tính</th>
+                <th class="py-2 px-4 border-b text-left text-center">Hành động</th>
+            </tr>
+        </thead>
+        <!-- BODY -->
+        <tbody id="accountTableBody">
+            <% if (danhSachTaiKhoan && danhSachTaiKhoan.length> 0) { %>
+                <% danhSachTaiKhoan.forEach(tk=> { %>
+                    <tr>
+                        <td class="py-2 px-4 border-b text-center">
+                            <%= tk.tai_khoan_id %>
+                        </td>
+                        <td class="py-2 px-4 border-b text-center">
+                            <%= tk.ho_ten %>
+                        </td>
+                        <td class="py-2 px-4 border-b text-center">
+                            <img src="/images/<%= tk.anh_dai_dien ? tk.anh_dai_dien : 'default_avatar.jpg' %>"
+                                alt="Ảnh đại diện" class="w-16 h-16 rounded-md object-cover mx-auto" />
+                        </td>
+                        <td class="py-2 px-4 border-b text-center">
+                            <%= new Date(tk.ngaysinh).toLocaleDateString('vi-VN') %>
+                        </td>
+                        <td class="py-2 px-4 border-b text-center">
+                            <%= tk.gioi_tinh %>
+                        </td>
+                        <td class="py-2 px-4 border-b text-center">
+                            <!-- XEM CHI TIẾT -->
+                            <button data-id="<%= tk.tai_khoan_id %>"
+                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
+                                aria-label="Xem chi tiết tài khoản <%= tk.tai_khoan_id %>"
+                                onclick="viewDetails(this.dataset.id)">
+                                <i class="fas fa-eye mr-1"></i> Xem chi tiết
+                            </button>
+                            <!-- SỬA -->
+                            <button
+                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
+                                aria-label="Sửa tài khoản" onclick='editAccount(this)' data-id="<%= tk.tai_khoan_id %>"
+                                data-ho_ten="<%= tk.ho_ten %>" data-email="<%= tk.email %>" data-sdt="<%= tk.sdt %>"
+                                data-ngaysinh="<%= new Date(tk.ngaysinh).toLocaleDateString('vi-VN') %>"
+                                data-gioi_tinh="<%= tk.gioi_tinh %>" data-dia_chi="<%= tk.dia_chi %>"
+                                data-so_cmnd="<%= tk.so_cmnd %>" data-ten_vai_tro="<%= tk.ten_vai_tro %>"
+                                data-anh_dai_dien="<%= tk.anh_dai_dien ? tk.anh_dai_dien : 'default_avatar.jpg' %>"
+                                data-bang-cap="<%= JSON.stringify(tk.loai_bang_cap || []) %>">
+                                <i class="fas fa-edit mr-1"></i> Sửa
+                            </button>
+                            <!-- XÓA -->
+                            <form action="/tai-khoan/xoa/<%= tk.tai_khoan_id %>" method="POST" class="inline-block"
+                                onsubmit="return confirm('Bạn có chắc chắn muốn xóa tài khoản này không?')">
+                                <button
+                                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300 transition-colors"
+                                    aria-label="Xóa tài khoản 1">
+                                    <i class="fas fa-trash-alt mr-1"></i> Xóa
+                                </button>
+                            </form>
+                        </td>
                     </tr>
-                </thead>
-                <!-- BODY -->
-                <tbody id="accountTableBody">
-                    <% if (danhSachTaiKhoan && danhSachTaiKhoan.length> 0) { %>
-                        <% danhSachTaiKhoan.forEach(tk=> { %>
+                    <% }); %>
+                        <% } else { %>
                             <tr>
-                                <td class="py-2 px-4 border-b text-center">
-                                    <%= tk.tai_khoan_id %>
-                                </td>
-                                <td class="py-2 px-4 border-b text-center">
-                                    <%= tk.ho_ten %>
-                                </td>
-                                <td class="py-2 px-4 border-b text-center">
-                                    <img src="/images/<%= tk.anh_dai_dien ? tk.anh_dai_dien : 'default_avatar.jpg' %>"
-                                        alt="Ảnh đại diện" class="w-16 h-16 rounded-md object-cover mx-auto" />
-                                </td>
-                                <td class="py-2 px-4 border-b text-center">
-                                    <%= new Date(tk.ngaysinh).toLocaleDateString('vi-VN') %>
-                                </td>
-                                <td class="py-2 px-4 border-b text-center">
-                                    <%= tk.gioi_tinh %>
-                                </td>
-                                <td class="py-2 px-4 border-b text-center">
-                                    <!-- XEM CHI TIẾT -->
-                                    <button data-id="<%= tk.tai_khoan_id %>"
-                                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                                        aria-label="Xem chi tiết tài khoản <%= tk.tai_khoan_id %>"
-                                        onclick="viewDetails(this.dataset.id)">
-                                        <i class="fas fa-eye mr-1"></i> Xem chi tiết
-                                    </button>
-                                    <!-- SỬA -->
-                                    <button
-                                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                                        aria-label="Sửa tài khoản" onclick='editAccount(this)'
-                                        data-id="<%= tk.tai_khoan_id %>" data-ho_ten="<%= tk.ho_ten %>"
-                                        data-email="<%= tk.email %>" data-sdt="<%= tk.sdt %>"
-                                        data-ngaysinh="<%= new Date(tk.ngaysinh).toLocaleDateString('vi-VN') %>"
-                                        data-gioi_tinh="<%= tk.gioi_tinh %>" data-dia_chi="<%= tk.dia_chi %>"
-                                        data-so_cmnd="<%= tk.so_cmnd %>" data-ten_vai_tro="<%= tk.ten_vai_tro %>"
-                                        data-anh_dai_dien="<%= tk.anh_dai_dien ? tk.anh_dai_dien : 'default_avatar.jpg' %>"
-                                        data-bang-cap="<%= JSON.stringify(tk.loai_bang_cap || []) %>">
-                                        <i class="fas fa-edit mr-1"></i> Sửa
-                                    </button>
-                                    <!-- XÓA -->
-                                    <form action="/tai-khoan/xoa/<%= tk.tai_khoan_id %>" method="POST"
-                                        class="inline-block"
-                                        onsubmit="return confirm('Bạn có chắc chắn muốn xóa tài khoản này không?')">
-                                        <button
-                                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300 transition-colors"
-                                            aria-label="Xóa tài khoản 1">
-                                            <i class="fas fa-trash-alt mr-1"></i> Xóa
-                                        </button>
-                                    </form>
-                                </td>
+                                <td colspan="5" class="py-4 px-6 text-center text-gray-500">Không có tài khoản
+                                    nào.</td>
                             </tr>
-                            <% }); %>
-                                <% } else { %>
-                                    <tr>
-                                        <td colspan="5" class="py-4 px-6 text-center text-gray-500">Không có tài khoản
-                                            nào.</td>
-                                    </tr>
-                                    <% } %>
-                </tbody>
-            </table>
+                            <% } %>
+        </tbody>
+    </table>
 
-            <!-- Modal thêm tài khoản -->
-            <div id="addModal"
-                class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden overflow-auto p-4">
-                <div class="bg-white rounded-lg p-6 w-full max-w-4xl shadow-lg max-h-full overflow-auto">
-                    <h2 class="text-xl font-semibold mb-4">Thêm tài khoản</h2>
-                    <form id="addAccountForm" method="post" action="/tai-khoan/them" enctype="multipart/form-data">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="mb-4">
-                                <label for="fullName" class="block text-sm font-medium">Họ tên</label>
-                                <input type="text" id="fullName" name="ho_ten" required pattern="^[a-zA-ZÀ-ỹ\s]+$"
-                                    title="Họ tên chỉ được chứa chữ cái và khoảng trắng"
-                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                            </div>
-                            <div class="mb-4">
-                                <label for="email" class="block text-sm font-medium">Email</label>
-                                <input type="email" id="email" name="email" required
-                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                            </div>
-                            <div class="mb-4">
-                                <label for="phone" class="block text-sm font-medium">Số điện thoại</label>
-                                <input type="tel" id="phone" name="sdt" required pattern="^0\d{9}$"
-                                    title="Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số"
-                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                            </div>
-                            <div class="mb-4">
-                                <label for="dob" class="block text-sm font-medium">Ngày sinh</label>
-                                <input type="date" id="dob" name="ngaysinh" required
-                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                            </div>
-                            <div class="mb-4">
-                                <label for="gender" class="block text-sm font-medium">Giới tính</label>
-                                <select id="gender" name="gioi_tinh" required
-                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500">
-                                    <option value="" disabled selected>Chọn giới tính</option>
-                                    <option value="Nam">Nam</option>
-                                    <option value="Nữ">Nữ</option>
-                                </select>
-                            </div>
-                            <div class="mb-4">
-                                <label for="role" class="block text-sm font-medium">Vai trò</label>
-                                <select id="role" name="ten_vai_tro" required onchange="toggleDegreeField()"
-                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500">
-                                    <option value="" disabled selected>Chọn vai trò</option>
-                                    <option value="Admin">Admin</option>
-                                    <option value="Giáo viên">Giáo viên</option>
-                                    <option value="Phụ huynh">Phụ huynh</option>
-                                    <option value="Hiệu trưởng">Hiệu trưởng</option>
-                                </select>
-                            </div>
-                            <div class="mb-4 col-span-2">
-                                <label for="address" class="block text-sm font-medium">Địa chỉ</label>
-                                <input type="text" id="address" name="dia_chi" required
-                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                            </div>
-                            <div class="mb-4 col-span-2">
-                                <label for="idNumber" class="block text-sm font-medium">Số CMND/CCCD</label>
-                                <input type="text" id="idNumber" name="so_cmnd" required pattern="^079\d{9}$"
-                                    title="CMND/CCCD phải bắt đầu bằng 079 và có đúng 12 chữ số"
-                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                            </div>
-                            <div class="mb-4 col-span-2">
-                                <label for="password" class="block text-sm font-medium">Mật khẩu</label>
-                                <input type="password" id="password" name="mat_khau" required
-                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                            </div>
-
-                            <!-- Phần bằng cấp chỉ hiển thị khi chọn vai trò là Giáo viên -->
-                            <div id="degreeSection" class="mb-4 col-span-2 hidden">
-                                <div class="flex items-end gap-2">
-                                    <div class="flex-grow">
-                                        <label for="degree" class="block text-sm font-medium">Bằng cấp</label>
-                                        <input type="text" id="degree"
-                                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                                    </div>
-                                    <button type="button" onclick="addDegree()"
-                                        class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors h-[42px]">
-                                        Thêm bằng cấp
-                                    </button>
-                                </div>
-                                <div id="degreeTags" class="tag-container">
-                                    <!-- Các tag bằng cấp sẽ được thêm vào đây -->
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mb-4 col-span-2">
-                            <label for="avatar" class="block text-sm font-medium mb-2">Hình đại diện</label>
-                            <label
-                                class="image-placeholder w-32 h-32 border-2 border-dashed border-gray-700 rounded-md flex items-center justify-center cursor-pointer hover:border-blue-700 transition"
-                                for="avatarInput" title="Click để chọn ảnh">
-                                <span id="avatarPreviewText" class="text-gray-400">Chọn ảnh</span>
-                                <img id="avatarPreview" class="mt-2 w-32 h-32 object-cover rounded-md hidden" />
-                                <input type="file" id="avatarInput" name="anh_dai_dien"
-                                    accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="hidden"
-                                    onchange="previewAvatar(this)" />
-                            </label>
-                        </div>
-
-                        <div class="mt-6 flex justify-end gap-4">
-                            <button type="button" onclick="toggleAddModal()"
-                                class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-gray-400">
-                                Hủy
-                            </button>
-                            <button type="submit"
-                                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-blue-400">
-                                Lưu
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            <!-- Modal sửa tài khoản -->
-            <div id="editModal"
-                class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden overflow-auto p-4">
-                <div class="bg-white rounded-lg p-6 w-full max-w-4xl shadow-lg max-h-full overflow-auto">
-                    <h2 class="text-xl font-semibold mb-4">Sửa tài khoản</h2>
-                    <form id="editAccountForm" method="post" action="/tai-khoan/sua" enctype="multipart/form-data">
-                        <input type="hidden" id="editAccountId" name="id" />
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="mb-4">
-                                <label for="editFullName" class="block text-sm font-medium">Họ tên</label>
-                                <input type="text" id="editFullName" name="ho_ten" required pattern="^[a-zA-ZÀ-ỹ\s]+$"
-                                    title="Họ tên chỉ được chứa chữ cái và khoảng trắng"
-                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                            </div>
-                            <div class="mb-4">
-                                <label for="editEmail" class="block text-sm font-medium">Email</label>
-                                <input type="email" id="editEmail" name="email" required
-                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                            </div>
-                            <div class="mb-4">
-                                <label for="editPhone" class="block text-sm font-medium">Số điện thoại</label>
-                                <input type="tel" id="editPhone" name="sdt" required pattern="^0\d{9}$"
-                                    title="Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số"
-                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                            </div>
-                            <div class="mb-4">
-                                <label for="editDob" class="block text-sm font-medium">Ngày sinh</label>
-                                <input type="date" id="editDob" name="ngaysinh" required
-                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                            </div>
-                            <div class="mb-4">
-                                <label for="editGender" class="block text-sm font-medium">Giới tính</label>
-                                <select id="editGender" name="gioi_tinh" required
-                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500">
-                                    <option value="" disabled>Chọn giới tính</option>
-                                    <option value="Nam">Nam</option>
-                                    <option value="Nữ">Nữ</option>
-                                </select>
-                            </div>
-                            <div class="mb-4">
-                                <label for="editRoleDisplay" class="block text-sm font-medium">Vai trò</label>
-                                <input type="text" id="editRoleDisplay" readonly
-                                    class="border border-gray-200 bg-gray-100 rounded-md px-4 py-2 w-full text-gray-600" />
-                                <input type="hidden" id="editRole" name="ten_vai_tro" />
-                            </div>
-                            <div class="mb-4 col-span-2">
-                                <label for="editAddress" class="block text-sm font-medium">Địa chỉ</label>
-                                <input type="text" id="editAddress" name="dia_chi" required
-                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                            </div>
-                            <div class="mb-4 col-span-2">
-                                <label for="editIdNumber" class="block text-sm font-medium">Số CMND/CCCD</label>
-                                <input type="text" id="editIdNumber" name="so_cmnd" required pattern="^079\d{9}$"
-                                    title="CMND/CCCD phải bắt đầu bằng 079 và có đúng 12 chữ số"
-                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                            </div>
-
-                            <!-- Phần bằng cấp chỉ hiển thị khi chọn vai trò là Giáo viên -->
-                            <div id="degreeSectionEdit" class="mb-4 col-span-2 hidden">
-                                <div class="flex items-end gap-2">
-                                    <div class="flex-grow">
-                                        <label for="editDegree" class="block text-sm font-medium">Bằng cấp</label>
-                                        <input type="text" id="editDegree"
-                                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                                    </div>
-                                    <button type="button" onclick="addDegreeEdit()"
-                                        class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors h-[42px]">
-                                        Thêm bằng cấp
-                                    </button>
-                                </div>
-                                <div id="degreeTagsEdit" class="tag-container">
-                                    <!-- Các tag bằng cấp sẽ được thêm vào đây -->
-                                </div>
-                            </div>
-                            <div class="mb-4 col-span-2">
-                                <label for="editAvatar" class="block text-sm font-medium mb-2">Hình đại diện</label>
-                                <label
-                                    class="image-placeholder w-32 h-32 border-2 border-dashed border-gray-700 rounded-md flex items-center justify-center cursor-pointer hover:border-blue-700 transition"
-                                    for="editAvatarInput" title="Click để chọn ảnh">
-                                    <span id="editAvatarPreviewText" class="text-gray-400">Chọn ảnh</span>
-                                    <img id="editAvatarPreview" class="mt-2 w-20 h-20 object-cover rounded-md hidden"
-                                        onerror="this.onerror=null;this.src='/images/default_avatar.jpg'" />
-                                    <input type="file" id="editAvatarInput" name="anh_dai_dien"
-                                        accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="hidden"
-                                        onchange="previewEditAvatar(this)" />
-                                </label>
-                                <input type="hidden" id="editCurrentAvatar" name="current_anh_dai_dien" />
-                            </div>
-                        </div>
-
-                        <div class="mt-6 flex justify-end gap-4">
-                            <button type="button" onclick="toggleEditModal()"
-                                class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-gray-400">
-                                Hủy
-                            </button>
-                            <button type="submit"
-                                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-blue-400">
-                                Lưu
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            <!-- Modal xem chi tiết tài khoản -->
-            <div id="viewModal"
-                class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden overflow-auto p-4">
-                <div class="bg-white rounded-lg p-6 w-full max-w-4xl shadow-lg max-h-[90vh] overflow-y-auto">
-                    <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-b pb-2">Chi tiết tài khoản</h2>
-
-                    <div class="space-y-6">
-                        <div class="flex items-center gap-6">
-                            <div class="w-1/4">
-                                <label class="block text-sm font-medium text-gray-700">Ảnh đại diện</label>
-                                <img id="viewAvatar" src="" alt="Ảnh đại diện"
-                                    class="w-40 h-40 object-cover border border-gray-300 rounded-lg mt-2" />
-                            </div>
-                            <div class="w-3/4 grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Họ tên</label>
-                                    <p id="viewFullName"
-                                        class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50"></p>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Số điện thoại</label>
-                                    <p id="viewPhone"
-                                        class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50"></p>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Email</label>
-                                    <p id="viewEmail"
-                                        class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50"></p>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Ngày sinh</label>
-                                    <p id="viewDob" class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50">
-                                    </p>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Giới tính</label>
-                                    <p id="viewGender"
-                                        class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50"></p>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Vai trò</label>
-                                    <p id="viewRole"
-                                        class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50"></p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Địa chỉ</label>
-                            <p id="viewAddress"
-                                class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50 w-full"></p>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Số CMND/CCCD</label>
-                            <p id="viewIdNumber"
-                                class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50 w-full"></p>
-                        </div>
-
-                        <div id="viewDegreesSection" class="mt-4" style="display: none;">
-                            <label class="block text-sm font-medium text-gray-700">Bằng cấp</label>
-                            <ul id="viewDegreesList"
-                                class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50 list-disc list-inside">
-                            </ul>
-                        </div>
+    <!-- Modal thêm tài khoản -->
+    <div id="addModal"
+        class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden overflow-auto p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-4xl shadow-lg max-h-full overflow-auto">
+            <h2 class="text-xl font-semibold mb-4">Thêm tài khoản</h2>
+            <form id="addAccountForm" method="post" action="/tai-khoan/them" enctype="multipart/form-data">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label for="fullName" class="block text-sm font-medium">Họ tên</label>
+                        <input type="text" id="fullName" name="ho_ten" required pattern="^[a-zA-ZÀ-ỹ\s]+$"
+                            title="Họ tên chỉ được chứa chữ cái và khoảng trắng"
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    </div>
+                    <div class="mb-4">
+                        <label for="email" class="block text-sm font-medium">Email</label>
+                        <input type="email" id="email" name="email" required
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    </div>
+                    <div class="mb-4">
+                        <label for="phone" class="block text-sm font-medium">Số điện thoại</label>
+                        <input type="tel" id="phone" name="sdt" required pattern="^0\d{9}$"
+                            title="Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số"
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    </div>
+                    <div class="mb-4">
+                        <label for="dob" class="block text-sm font-medium">Ngày sinh</label>
+                        <input type="date" id="dob" name="ngaysinh" required
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    </div>
+                    <div class="mb-4">
+                        <label for="gender" class="block text-sm font-medium">Giới tính</label>
+                        <select id="gender" name="gioi_tinh" required
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500">
+                            <option value="" disabled selected>Chọn giới tính</option>
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label for="role" class="block text-sm font-medium">Vai trò</label>
+                        <select id="role" name="ten_vai_tro" required onchange="toggleDegreeField()"
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500">
+                            <option value="" disabled selected>Chọn vai trò</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Giáo viên">Giáo viên</option>
+                            <option value="Phụ huynh">Phụ huynh</option>
+                            <option value="Hiệu trưởng">Hiệu trưởng</option>
+                        </select>
+                    </div>
+                    <div class="mb-4 col-span-2">
+                        <label for="address" class="block text-sm font-medium">Địa chỉ</label>
+                        <input type="text" id="address" name="dia_chi" required
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    </div>
+                    <div class="mb-4 col-span-2">
+                        <label for="idNumber" class="block text-sm font-medium">Số CMND/CCCD</label>
+                        <input type="text" id="idNumber" name="so_cmnd" required pattern="^079\d{9}$"
+                            title="CMND/CCCD phải bắt đầu bằng 079 và có đúng 12 chữ số"
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    </div>
+                    <div class="mb-4 col-span-2">
+                        <label for="password" class="block text-sm font-medium">Mật khẩu</label>
+                        <input type="password" id="password" name="mat_khau" required
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
                     </div>
 
-                    <div class="mt-8 flex justify-end gap-4">
-                        <button onclick="toggleViewModal()"
-                            class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-gray-400">
-                            Đóng
-                        </button>
+                    <!-- Phần bằng cấp chỉ hiển thị khi chọn vai trò là Giáo viên -->
+                    <div id="degreeSection" class="mb-4 col-span-2 hidden">
+                        <div class="flex items-end gap-2">
+                            <div class="flex-grow">
+                                <label for="degree" class="block text-sm font-medium">Bằng cấp</label>
+                                <input type="text" id="degree"
+                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                            </div>
+                            <button type="button" onclick="addDegree()"
+                                class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors h-[42px]">
+                                Thêm bằng cấp
+                            </button>
+                        </div>
+                        <div id="degreeTags" class="tag-container">
+                            <!-- Các tag bằng cấp sẽ được thêm vào đây -->
+                        </div>
                     </div>
                 </div>
+                <div class="mb-4 col-span-2">
+                    <label for="avatar" class="block text-sm font-medium mb-2">Hình đại diện</label>
+                    <label
+                        class="image-placeholder w-32 h-32 border-2 border-dashed border-gray-700 rounded-md flex items-center justify-center cursor-pointer hover:border-blue-700 transition"
+                        for="avatarInput" title="Click để chọn ảnh">
+                        <span id="avatarPreviewText" class="text-gray-400">Chọn ảnh</span>
+                        <img id="avatarPreview" class="mt-2 w-32 h-32 object-cover rounded-md hidden" />
+                        <input type="file" id="avatarInput" name="anh_dai_dien"
+                            accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="hidden"
+                            onchange="previewAvatar(this)" />
+                    </label>
+                </div>
+
+                <div class="mt-6 flex justify-end gap-4">
+                    <button type="button" onclick="toggleAddModal()"
+                        class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-gray-400">
+                        Hủy
+                    </button>
+                    <button type="submit"
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-blue-400">
+                        Lưu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Modal sửa tài khoản -->
+    <div id="editModal"
+        class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden overflow-auto p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-4xl shadow-lg max-h-full overflow-auto">
+            <h2 class="text-xl font-semibold mb-4">Sửa tài khoản</h2>
+            <form id="editAccountForm" method="post" action="/tai-khoan/sua" enctype="multipart/form-data">
+                <input type="hidden" id="editAccountId" name="id" />
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label for="editFullName" class="block text-sm font-medium">Họ tên</label>
+                        <input type="text" id="editFullName" name="ho_ten" required pattern="^[a-zA-ZÀ-ỹ\s]+$"
+                            title="Họ tên chỉ được chứa chữ cái và khoảng trắng"
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    </div>
+                    <div class="mb-4">
+                        <label for="editEmail" class="block text-sm font-medium">Email</label>
+                        <input type="email" id="editEmail" name="email" required
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    </div>
+                    <div class="mb-4">
+                        <label for="editPhone" class="block text-sm font-medium">Số điện thoại</label>
+                        <input type="tel" id="editPhone" name="sdt" required pattern="^0\d{9}$"
+                            title="Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số"
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    </div>
+                    <div class="mb-4">
+                        <label for="editDob" class="block text-sm font-medium">Ngày sinh</label>
+                        <input type="date" id="editDob" name="ngaysinh" required
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    </div>
+                    <div class="mb-4">
+                        <label for="editGender" class="block text-sm font-medium">Giới tính</label>
+                        <select id="editGender" name="gioi_tinh" required
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500">
+                            <option value="" disabled>Chọn giới tính</option>
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label for="editRoleDisplay" class="block text-sm font-medium">Vai trò</label>
+                        <input type="text" id="editRoleDisplay" readonly
+                            class="border border-gray-200 bg-gray-100 rounded-md px-4 py-2 w-full text-gray-600" />
+                        <input type="hidden" id="editRole" name="ten_vai_tro" />
+                    </div>
+                    <div class="mb-4 col-span-2">
+                        <label for="editAddress" class="block text-sm font-medium">Địa chỉ</label>
+                        <input type="text" id="editAddress" name="dia_chi" required
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    </div>
+                    <div class="mb-4 col-span-2">
+                        <label for="editIdNumber" class="block text-sm font-medium">Số CMND/CCCD</label>
+                        <input type="text" id="editIdNumber" name="so_cmnd" required pattern="^079\d{9}$"
+                            title="CMND/CCCD phải bắt đầu bằng 079 và có đúng 12 chữ số"
+                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    </div>
+
+                    <!-- Phần bằng cấp chỉ hiển thị khi chọn vai trò là Giáo viên -->
+                    <div id="degreeSectionEdit" class="mb-4 col-span-2 hidden">
+                        <div class="flex items-end gap-2">
+                            <div class="flex-grow">
+                                <label for="editDegree" class="block text-sm font-medium">Bằng cấp</label>
+                                <input type="text" id="editDegree"
+                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                            </div>
+                            <button type="button" onclick="addDegreeEdit()"
+                                class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors h-[42px]">
+                                Thêm bằng cấp
+                            </button>
+                        </div>
+                        <div id="degreeTagsEdit" class="tag-container">
+                            <!-- Các tag bằng cấp sẽ được thêm vào đây -->
+                        </div>
+                    </div>
+                    <div class="mb-4 col-span-2">
+                        <label for="editAvatar" class="block text-sm font-medium mb-2">Hình đại diện</label>
+                        <label
+                            class="image-placeholder w-32 h-32 border-2 border-dashed border-gray-700 rounded-md flex items-center justify-center cursor-pointer hover:border-blue-700 transition"
+                            for="editAvatarInput" title="Click để chọn ảnh">
+                            <span id="editAvatarPreviewText" class="text-gray-400">Chọn ảnh</span>
+                            <img id="editAvatarPreview" class="mt-2 w-20 h-20 object-cover rounded-md hidden"
+                                onerror="this.onerror=null;this.src='/images/default_avatar.jpg'" />
+                            <input type="file" id="editAvatarInput" name="anh_dai_dien"
+                                accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="hidden"
+                                onchange="previewEditAvatar(this)" />
+                        </label>
+                        <input type="hidden" id="editCurrentAvatar" name="current_anh_dai_dien" />
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end gap-4">
+                    <button type="button" onclick="toggleEditModal()"
+                        class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-gray-400">
+                        Hủy
+                    </button>
+                    <button type="submit"
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-blue-400">
+                        Lưu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Modal xem chi tiết tài khoản -->
+    <div id="viewModal"
+        class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden overflow-auto p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-4xl shadow-lg max-h-[90vh] overflow-y-auto">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-b pb-2">Chi tiết tài khoản</h2>
+
+            <div class="space-y-6">
+                <div class="flex items-center gap-6">
+                    <div class="w-1/4">
+                        <label class="block text-sm font-medium text-gray-700">Ảnh đại diện</label>
+                        <img id="viewAvatar" src="" alt="Ảnh đại diện"
+                            class="w-40 h-40 object-cover border border-gray-300 rounded-lg mt-2" />
+                    </div>
+                    <div class="w-3/4 grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Họ tên</label>
+                            <p id="viewFullName" class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50">
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Số điện thoại</label>
+                            <p id="viewPhone" class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Email</label>
+                            <p id="viewEmail" class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Ngày sinh</label>
+                            <p id="viewDob" class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50">
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Giới tính</label>
+                            <p id="viewGender" class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Vai trò</label>
+                            <p id="viewRole" class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Địa chỉ</label>
+                    <p id="viewAddress" class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50 w-full"></p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Số CMND/CCCD</label>
+                    <p id="viewIdNumber" class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50 w-full"></p>
+                </div>
+
+                <div id="viewDegreesSection" class="mt-4" style="display: none;">
+                    <label class="block text-sm font-medium text-gray-700">Bằng cấp</label>
+                    <ul id="viewDegreesList"
+                        class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50 list-disc list-inside">
+                    </ul>
+                </div>
             </div>
+
+            <div class="mt-8 flex justify-end gap-4">
+                <button onclick="toggleViewModal()"
+                    class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-gray-400">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- SCRIPT THÊM -->
@@ -562,12 +553,6 @@
     function toggleEditModal() {
         const modal = document.getElementById('editModal');
         modal.classList.toggle('hidden');
-
-        // if (!modal.classList.contains('hidden')) {
-        //     document.getElementById('editAvatarPreview').classList.add('hidden');
-        //     document.getElementById('editAvatarPreviewText').classList.remove('hidden');
-        //     document.getElementById('editAvatarInput').value = '';
-        // }
     }
 
     function previewEditAvatar(input) {
@@ -612,7 +597,8 @@
         document.getElementById('editFullName').value = ho_ten;
         document.getElementById('editEmail').value = email;
         document.getElementById('editPhone').value = sdt;
-
+        document.getElementById('editRole').value = ten_vai_tro;
+        document.getElementById('editRoleDisplay').value = ten_vai_tro;
         if (ngaysinh) {
             const parts = ngaysinh.split('/');
             if (parts.length === 3) {
@@ -624,7 +610,6 @@
         document.getElementById('editGender').value = gioi_tinh || '';
         document.getElementById('editAddress').value = dia_chi;
         document.getElementById('editIdNumber').value = so_cmnd;
-
         const avatarPreview = document.getElementById('editAvatarPreview');
         const avatarPreviewText = document.getElementById('editAvatarPreviewText');
         const currentAvatar = document.getElementById('editCurrentAvatar');
@@ -638,6 +623,36 @@
             avatarPreviewText.classList.add('hidden');
         }
         currentAvatar.value = anh_dai_dien;
+        if (ten_vai_tro === 'Giáo viên') {
+            document.getElementById('degreeSectionEdit').classList.remove('hidden');
+            degreeSectionEdit.classList.remove('hidden');
+
+            const degreeTagsEdit = document.getElementById('degreeTagsEdit');
+            degreeTagsEdit.innerHTML = ''; // Xóa các tag cũ nếu có
+
+            // Lấy dữ liệu bằng cấp từ thuộc tính data-bang-cap
+            const bangCapData = button.getAttribute('data-bang-cap');
+
+            try {
+                const bangCapArray = JSON.parse(bangCapData); // Nếu là mảng JSON
+                if (Array.isArray(bangCapArray)) {
+                    bangCapArray.forEach(function (degreeValue) {
+                        const tag = document.createElement('div');
+                        tag.className = 'tag';
+                        tag.innerHTML = `
+                    <span>${degreeValue}</span>
+                    <span class="tag-remove" onclick="removeDegree(this)">×</span>
+                    <input type="hidden" name="loai_bang_cap[]" value="${degreeValue}">
+                `;
+                        degreeTagsEdit.appendChild(tag);
+                    });
+                }
+            } catch (error) {
+                console.error('Không thể phân tích dữ liệu bằng cấp:', error);
+            }
+        } else {
+            document.getElementById('degreeSectionEdit').classList.add('hidden');
+        }
 
         toggleEditModal();
     }
@@ -722,36 +737,24 @@
             return;
         }
 
-        const reader = new FileReader();
-        reader.onload = async function (e) {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        const formData = new FormData();
+        formData.append('excelFile', file);
 
-            // Gửi dữ liệu lên server
-            try {
-                const response = await fetch('/tai-khoan/them-hang-loat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(jsonData),
-                });
+        try {
+            const response = await fetch('/tai-khoan/them-hang-loat', {
+                method: 'POST',
+                body: formData,
+            });
 
-                const result = await response.json();
-                if (response.ok) {
-                    alert('Thêm tài khoản thành công!');
-                    toggleAddModal(); // Đóng modal
-                    location.reload(); // Tải lại trang
-                } else {
-                    alert('Lỗi: ' + result.message);
-                }
-            } catch (error) {
-                alert('Lỗi khi tải lên: ' + error.message);
+            const result = await response.json();
+            if (response.ok) {
+                alert('Thêm tài khoản thành công!');
+                location.reload(); // Tải lại trang
+            } else {
+                alert('Lỗi: ' + result.message);
             }
-        };
-        reader.readAsArrayBuffer(file);
+        } catch (error) {
+            console.error('Lỗi khi tải lên:', error); // Debug
+        }
     }
 </script>
