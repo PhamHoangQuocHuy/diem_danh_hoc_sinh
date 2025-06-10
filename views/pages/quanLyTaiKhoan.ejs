@@ -103,6 +103,7 @@
                 <th class="py-2 px-4 border-b text-left text-center">Ảnh đại diện</th>
                 <th class="py-2 px-4 border-b text-left text-center">Ngày sinh</th>
                 <th class="py-2 px-4 border-b text-left text-center">Giới tính</th>
+                <th class="py-2 px-4 border-b text-left text-center">Vai trò</th>
                 <th class="py-2 px-4 border-b text-left text-center">Hành động</th>
             </tr>
         </thead>
@@ -126,6 +127,9 @@
                         </td>
                         <td class="py-2 px-4 border-b text-center">
                             <%= tk.gioi_tinh %>
+                        </td>
+                        <td class="py-2 px-4 border-b text-center">
+                            <%= tk.ten_vai_tro%>
                         </td>
                         <td class="py-2 px-4 border-b text-center">
                             <!-- XEM CHI TIẾT -->
@@ -747,14 +751,40 @@
             });
 
             const result = await response.json();
+            const messageBox = document.createElement('div');
+            messageBox.className = `message-box message-${result.messageType || 'error'}`;
+            messageBox.style.fontSize = '16px';
             if (response.ok) {
-                alert('Thêm tài khoản thành công!');
-                location.reload(); // Tải lại trang
+                messageBox.textContent = result.message;
+                document.querySelector('.container').prepend(messageBox);
+                setTimeout(() => location.reload(), 2000);
             } else {
-                alert('Lỗi: ' + result.message);
+                messageBox.textContent = result.message;
+                if (result.danhSachLoi && result.danhSachLoi.length > 0) {
+                    const errorList = document.createElement('ul');
+                    errorList.className = 'list-disc list-inside mt-2';
+                    result.danhSachLoi.forEach(err => {
+                        const li = document.createElement('li');
+                        li.textContent = `Dòng ${err.dong} (Email: ${err.email}): ${err.loi}`;
+                        errorList.appendChild(li);
+                    });
+                    messageBox.appendChild(errorList);
+                } else if (result.errorDetails) {
+                    const li = document.createElement('li');
+                    li.textContent = `Dòng ${result.errorDetails.dong} (Email: ${result.errorDetails.email}): ${result.errorDetails.loi}`;
+                    const errorList = document.createElement('ul');
+                    errorList.className = 'list-disc list-inside mt-2';
+                    errorList.appendChild(li);
+                    messageBox.appendChild(errorList);
+                }
+                document.querySelector('.container').prepend(messageBox);
             }
         } catch (error) {
-            console.error('Lỗi khi tải lên:', error); // Debug
+            const messageBox = document.createElement('div');
+            messageBox.className = 'message-box message-error';
+            messageBox.textContent = 'Lỗi hệ thống khi tải lên file Excel';
+            document.querySelector('.container').prepend(messageBox);
+            console.error('Lỗi khi tải lên:', error);
         }
     }
 </script>

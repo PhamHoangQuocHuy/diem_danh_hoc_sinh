@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -11,157 +10,83 @@
         }
 
         .message-success {
-            color: green;
+            color: #2ecc71;
             font-weight: bold;
         }
 
         .message-error {
-            color: red;
+            color: #e74c3c;
             font-weight: bold;
         }
 
         body {
             margin: 0;
-            background: linear-gradient(135deg, #ffd6a5, #fdffb6);
-            font-family: Arial, sans-serif;
+            background: linear-gradient(rgba(120, 157, 183, 0.9), rgba(94, 101, 105, 0.9)), 
+                        url('https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Arial', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
             height: 100vh;
-            color: #4b3b2b;
+            color: #2c3e50;
         }
 
-        /* icon container above the box */
-        .icon-kindergarten {
-            width: 90px;
-            height: 90px;
-            background: #fedc97;
-            border-radius: 50%;
-            box-shadow: 0 4px 14px rgba(254, 172, 54, 0.6);
-            cursor: pointer;
-            margin-bottom: 26px;
-            position: relative;
-            overflow: visible;
-            transition: box-shadow 0.3s ease;
+        /* Logo container */
+        .logo-container {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
         }
 
-        /* sunshine glow circle behind */
-        .icon-kindergarten::before {
-            content: "";
-            position: absolute;
-            top: -18px;
-            left: -18px;
-            width: 126px;
-            height: 126px;
-            border-radius: 50%;
-            background: radial-gradient(circle, #ffe16a 0%, transparent 70%);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
-        }
-
-        .icon-kindergarten:hover::before,
-        .icon-kindergarten:focus::before {
-            opacity: 1;
-        }
-
-        /* brighten shadow on hover */
-        .icon-kindergarten:hover,
-        .icon-kindergarten:focus {
-            box-shadow: 0 0 40px 6px #ffd54c;
-        }
-
-        /* SVG styles */
-        svg {
-            display: block;
-            margin: auto;
-        }
-
-        /* Animate eyes and mouth */
-        .eye {
-            fill: #fff;
-            transition: fill 0.3s ease, transform 0.3s ease;
-        }
-
-        .eye-pupil {
-            fill: #795422;
-            transition: transform 0.3s ease;
-            transform-origin: center center;
-        }
-
-        .mouth {
-            stroke: #795422;
-            stroke-width: 3;
-            fill: none;
-            stroke-linecap: round;
-            transition: d 0.3s ease;
-        }
-
-        /* Group for the two eyes to scale */
-        .eyes-group {
-            transition: transform 0.3s ease;
-            transform-origin: center center;
-        }
-
-        .icon-kindergarten:hover .eye {
-            fill: #fff8c4;
-        }
-
-        .icon-kindergarten:hover .eye-pupil {
-            transform: scale(1.2);
-        }
-
-        .icon-kindergarten:hover .eyes-group {
-            transform: scale(1.15);
-        }
-
-        /* Mouth morphing simulated with scaleY */
-        .icon-kindergarten:hover .mouth {
-            transition: transform 0.3s ease;
-            transform-origin: center bottom;
-            transform: scaleY(1.5);
+        .logo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
         }
 
         /* Login box */
         .login-wrapper {
-            background: #ffffffcc;
+            background: rgba(255, 255, 255, 0.95);
             max-width: 500px;
             width: 90vw;
             padding: 32px 28px 40px 28px;
-            border-radius: 28px;
-            box-shadow: 0 10px 20px rgba(253, 191, 53, 0.3);
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
             text-align: center;
             position: relative;
         }
 
-        /* playful circles decoration */
+        /* Decorative elements */
         .decor-circle {
             position: absolute;
             border-radius: 50%;
-            opacity: 0.15;
+            opacity: 0.2;
         }
 
         .decor-circle.one {
-            width: 110px;
-            height: 110px;
-            background: #fea82f;
-            top: -40px;
-            left: -40px;
+            width: 100px;
+            height: 100px;
+            background: #3498db;
+            top: -30px;
+            left: -30px;
         }
 
         .decor-circle.two {
-            width: 80px;
-            height: 80px;
-            background: #fece53;
-            bottom: -30px;
-            right: -30px;
+            width: 70px;
+            height: 70px;
+            background: #5dade2;
+            bottom: -25px;
+            right: -25px;
         }
 
         h1 {
             font-weight: 700;
             margin-bottom: 24px;
             font-size: 2.2rem;
+            color: #2c3e50;
         }
 
         form {
@@ -171,7 +96,7 @@
         label {
             font-weight: 600;
             font-size: 0.95rem;
-            color: #755035;
+            color: #2c3e50;
             margin-bottom: 6px;
             display: inline-block;
         }
@@ -181,61 +106,61 @@
             width: 100%;
             padding: 14px 18px;
             border-radius: 20px;
-            border: 2px solid #f7ca88;
+            border: 2px solid #3498db;
             font-size: 1rem;
-            font-family: Arial, sans-serif;
-            color: #4b3b2b;
+            font-family: 'Arial', sans-serif;
+            color: #2c3e50;
             margin-bottom: 22px;
-            transition: border-color 0.3s ease;
-            box-shadow: inset 1px 1px 6px #ffeec6;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: inset 1px 1px 6px #d6eaf8;
         }
 
         input[type="email"]::placeholder,
         input[type="password"]::placeholder {
-            color: #b9a27a;
+            color: #7f8c8d;
             font-style: italic;
         }
 
         input[type="email"]:focus,
         input[type="password"]:focus {
             outline: none;
-            border-color: #ee8d0d;
-            box-shadow: 0 0 8px #ffb50988;
-            background-color: #fff9e9;
+            border-color: #2980b9;
+            box-shadow: 0 0 8px rgba(41, 128, 185, 0.5);
+            background-color: #f5f9ff;
         }
 
         button {
             width: 100%;
             padding: 14px 0;
-            background: linear-gradient(45deg, #feba2d, #ee8d0d);
+            background: linear-gradient(45deg, #3498db, #2980b9);
             border: none;
             border-radius: 22px;
             font-size: 1.15rem;
             font-weight: 700;
-            color: #4b3b2b;
+            color: #fff;
             cursor: pointer;
-            box-shadow: 0 6px 15px #ffba3580;
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
             transition: background 0.3s ease;
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
         }
 
         button:hover,
         button:focus {
-            background: linear-gradient(45deg, #ee8d0d, #feba2d);
+            background: linear-gradient(45deg, #2980b9, #3498db);
         }
 
         .help-links {
             margin-top: 18px;
             font-size: 0.9rem;
-            color: #a97c50;
+            color: #7f8c8d;
             text-align: right;
         }
 
         .help-links a {
-            color: #d9860f;
+            color: #3498db;
             text-decoration: none;
             font-weight: 600;
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
         }
 
         .help-links a:hover,
@@ -260,31 +185,31 @@
         }
     </style>
 </head>
-
 <body>
     <main class="login-wrapper" role="main" aria-label="Đăng nhập">
-        <div class="decor-circle one" aria-hidden="true"></div>
+        <div class="logo-container">
+            <!-- <img src="/images/logo.png" alt="School Logo" style="border-radius: 100px;"> -->
+        </div>
+        <div class="decor-circle one" aria-hidden="true">
+        </div>
         <div class="decor-circle two" aria-hidden="true"></div>
         <h1>Đăng nhập</h1>
         <% if (message) { %>
             <p class="<%= messageType === 'error' ? 'message-error' : 'message-success' %>">
                 <%= message %>
             </p>
-            <% } %>
-                <form action="/api/auth/login" method="POST">
-                    <label for="email">Email người dùng</label>
-                    <input type="email"  name="email" placeholder="email@gmail.com" autocomplete="username"
-                        required />
+        <% } %>
+        <form action="/api/auth/login" method="POST">
+            <label for="email">Email người dùng</label>
+            <input type="email" name="email" placeholder="email@gmail.com" autocomplete="username" required />
 
-                    <label for="password">Mật khẩu</label>
-                    <input type="password"  name="mat_khau" placeholder="Nhập mật khẩu"
-                        autocomplete="current-password" required />
-                    <button type="submit" aria-label="Đăng nhập">Đăng nhập</button>
-                </form>
-                <nav class="help-links" aria-label="Liên kết hỗ trợ">
-                    <a href="#" tabindex="0">Quên mật khẩu?</a>
-                </nav>
+            <label for="password">Mật khẩu</label>
+            <input type="password" name="mat_khau" placeholder="Nhập mật khẩu" autocomplete="current-password" required />
+            <button type="submit" aria-label="Đăng nhập">Đăng nhập</button>
+        </form>
+        <nav class="help-links" aria-label="Liên kết hỗ trợ">
+            <a href="#" tabindex="0">Quên mật khẩu?</a>
+        </nav>
     </main>
 </body>
-
 </html>

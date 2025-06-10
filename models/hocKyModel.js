@@ -56,10 +56,27 @@ class HocKyModel {
                 messageType: 'error'
             };
         }
+        if (namBatDau > namKetThuc) {
+            return { success: false, message: 'Năm bắt đầu phải nhỏ hơn năm kết thúc', messageType: 'error' };
+        }
 
         let conn;
         try {
             conn = await pool.getConnection();
+            // Kiểm tra trùng lặp ten_hoc_ky và nam_hoc
+            const [checkTrungHocKyTrongNam] = await conn.query(
+                'SELECT 1 FROM hoc_ky WHERE ten_hoc_ky = ? AND nam_hoc = ?',
+                [ten_hoc_ky, namHocChuanHoa]
+            );
+            if (checkTrungHocKyTrongNam.length > 0) {
+                await conn.rollback();
+                return {
+                    success: false,
+                    message: `Học kỳ ${ten_hoc_ky} và năm học ${namHocChuanHoa} đã tồn tại trong bảng`,
+                    messageType: 'error'
+                };
+            }
+
             const [result] = await conn.execute(`
                 INSERT INTO hoc_ky 
                 (ten_hoc_ky, nam_hoc, ngay_bat_dau, ngay_ket_thuc, truong_hoc_id)
@@ -148,7 +165,19 @@ class HocKyModel {
                     messageType: 'error'
                 };
             }
-
+            // Kiểm tra trùng lặp ten_hoc_ky và nam_hoc (trừ bản ghi hiện tại)
+            const [checkTrungHocKyTrongNam] = await conn.query(
+                'SELECT 1 FROM hoc_ky WHERE ten_hoc_ky = ? AND nam_hoc = ? AND hoc_ky_id != ?',
+                [ten_hoc_ky, nam_hoc, id]
+            );
+            if (checkTrungHocKyTrongNam.length > 0) {
+                await conn.rollback();
+                return {
+                    success: false,
+                    message: `Học kỳ ${ten_hoc_ky} và năm học ${namHocChuanHoa} đã tồn tại trong bảng`,
+                    messageType: 'error'
+                };
+            }
             const sql = `
             UPDATE hoc_ky 
             SET ten_hoc_ky = ?, nam_hoc = ?, ngay_bat_dau = ?, ngay_ket_thuc = ?, truong_hoc_id = ?
@@ -183,14 +212,14 @@ class HocKyModel {
         }
     }
     static async timHocKyTheoNamHoc(tim_kiem) {
-        if(!tim_kiem || tim_kiem.trim() === '') {
-            return res.render('admin_index', { 
-                page: 'pages/quanLyHocKy', 
-                danhSachHocKy: [], 
-                danhSachTruongHoc: [], 
-                message: 'Vui lòng nhập năm học', 
-                messageType: 'error' 
-            }); 
+        if (!tim_kiem || tim_kiem.trim() === '') {
+            return res.render('admin_index', {
+                page: 'pages/quanLyHocKy',
+                danhSachHocKy: [],
+                danhSachTruongHoc: [],
+                message: 'Vui lòng nhập năm học',
+                messageType: 'error'
+            });
         }
         let conn;
         try {
@@ -207,7 +236,7 @@ class HocKyModel {
             if (conn) conn.release();
         }
     }
-    static async locTheoHocKy(tenHocKy){
+    static async locTheoHocKy(tenHocKy) {
         let conn;
         try {
             conn = await pool.getConnection();

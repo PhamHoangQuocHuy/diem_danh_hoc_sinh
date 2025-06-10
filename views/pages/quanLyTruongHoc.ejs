@@ -75,7 +75,8 @@
             <form id="addSchoolForm" method="post" action="/truong-hoc/them">
                 <div class="mb-4">
                     <label for="schoolName" class="block text-sm font-medium">Tên trường</label>
-                    <input type="text" id="schoolName" name="ten_truong" required
+                    <input type="text" id="schoolName" name="ten_truong" required pattern="^[a-zA-ZÀ-ỹ\s]+$"
+                        title="Tên trường học chỉ được chứa chữ cái và khoảng trắng"
                         class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
                 </div>
                 <div class="mb-4">
@@ -99,7 +100,8 @@
             <form id="editSchoolForm" method="post" action="/truong-hoc/sua">
                 <div class="mb-4">
                     <label for="editSchoolName" class="block text-sm font-medium">Tên trường</label>
-                    <input type="text" id="editSchoolName" name="ten_truong" required
+                    <input type="text" id="editSchoolName" name="ten_truong" required pattern="^[a-zA-ZÀ-ỹ\s]+$"
+                        title="Tên trường học chỉ được chứa chữ cái và khoảng trắng"
                         class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
                 </div>
                 <div class="mb-4">

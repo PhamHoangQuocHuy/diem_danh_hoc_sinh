@@ -315,7 +315,7 @@ class TaiKhoanModel {
         const conn = await pool.getConnection();
         try {
             await conn.beginTransaction();
-            for (const taiKhoan of danhSachTaiKhoan) {
+            for (const [index, taiKhoan] of danhSachTaiKhoan.entries()) {
                 const {
                     ho_ten,
                     ngaysinh,
@@ -328,34 +328,63 @@ class TaiKhoanModel {
                     anh_dai_dien = 'default_avatar.jpg',
                     ten_vai_tro,
                     loai_bang_cap = [],
-                } = taiKhoan
-                //console.log('Mat khau truoc khi hash:', mat_khau, 'Kieu du lieu:', typeof mat_khau);
-                const hashedPassword = await bcrypt.hash(mat_khau?.toString() || '', saltRounds);
-                const [result] = await conn.execute(`
-                    INSERT INTO tai_khoan (ho_ten, ngaysinh, gioi_tinh, so_cmnd, dia_chi, email, sdt, mat_khau, anh_dai_dien, ten_vai_tro)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    `, [ho_ten, ngaysinh, gioi_tinh, so_cmnd, dia_chi, email, sdt, hashedPassword, anh_dai_dien, ten_vai_tro]);
+                } = taiKhoan;
+
+                // Kiểm tra trùng lặp trong DB
+                const [emailCheck] = await conn.execute('SELECT 1 FROM tai_khoan WHERE email = ?', [email]);
+                if (emailCheck.length > 0) {
+                    throw new Error(`Email đã tồn tại: ${email} (dòng ${index + 2})`);
+                }
+                const [cmndCheck] = await conn.execute('SELECT 1 FROM tai_khoan WHERE so_cmnd = ?', [so_cmnd]);
+                if (cmndCheck.length > 0) {
+                    throw new Error(`CMND đã tồn tại: ${so_cmnd} (dòng ${index + 2})`);
+                }
+                const [sdtCheck] = await conn.execute('SELECT 1 FROM tai_khoan WHERE sdt = ?', [sdt]);
+                if (sdtCheck.length > 0) {
+                    throw new Error(`Số điện thoại đã tồn tại: ${sdt} (dòng ${index + 2})`);
+                }
+                if (ten_vai_tro === 'Giáo viên' && loai_bang_cap.length === 0) {
+                    throw new Error(`Giáo viên phải có bằng cấp (dòng ${index + 2})`);
+                }
+
+                // Chèn tài khoản
+                const hashedPassword = await bcrypt.hash(mat_khau.toString(), saltRounds);
+                const [result] = await conn.execute(
+                    `INSERT INTO tai_khoan (ho_ten, ngaysinh, gioi_tinh, so_cmnd, dia_chi, email, sdt, mat_khau, anh_dai_dien, ten_vai_tro)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [ho_ten, ngaysinh, gioi_tinh, so_cmnd, dia_chi, email, sdt, hashedPassword, anh_dai_dien, ten_vai_tro]
+                );
                 const taiKhoanId = result.insertId;
+
+                // Chèn giáo viên hoặc phụ huynh
                 if (ten_vai_tro === 'Giáo viên') {
                     const [gvResult] = await conn.execute('INSERT INTO giao_vien (tai_khoan_id) VALUES (?)', [taiKhoanId]);
                     const giaoVienId = gvResult.insertId;
                     for (const bangCap of loai_bang_cap) {
                         await conn.execute('INSERT INTO bang_cap (giao_vien_id, loai_bang_cap) VALUES (?, ?)', [giaoVienId, bangCap]);
                     }
-                }
-                else if (ten_vai_tro === 'Phụ huynh') {
+                } else if (ten_vai_tro === 'Phụ huynh') {
                     await conn.execute('INSERT INTO phu_huynh (tai_khoan_id) VALUES (?)', [taiKhoanId]);
                 }
             }
+
             await conn.commit();
-            return { success: true, message: 'Thêm hàng loạt tài khoản thành công', messageType: 'success' }
-        }
-        catch (error) {
+            return { success: true, message: 'Thêm hàng loạt tài khoản thành công', messageType: 'success' };
+        } catch (error) {
             await conn.rollback();
-            console.error('Lỗi khi thêm hàng lớt tài khoản: ', error);
-            return { success: false, message: 'Thêm hàng loạt tài khoản thất bại', messageType: 'error' }
-        }
-        finally {
+            console.error('Lỗi khi thêm hàng loạt tài khoản: ', error);
+            const errorDetails = {
+                email: error.message.includes('Email') ? error.message.split(': ')[1].split(' (')[0] : 'Không xác định',
+                loi: error.message,
+                dong: parseInt(error.message.match(/dòng \d+/)?.[0]?.replace('dòng ', '') || 0),
+            };
+            return {
+                success: false,
+                message: 'Thêm hàng loạt tài khoản thất bại',
+                messageType: 'error',
+                errorDetails,
+            };
+        } finally {
             conn.release();
         }
     }

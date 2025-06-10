@@ -376,7 +376,12 @@ class TaiKhoanController {
 
             const danhSachTaiKhoan = [];
             const danhSachLoi = [];
-            for (const row of data) {
+
+            const validRoles = ['Admin', 'Giáo viên', 'Phụ huynh', 'Hiệu trưởng'];
+            const validGenders = ['Nam', 'Nữ'];
+
+            for (let index = 0; index < data.length; index++) {
+                const row = data[index];
                 const {
                     ho_ten,
                     ngaysinh,
@@ -389,36 +394,55 @@ class TaiKhoanController {
                     ten_vai_tro,
                     loai_bang_cap,
                 } = row;
-                // Xử lý định dạng ngày sinh
-                //console.log('Dòng đang đọc:', row);
 
+                // Xử lý định dạng ngày sinh
                 let ngaySinhFormatted = '';
                 if (typeof ngaysinh === 'number') {
                     const dateObj = new Date(Math.round((ngaysinh - 25569) * 86400 * 1000));
                     ngaySinhFormatted = dateObj.toISOString().split('T')[0];
                 } else if (typeof ngaysinh === 'string') {
                     ngaySinhFormatted = new Date(ngaysinh).toISOString().split('T')[0];
-                } else {
-                    ngaySinhFormatted = '';
                 }
 
                 // Kiểm tra dữ liệu thiếu
-                if (!ho_ten || !ngaysinh || !gioi_tinh || !so_cmnd || !dia_chi || !email || !sdt || !mat_khau || !ten_vai_tro) {
-                    danhSachLoi.push({ email, loi: 'Thiếu dữ liệu' });
+                if (!ho_ten || !ngaySinhFormatted || !gioi_tinh || !so_cmnd || !dia_chi || !email || !sdt || !mat_khau || !ten_vai_tro) {
+                    danhSachLoi.push({ email: email || 'Không xác định', loi: 'Thiếu dữ liệu', dong: index + 2 });
+                    continue;
+                }
+
+                // Kiểm tra định dạng
+                if (!validGenders.includes(gioi_tinh)) {
+                    danhSachLoi.push({ email, loi: 'Giới tính không hợp lệ (chỉ Nam hoặc Nữ)', dong: index + 2 });
+                    continue;
+                }
+                if (!validRoles.includes(ten_vai_tro)) {
+                    danhSachLoi.push({ email, loi: 'Vai trò không hợp lệ', dong: index + 2 });
+                    continue;
+                }
+                if (!/^079\d{9}$/.test(so_cmnd)) {
+                    danhSachLoi.push({ email, loi: 'Số CMND phải bắt đầu bằng 079 và có 12 chữ số', dong: index + 2 });
+                    continue;
+                }
+                if (!/^0\d{9}$/.test(sdt)) {
+                    danhSachLoi.push({ email, loi: 'Số điện thoại phải bắt đầu bằng 0 và có 10 chữ số', dong: index + 2 });
+                    continue;
+                }
+                if (ten_vai_tro === 'Giáo viên' && (!loai_bang_cap || loai_bang_cap.trim() === '')) {
+                    danhSachLoi.push({ email, loi: 'Giáo viên phải có ít nhất một bằng cấp', dong: index + 2 });
                     continue;
                 }
 
                 // Kiểm tra trùng lặp
                 if (await TaiKhoanModel.kiemTraEmail(email)) {
-                    danhSachLoi.push({ email, loi: 'Email đã tồn tại' });
+                    danhSachLoi.push({ email, loi: 'Email đã tồn tại', dong: index + 2 });
                     continue;
                 }
                 if (await TaiKhoanModel.kiemTraSoCMND(so_cmnd)) {
-                    danhSachLoi.push({ email, loi: 'CMND đã tồn tại' });
+                    danhSachLoi.push({ email, loi: 'CMND đã tồn tại', dong: index + 2 });
                     continue;
                 }
                 if (await TaiKhoanModel.kiemTraSoDienThoai(sdt)) {
-                    danhSachLoi.push({ email, loi: 'Số điện thoại đã tồn tại' });
+                    danhSachLoi.push({ email, loi: 'Số điện thoại đã tồn tại', dong: index + 2 });
                     continue;
                 }
 
@@ -433,23 +457,25 @@ class TaiKhoanController {
                     sdt,
                     mat_khau,
                     ten_vai_tro,
-                    loai_bang_cap: []
+                    loai_bang_cap: ten_vai_tro === 'Giáo viên' && loai_bang_cap ? loai_bang_cap.split(',').map(bc => bc.trim()) : [],
                 };
-
-                //console.log(`Đọc tài khoản: ${ho_ten}, email: ${email}, ngày sinh: ${ngaySinhFormatted}`);
-
-                if (ten_vai_tro === 'Giáo viên' && loai_bang_cap) {
-                    taiKhoan.loai_bang_cap = loai_bang_cap.split(',').map(bc => bc.trim());
-                }
 
                 danhSachTaiKhoan.push(taiKhoan);
             }
 
-            // Thêm tất cả tài khoản hợp lệ
-            if (danhSachTaiKhoan.length > 0) {
-                await TaiKhoanModel.themHangLoat(danhSachTaiKhoan);
+            // Nếu có lỗi, không gọi themHangLoat
+            if (danhSachLoi.length > 0) {
+                return res.status(400).json({
+                    message: `Có ${danhSachLoi.length} lỗi trong file Excel`,
+                    soLuongThanhCong: 0,
+                    soLuongLoi: danhSachLoi.length,
+                    danhSachLoi,
+                });
+            }
 
-                // Gửi email cho từng tài khoản
+            // Thêm tài khoản và gửi email
+            const result = await TaiKhoanModel.themHangLoat(danhSachTaiKhoan);
+            if (result.success) {
                 for (const tk of danhSachTaiKhoan) {
                     await guiMailTaiKhoan({
                         to: tk.email,
@@ -458,21 +484,30 @@ class TaiKhoanController {
                         password: tk.mat_khau,
                     });
                 }
+                return res.status(200).json({
+                    message: `Đã thêm ${danhSachTaiKhoan.length} tài khoản thành công`,
+                    soLuongThanhCong: danhSachTaiKhoan.length,
+                    soLuongLoi: 0,
+                    danhSachLoi: [],
+                });
+            } else {
+                return res.status(500).json({
+                    message: result.message,
+                    soLuongThanhCong: 0,
+                    soLuongLoi: result.errorDetails ? 1 : 0,
+                    danhSachLoi: result.errorDetails ? [result.errorDetails] : [],
+                });
             }
-            return res.status(200).json({
-                message: `Đã thêm ${danhSachTaiKhoan.length} tài khoản. Có ${danhSachLoi.length} lỗi.`,
-                soLuongThanhCong: danhSachTaiKhoan.length,
-                soLuongLoi: danhSachLoi.length,
-                danhSachLoi
-            });
         } catch (error) {
             console.error('Lỗi khi thêm hàng loạt:', error);
             return res.status(500).json({
-                message: 'Lỗi khi thêm tài khoản hàng loạt',
+                message: 'Lỗi hệ thống khi thêm tài khoản hàng loạt',
                 error: error.message,
+                soLuongThanhCong: 0,
+                soLuongLoi: 1,
+                danhSachLoi: [{ email: 'Không xác định', loi: error.message, dong: 0 }],
             });
         }
     }
-
 }
 module.exports = TaiKhoanController;
