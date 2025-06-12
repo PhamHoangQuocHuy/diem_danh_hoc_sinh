@@ -32,10 +32,10 @@
         </thead>
         <tbody id="classTableBody">
             <% if(danhSachLopHoc && danhSachLopHoc.length> 0) {%>
-                <% danhSachLopHoc.forEach((lopHoc)=> { %>
+                <% danhSachLopHoc.forEach((lopHoc, index)=> { %>
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="py-2 px-4 border-b text-center">
-                            <%= lopHoc.lop_hoc_id %>
+                            <%= index + 1 %>
                         </td>
                         <td class="py-2 px-4 border-b text-center">
                             <%= lopHoc.ten_lop %>
@@ -161,7 +161,7 @@
                 <input type="hidden" name="lop_hoc_id" id="editClassId">
                 <div class="mb-4">
                     <label for="editclassName" class="block text-sm font-medium">Tên lớp</label>
-                    <input type="text" id="editclassName" name="ten_lop" required pattern="^[a-zA-ZÀ-ỹ1-9\s]+$"
+                    <input type="text" id="editclassName" name="ten_lop" required pattern="^[a-zA-ZÀ-ỹ1-9\s]+$" readonly
                         title="Tên lớp học chỉ được chứa chữ cái và khoảng trắng"
                         class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
                 </div>

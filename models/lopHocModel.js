@@ -173,22 +173,21 @@ class LopHocModel {
             if (lopHocHienTai.length === 0) {
                 throw new Error('Lớp học không tồn tại');
             }
-            const { hoc_ky_id, nam_hoc, ten_hoc_ky } = lopHocHienTai[0];
+            const { nam_hoc, ten_hoc_ky } = lopHocHienTai[0];
 
             // Ràng buộc 1: Kiểm tra nếu giáo viên đã chủ nhiệm lớp khác trong cùng năm học (bất kể học kỳ, trừ lớp hiện tại)
             const [lopDangChuNhiem] = await conn.query(`
-            SELECT lh.ten_lop, hk.nam_hoc, hk.ten_hoc_ky
-            FROM lop_hoc lh
-            JOIN hoc_ky hk ON lh.hoc_ky_id = hk.hoc_ky_id
-            WHERE lh.giao_vien_id = ? AND lh.lop_hoc_id != ? AND hk.nam_hoc = ?
-        `, [giao_vien_id, id, nam_hoc]);
+                SELECT lh.lop_hoc_id, lh.ten_lop, hk.ten_hoc_ky 
+                FROM lop_hoc lh 
+                JOIN hoc_ky hk ON lh.hoc_ky_id = hk.hoc_ky_id
+                WHERE lh.giao_vien_id = ? AND hk.nam_hoc = ? AND lh.ten_lop != ?
+            `, [giao_vien_id, nam_hoc, ten_lop]);
 
             if (lopDangChuNhiem.length > 0) {
                 await conn.rollback();
-                const lop = lopDangChuNhiem[0];
                 return {
                     success: false,
-                    message: `Giáo viên này đã chủ nhiệm lớp '${lop.ten_lop}' trong năm học ${lop.nam_hoc} (${lop.ten_hoc_ky})`,
+                    message: `Giáo viên này đã chủ nhiệm lớp khác (${lopDangChuNhiem[0].ten_lop}) trong năm học ${nam_hoc} (${lopDangChuNhiem.map(r => r.ten_hoc_ky).join(', ')})`,
                     messageType: 'error'
                 };
             }
@@ -229,7 +228,7 @@ class LopHocModel {
     }
     static async timThongTinLopHoc(tim_kiem) {
         try {
-            if(!tim_kiem || tim_kiem.trim() === ''){
+            if (!tim_kiem || tim_kiem.trim() === '') {
                 return { success: false, message: 'Vui lòng nhập tìm kiếm', messageType: 'error' };
             }
             const conn = await pool.getConnection();

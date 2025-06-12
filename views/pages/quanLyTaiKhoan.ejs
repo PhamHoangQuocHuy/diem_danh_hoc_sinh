@@ -110,10 +110,10 @@
         <!-- BODY -->
         <tbody id="accountTableBody">
             <% if (danhSachTaiKhoan && danhSachTaiKhoan.length> 0) { %>
-                <% danhSachTaiKhoan.forEach(tk=> { %>
+                <% danhSachTaiKhoan.forEach((tk, index) => { %>
                     <tr>
                         <td class="py-2 px-4 border-b text-center">
-                            <%= tk.tai_khoan_id %>
+                            <%= index + 1 %>
                         </td>
                         <td class="py-2 px-4 border-b text-center">
                             <%= tk.ho_ten %>

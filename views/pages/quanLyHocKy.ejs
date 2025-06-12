@@ -32,39 +32,39 @@
     <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
         <thead>
             <tr class="bg-gray-200">
-                <th class="py-2 px-4 border-b text-left">ID</th>
-                <th class="py-2 px-4 border-b text-left">Tên trường</th>
-                <th class="py-2 px-4 border-b text-left">Tên học kỳ</th>
-                <th class="py-2 px-4 border-b text-left">Năm học</th>
-                <th class="py-2 px-4 border-b text-left">Ngày bắt đầu</th>
-                <th class="py-2 px-4 border-b text-left">Ngày kết thúc</th>
-                <th class="py-2 px-4 border-b text-left">Hành động</th>
+                <th class="py-2 px-4 border-b text-center">ID</th>
+                <th class="py-2 px-4 border-b text-center">Tên trường</th>
+                <th class="py-2 px-4 border-b text-center">Tên học kỳ</th>
+                <th class="py-2 px-4 border-b text-center">Năm học</th>
+                <th class="py-2 px-4 border-b text-center">Ngày bắt đầu</th>
+                <th class="py-2 px-4 border-b text-center">Ngày kết thúc</th>
+                <th class="py-2 px-4 border-b text-center">Hành động</th>
             </tr>
         </thead>
         <tbody id="semesterTableBody">
             <% if(danhSachHocKy && danhSachHocKy.length> 0) { %>
-                <% danhSachHocKy.forEach(hocKy=> { %>
+                <% danhSachHocKy.forEach((hocKy, index) => { %>
                     <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="py-2 px-4 border-b">
-                            <%= hocKy.hoc_ky_id %>
+                        <td class="py-2 px-4 border-b text-center">
+                            <%= index + 1 %>
                         </td>
-                        <td class="py-2 px-4 border-b">
+                        <td class="py-2 px-4 border-b text-center">
                             <%= danhSachTruongHoc.find(truongHoc=> truongHoc.truong_hoc_id ===
                                 hocKy.truong_hoc_id).ten_truong %>
                         </td>
-                        <td class="py-2 px-4 border-b">
+                        <td class="py-2 px-4 border-b text-center">
                             <%= hocKy.ten_hoc_ky %>
                         </td>
-                        <td class="py-2 px-4 border-b">
+                        <td class="py-2 px-4 border-b text-center">
                             <%= hocKy.nam_hoc %>
                         </td>
-                        <td class="py-2 px-4 border-b">
+                        <td class="py-2 px-4 border-b text-center">
                             <%= formatDate(hocKy.ngay_bat_dau) %>
                         </td>
-                        <td class="py-2 px-4 border-b">
+                        <td class="py-2 px-4 border-b text-center">
                             <%= formatDate(hocKy.ngay_ket_thuc) %>
                         </td>
-                        <td class="py-2 px-4 border-b">
+                        <td class="py-2 px-4 border-b text-center">
                             <!-- SỬA -->
                             <button onclick="toggleEditModal(this)" data-id="<%= hocKy.hoc_ky_id %>"
                                 data-ten_truong_hoc="<%= danhSachTruongHoc.find(truongHoc => truongHoc.truong_hoc_id === hocKy.truong_hoc_id).ten_truong %>"

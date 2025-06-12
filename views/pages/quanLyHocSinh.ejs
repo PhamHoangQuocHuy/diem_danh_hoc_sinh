@@ -1,5 +1,21 @@
 <style>
-    /* Ô vuông chứa ảnh hoặc placeholder */
+    #parentSuggestions {
+        max-height: 192px;
+        /* max-h-48 */
+        overflow-y: auto;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    #parentSuggestions div {
+        cursor: pointer;
+        padding: 8px 16px;
+    }
+
+    #parentSuggestions div:hover {
+        background-color: #f3f4f6;
+        /* Tailwind gray-100 */
+    }
+
     .image-placeholder {
         width: 100px;
         height: 100px;
@@ -48,171 +64,257 @@
     <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
         <thead>
             <tr class="bg-gray-200">
-                <th class="py-2 px-4 border-b text-left">ID</th>
-                <th class="py-2 px-4 border-b text-left">Họ tên</th>
-                <th class="py-2 px-4 border-b text-left">Ngày sinh</th>
-                <th class="py-2 px-4 border-b text-left">Giới tính</th>
-                <th class="py-2 px-4 border-b text-left">Địa chỉ</th>
-                <th class="py-2 px-4 border-b text-left">Loại học sinh</th>
-                <th class="py-2 px-4 border-b text-left">Hành động</th>
+                <th class="py-2 px-4 border-b text-center">ID</th>
+                <th class="py-2 px-4 border-b text-center">Họ tên</th>
+                <th class="py-2 px-4 border-b text-center">Ngày sinh</th>
+                <th class="py-2 px-4 border-b text-center">Giới tính</th>
+                <th class="py-2 px-4 border-b text-center">Địa chỉ</th>
+                <th class="py-2 px-4 border-b text-center">Loại học sinh</th>
+                <th class="py-2 px-4 border-b text-center">Hành động</th>
             </tr>
         </thead>
         <tbody id="studentTableBody">
-            <tr class="hover:bg-gray-50 transition-colors">
-                <td class="py-2 px-4 border-b">1</td>
-                <td class="py-2 px-4 border-b">Nguyễn Văn A</td>
-                <td class="py-2 px-4 border-b">2007-05-12</td>
-                <td class="py-2 px-4 border-b">Nam</td>
-                <td class="py-2 px-4 border-b">123 Đường ABC, Quận 1</td>
-                <td class="py-2 px-4 border-b">Bán trú</td>
-                <td class="py-2 px-4 border-b">
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                        aria-label="Xem chi tiết học sinh 1" onclick="viewDetails(1)">
-                        <i class="fas fa-eye mr-1"></i> Xem chi tiết
-                    </button>
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                        aria-label="Sửa học sinh 1">
-                        <i class="fas fa-edit mr-1"></i> Sửa
-                    </button>
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300 transition-colors"
-                        aria-label="Xóa học sinh 1">
-                        <i class="fas fa-trash-alt mr-1"></i> Xóa
-                    </button>
-                </td>
-            </tr>
-            <tr class="hover:bg-gray-50 transition-colors">
-                <td class="py-2 px-4 border-b">2</td>
-                <td class="py-2 px-4 border-b">Trần Thị B</td>
-                <td class="py-2 px-4 border-b">2008-11-28</td>
-                <td class="py-2 px-4 border-b">Nữ</td>
-                <td class="py-2 px-4 border-b">456 Đường XYZ, Quận 2</td>
-                <td class="py-2 px-4 border-b">Không bán trú</td>
-                <td class="py-2 px-4 border-b">
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                        aria-label="Xem chi tiết học sinh 2" onclick="viewDetails(2)">
-                        <i class="fas fa-eye mr-1"></i> Xem chi tiết
-                    </button>
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                        aria-label="Sửa học sinh 2">
-                        <i class="fas fa-edit mr-1"></i> Sửa
-                    </button>
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300 transition-colors"
-                        aria-label="Xóa học sinh 2">
-                        <i class="fas fa-trash-alt mr-1"></i> Xóa
-                    </button>
-                </td>
-            </tr>
+            <% if(danhSachHocSinh && danhSachHocSinh.length> 0) { %>
+                <% danhSachHocSinh.forEach((hocSinh, index)=> { %>
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="py-2 px-4 border-b text-center">
+                            <%= index + 1 %>
+                        </td>
+                        <td class="py-2 px-4 border-b text-center">
+                            <%= hocSinh.ho_ten %>
+                        </td>
+                        <td class="py-2 px-4 border-b text-center">
+                            <%= formatDate(hocSinh.ngay_sinh) %>
+                        </td>
+                        <td class="py-2 px-4 border-b text-center">
+                            <%= hocSinh.gioi_tinh %>
+                        </td>
+                        <td class="py-2 px-4 border-b text-center">
+                            <%= hocSinh.dia_chi %>
+                        </td>
+                        <td class="py-2 px-4 border-b text-center">
+                            <%= hocSinh.loai_hoc_sinh %>
+                        </td>
+                        <td class="py-2 px-4 border-b text-center">
+                            <button
+                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
+                                aria-label="Xem chi tiết học sinh 1" onclick="viewDetails()">
+                                <i class="fas fa-eye mr-1"></i> Xem chi tiết
+                            </button>
+                            <button
+                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
+                                aria-label="Sửa học sinh 1">
+                                <i class="fas fa-edit mr-1"></i> Sửa
+                            </button>
+                            <button
+                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300 transition-colors"
+                                aria-label="Xóa học sinh 1">
+                                <i class="fas fa-trash-alt mr-1"></i> Xóa
+                            </button>
+                        </td>
+                    </tr>
+                    <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="7" class="py-2 px-4 border-b text-center">Không có học sinh</td>
+                            </tr>
+                            <% } %>
         </tbody>
     </table>
 
     <!-- Modal thêm học sinh -->
-    <div id="addModal"
-        class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden overflow-auto p-4">
-        <div class="bg-white rounded-lg p-6 w-full max-w-3xl shadow-lg max-h-full overflow-auto">
-            <h2 class="text-xl font-semibold mb-4">Thêm học sinh</h2>
-            <form id="addStudentForm">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="mb-4 col-span-2">
-                        <label for="fullName" class="block text-sm font-medium">Họ tên</label>
-                        <input type="text" id="fullName" name="fullName" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+    <div id="addModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-60 hidden p-2">
+        <div class="bg-white rounded-xl p-5 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-auto font-sans">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Thêm học sinh</h2>
+            <form id="addStudentForm" method="post" action="/hoc-sinh/them" enctype="multipart/form-data" >
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="col-span-2">
+                        <label for="fullName" class="block text-sm font-medium text-gray-700">Họ tên</label>
+                        <input type="text" id="fullName" name="ho_ten" required pattern="^[a-zA-ZÀ-ỹ\s]+$"
+                            title="Họ tên chỉ được chứa chữ cái và khoảng trắng"
+                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50" />
                     </div>
-                    <div class="mb-4">
-                        <label for="dob" class="block text-sm font-medium">Ngày sinh</label>
-                        <input type="date" id="dob" name="dob" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    <div>
+                        <label for="dob" class="block text-sm font-medium text-gray-700">Ngày sinh</label>
+                        <input type="date" id="dob" name="ngay_sinh" required
+                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50" />
                     </div>
-                    <div class="mb-4">
-                        <label for="gender" class="block text-sm font-medium">Giới tính</label>
-                        <select id="gender" name="gender" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500">
-                            <option value="" disabled selected>Chọn giới tính</option>
+                    <div>
+                        <label for="gender" class="block text-sm font-medium text-gray-700">Giới tính</label>
+                        <select id="gender" name="gioi_tinh" required
+                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50">
+                            <option value="" disabled selected>Chọn</option>
                             <option value="Nam">Nam</option>
                             <option value="Nữ">Nữ</option>
                         </select>
                     </div>
-                    <div class="mb-4">
-                        <label for="studentType" class="block text-sm font-medium">Loại học sinh</label>
-                        <select id="studentType" name="studentType" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500">
-                            <option value="" disabled selected>Chọn loại</option>
+                    <div>
+                        <label for="studentType" class="block text-sm font-medium text-gray-700">Loại học sinh</label>
+                        <select id="studentType" name="loai_hoc_sinh" required
+                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50">
+                            <option value="" disabled selected>Chọn</option>
                             <option value="Bán trú">Bán trú</option>
                             <option value="Không bán trú">Không bán trú</option>
                         </select>
                     </div>
-                    <div class="mb-4 col-span-2">
-                        <label for="address" class="block text-sm font-medium">Địa chỉ</label>
-                        <input type="text" id="address" name="address" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Chọn lớp</label>
+                        <div id="classCheckboxes"
+                            class="grid grid-cols-1 gap-1 max-h-28 overflow-auto border border-gray-200 rounded-lg p-2 bg-gray-50">
+                            <% danhSachLopHoc_HocKy.forEach(function(lop) { %>
+                                <label class="inline-flex items-center text-sm text-gray-600">
+                                    <input type="checkbox" name="lop_hoc_ids[]" value="<%= lop.lop_hoc_id %>"
+                                        class="mr-2 lop-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-400"
+                                        data-ten_lop="<%= lop.ten_lop %>" data-nam_hoc="<%= lop.nam_hoc %>"
+                                        data-hoc_ky="<%= lop.hoc_ky %>" />
+                                    <span>
+                                        <%= lop.ten_lop %> - <%= lop.ten_hoc_ky %> - <%= lop.nam_hoc %>
+                                    </span>
+                                </label>
+                                <% }); %>
+                        </div>
                     </div>
-                    <div class="mb-4 col-span-2">
-                        <label for="parentRelation" class="block text-sm font-medium">Mối quan hệ với phụ huynh</label>
-                        <select id="parentRelation" name="parentRelation" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500">
-                            <option value="" disabled selected>Chọn mối quan hệ</option>
-                            <option value="Cha">Cha</option>
-                            <option value="Mẹ">Mẹ</option>
-                            <option value="Người giám hộ">Người giám hộ</option>
-                        </select>
+                    <div class="col-span-2">
+                        <label for="address" class="block text-sm font-medium text-gray-700">Địa chỉ</label>
+                        <input type="text" id="address" name="dia_chi" required
+                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50" />
                     </div>
-                    <div class="mb-4 col-span-2">
-                        <label class="block text-sm font-medium mb-2">Ảnh học sinh (tối đa 3 ảnh)</label>
-                        <div class="flex gap-4">
-                            <label class="image-placeholder" for="image1" title="Click để chọn ảnh 1">
-                                <span class="placeholder-text text-gray-400">Ảnh 1</span>
-                                <input type="file" id="image1" name="images" accept="image/*" />
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Chọn phụ huynh và mối quan
+                            hệ</label>
+                        <div id="phuHuynhContainer"
+                            class="grid grid-cols-1 gap-2 max-h-60 overflow-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+                            <% danhSachPhuHuynh.forEach(function(p) { %>
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" name="phu_huynh_ids[]" class="ph-checkbox"
+                                        value="<%= p.id %>" data-name="<%= p.ho_ten %>" />
+                                    <span>
+                                        <%= p.ho_ten %> - <%= p.email %>
+                                    </span>
+                                    <select disabled
+                                        class="ml-auto ph-select border border-gray-200 rounded px-2 py-1 text-sm bg-white text-gray-700">
+                                        <option value="" selected disabled>-- Mối quan hệ --</option>
+                                        <option value="Cha">Cha</option>
+                                        <option value="Mẹ">Mẹ</option>
+                                        <option value="Người giám hộ">Người giám hộ</option>
+                                    </select>
+                                </div>
+                                <% }) %>
+                        </div>
+                    </div>
+
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Ảnh học sinh (thêm đủ 3 ảnh)</label>
+                        <div class="flex gap-3">
+                            <label
+                                class="image-placeholder w-16 h-16 flex items-center justify-center border border-gray-200 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
+                                for="image1" title="Chọn ảnh 1">
+                                <span class="text-xs text-gray-500">Ảnh 1</span>
+                                <input type="file" id="image1" name="duong_dan_anh[]" multiple accept="image/*" class="hidden" />
                             </label>
-                            <label class="image-placeholder" for="image2" title="Click để chọn ảnh 2">
-                                <span class="placeholder-text text-gray-400">Ảnh 2</span>
-                                <input type="file" id="image2" name="images" accept="image/*" />
+                            <label
+                                class="image-placeholder w-16 h-16 flex items-center justify-center border border-gray-200 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
+                                for="image2" title="Chọn ảnh 2">
+                                <span class="text-xs text-gray-500">Ảnh 2</span>
+                                <input type="file" id="image2" name="duong_dan_anh[]" multiple accept="image/*" class="hidden" />
                             </label>
-                            <label class="image-placeholder" for="image3" title="Click để chọn ảnh 3">
-                                <span class="placeholder-text text-gray-400">Ảnh 3</span>
-                                <input type="file" id="image3" name="images" accept="image/*" />
+                            <label
+                                class="image-placeholder w-16 h-16 flex items-center justify-center border border-gray-200 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
+                                for="image3" title="Chọn ảnh 3">
+                                <span class="text-xs text-gray-500">Ảnh 3</span>
+                                <input type="file" id="image3" name="duong_dan_anh[]" multiple accept="image/*" class="hidden" />
                             </label>
                         </div>
                     </div>
                 </div>
-                <div class="flex justify-end mt-6">
+                <div class="flex justify-end mt-4 gap-2">
                     <button type="button" onclick="toggleAddModal()"
-                        class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md mr-2 hover:bg-gray-400 transition-colors">Hủy</button>
+                        class="bg-gray-200 text-gray-700 px-4 py-1.5 rounded-lg hover:bg-gray-300 transition-colors duration-200">Hủy</button>
                     <button type="submit"
-                        class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors">Thêm</button>
+                        class="bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-4 py-1.5 rounded-lg hover:from-indigo-600 hover:to-blue-600 transition-colors duration-200">Thêm</button>
                 </div>
             </form>
         </div>
     </div>
-
 </div>
+<!-- THÊM -->
+<script type="">
+    const danhSachPhuHuynh = [
+        <% danhSachPhuHuynh.forEach(phuHuynh => { %>
+    {
+        phu_huynh_id: <%= phuHuynh.phu_huynh_id %>,
+        ho_ten: '<%= phuHuynh.ho_ten %>',
+        email: '<%= phuHuynh.email %>'
+    },
+        <% }) %>
+    ];
 
-<script>
     function toggleAddModal() {
         const modal = document.getElementById('addModal');
         modal.classList.toggle('hidden');
+        // Xóa nội dung tìm kiếm và gợi ý khi mở modal
+        document.getElementById('parentSearch').value = '';
+        document.getElementById('phu_huynh_id').value = '';
+        document.getElementById('parentSuggestions').classList.add('hidden');
     }
 
     function viewDetails(studentId) {
         alert("Xem chi tiết học sinh ID: " + studentId);
     }
 
-    // Hiển thị ảnh khi chọn file cho từng ô
+    // Xử lý tìm kiếm phụ huynh
+    document.getElementById('parentSearch').addEventListener('input', function () {
+        const query = this.value.toLowerCase();
+        const suggestionsContainer = document.getElementById('parentSuggestions');
+        suggestionsContainer.innerHTML = '';
+
+        if (query.length === 0) {
+            suggestionsContainer.classList.add('hidden');
+            return;
+        }
+
+        const filteredParents = danhSachPhuHuynh.filter(parent =>
+            parent.ho_ten.toLowerCase().includes(query) || parent.email.toLowerCase().includes(query)
+        );
+
+        if (filteredParents.length > 0) {
+            suggestionsContainer.classList.remove('hidden');
+            filteredParents.forEach(parent => {
+                const div = document.createElement('div');
+                div.className = 'px-4 py-2 hover:bg-gray-100 cursor-pointer';
+                div.textContent = `${parent.ho_ten} - ${parent.email}`;
+                div.addEventListener('click', () => {
+                    document.getElementById('parentSearch').value = `${parent.ho_ten} - ${parent.email}`;
+                    document.getElementById('phu_huynh_id').value = parent.phu_huynh_id;
+                    suggestionsContainer.classList.add('hidden');
+                });
+                suggestionsContainer.appendChild(div);
+            });
+        } else {
+            suggestionsContainer.classList.add('hidden');
+        }
+    });
+
+    // Ẩn danh sách gợi ý khi click ra ngoài
+    document.addEventListener('click', function (e) {
+        const parentSearch = document.getElementById('parentSearch');
+        const suggestionsContainer = document.getElementById('parentSuggestions');
+        if (!parentSearch.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+            suggestionsContainer.classList.add('hidden');
+        }
+    });
+
+    // Hiển thị ảnh khi chọn file
     function handleImagePreview(inputElement, labelElement) {
         if (inputElement.files && inputElement.files[0]) {
             const file = inputElement.files[0];
             const reader = new FileReader();
             reader.onload = function (e) {
-                labelElement.style.borderStyle = 'solid'; // đổi viền thành solid khi có ảnh
+                labelElement.style.borderStyle = 'solid';
                 labelElement.innerHTML = '<img src="' + e.target.result + '" alt="Ảnh học sinh" />';
             };
             reader.readAsDataURL(file);
         } else {
-            // Nếu bỏ chọn file, trả lại placeholder
             labelElement.innerHTML = '<span class="placeholder-text text-gray-400">Chọn ảnh</span>';
             labelElement.style.borderStyle = 'dashed';
         }
@@ -225,3 +327,99 @@
         });
     });
 </script>
+
+<!-- CHECKBOX & VALIDATION -->
+<script>
+    document.getElementById('addStudentForm').addEventListener('submit', function (e) {
+        let isValid = true;
+        let message = "";
+
+        // Kiểm tra các trường required
+        this.querySelectorAll('input[required], select[required], textarea[required]').forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+                message = "Vui lòng điền đầy đủ thông tin!";
+            }
+        });
+
+        if (!isValid) {
+            e.preventDefault();
+            alert(message);
+            return;
+        }
+
+        // Kiểm tra checkbox lớp học
+        const checkboxes = document.querySelectorAll('.lop-checkbox:checked');
+        const selected = {};
+        checkboxes.forEach(cb => {
+            const tenLop = cb.dataset.tenLop;
+            const namHoc = cb.dataset.namHoc;
+            const key = `${tenLop}-${namHoc}`;
+            if (!selected[key]) selected[key] = [];
+            selected[key].push(cb.dataset.hocKy);
+        });
+
+        let validLop = false;
+        for (const key in selected) {
+            const hk = selected[key];
+            if (hk.includes("1") && hk.includes("2")) {
+                validLop = true;
+                break;
+            }
+        }
+
+        if (!validLop) {
+            e.preventDefault();
+            alert("Vui lòng chọn đủ 2 học kỳ (1 và 2) của cùng một lớp và cùng năm học!");
+            return;
+        }
+
+        // Kiểm tra đủ 3 ảnh
+        const imageInputs = document.querySelectorAll('input[type="file"][name="duong_dan_anh[]"]');
+        let imageCount = 0;
+        imageInputs.forEach(input => {
+            if (input.files.length > 0) imageCount++;
+        });
+
+        if (imageCount < 3) {
+            e.preventDefault();
+            alert("Vui lòng chọn đủ 3 ảnh học sinh!");
+            return;
+        }
+    });
+    // Kiểm tra mối quan hệ đã chọn cho các phụ huynh
+    const phuHuynhCheckboxes = document.querySelectorAll('.ph-checkbox');
+    let relationshipValid = true;
+
+    phuHuynhCheckboxes.forEach(cb => {
+        const select = cb.parentElement.querySelector('.ph-select');
+        if (cb.checked && (!select || !select.value)) {
+            relationshipValid = false;
+        }
+    });
+
+    if (!relationshipValid) {
+        e.preventDefault();
+        alert("Vui lòng chọn mối quan hệ cho từng phụ huynh đã chọn!");
+        return;
+    }
+    // Bật/tắt dropdown mối quan hệ khi chọn checkbox phụ huynh
+    document.querySelectorAll('.ph-checkbox').forEach((checkbox) => {
+        checkbox.addEventListener('change', (e) => {
+            const select = e.target.closest('div').querySelector('.ph-select');
+            if (e.target.checked) {
+                select.disabled = false;
+                select.name = 'moi_quan_he[]';
+                e.target.name = 'phu_huynh_ids[]';
+            } else {
+                select.disabled = true;
+                select.name = '';
+                e.target.name = '';
+            }
+        });
+    });
+</script>
+
+<% function formatDate(dateStr) { if (!dateStr) return '' ; const d=new Date(dateStr); const
+    day=String(d.getDate()).padStart(2, '0' ); const month=String(d.getMonth() + 1).padStart(2, '0' ); const
+    year=d.getFullYear(); return `${day}/${month}/${year}`; } %>
