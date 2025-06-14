@@ -10,7 +10,16 @@ class TaiKhoanController {
     static async hienThiDanhSachTaiKhoan(req, res) {
         let conn;
         try {
-            const danhSachTaiKhoan = await TaiKhoanModel.hienThiTaiKhoan();
+            const page = parseInt(req.query.page) || 1;
+            const limit = 5; 
+            const offset = (page - 1) * limit;
+
+
+            const danhSachTaiKhoan = await TaiKhoanModel.hienThiTaiKhoan(limit, offset);
+            const totalTaiKhoan = await TaiKhoanModel.demTongTaiKhoan();
+            const totalPages = Math.ceil(totalTaiKhoan / limit);
+            
+
             conn = await pool.getConnection();
             for (let taiKhoan of danhSachTaiKhoan) {
                 if (taiKhoan.ten_vai_tro === 'Giáo viên') {
@@ -30,6 +39,8 @@ class TaiKhoanController {
             return res.status(200).render('admin_index', {
                 page: 'pages/quanLyTaiKhoan',
                 danhSachTaiKhoan,
+                currentPage: page,
+                totalPages,
                 message: req.query.message || '',
                 messageType: req.query.messageType || ''
             });

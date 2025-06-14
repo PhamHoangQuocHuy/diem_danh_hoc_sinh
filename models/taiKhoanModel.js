@@ -79,21 +79,20 @@ class TaiKhoanModel {
         }
 
     }
-    static async hienThiTaiKhoan() {
-        const conn = await pool.getConnection();
-        try {
-            const [rows] = await conn.execute(`
-            SELECT * FROM tai_khoan
-        `);
+    static async hienThiTaiKhoan(limit, offset) {
+        if (limit === undefined || offset === undefined) {
+            // Nếu không có phân trang, trả về tất cả bản ghi
+            const [rows] = await pool.query('SELECT * FROM tai_khoan');
             return rows;
-        } catch (error) {
-            console.error('Lỗi khi lấy danh sách tài khoản:', error);
-            return [];
-        } finally {
-            conn.release();
         }
 
-
+        // Thực hiện truy vấn SQL với LIMIT và OFFSET
+        const [rows] = await pool.query('SELECT * FROM tai_khoan LIMIT ? OFFSET ?', [limit, offset]);
+        return rows;
+    }
+    static async demTongTaiKhoan() {
+        const [rows] = await pool.query('SELECT COUNT(*) as total FROM tai_khoan');
+        return rows[0].total;
     }
     static async xoaTaiKhoan(id) {
         const conn = await pool.getConnection();

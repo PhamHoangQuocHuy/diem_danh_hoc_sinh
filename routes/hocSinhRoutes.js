@@ -6,6 +6,6 @@ const uploadHocSinh = require('../config/multerHocSinh');
 
 
 router.get('/', AuthMiddleware.kiemTraToken, HocSinhController.hienThiHocSinh);
-router.post('/them', AuthMiddleware.kiemTraToken, uploadHocSinh.array('duong_dan_anh',3) ,HocSinhController.themHocSinh);
+router.post('/them', AuthMiddleware.kiemTraToken, uploadHocSinh ,HocSinhController.themHocSinh);
 
 module.exports = router;
