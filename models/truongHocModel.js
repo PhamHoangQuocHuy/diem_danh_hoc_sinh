@@ -3,7 +3,7 @@ const pool = require('../config/connect_database');
 class TruongHocModel {
     static async hienthiTruongHoc() {
         const conn = await pool.getConnection();
-        const [rows] = await conn.query(`SELECT * FROM truong_hoc`);
+        const [rows] = await conn.query(`SELECT * FROM truong_hoc where daXoa=0`);
         return rows;
     }
     static async themTruongHoc(truongHoc) {
@@ -24,33 +24,16 @@ class TruongHocModel {
             conn.release();
         }
     }
-    static async kiemTraHocKy(truongHocId) {
-        const conn = await pool.getConnection();
-        try {
-            const [rows] = await conn.query(`SELECT * FROM hoc_ky WHERE truong_hoc_id = ?`, [truongHocId]);
-            return rows;
-        } catch (error) {
-            console.log('Lỗi khi kiểm tra học kỳ: ', error);
-            return [];
-        } finally {
-            conn.release();
-        }
-    }
     static async xoaTruongHoc(id) {
         const conn = await pool.getConnection();
         try {
             await conn.beginTransaction();
-            // Kiểm tra xem có học kỳ nào thuộc trường này không
-            const [hocKyRows] = await conn.query(`SELECT * FROM hoc_ky WHERE truong_hoc_id = ?`, [id]);
-            if (hocKyRows.length > 0) {
-                await conn.rollback();
-                return {
-                    success: false,
-                    message: 'Không thể xóa trường học vì đang có học kỳ thuộc trường này',
-                    messageType: 'error'
-                };
+            // Kiểm tra xem có năm học nào thuộc trường này không
+            const tonTaiNamHoc = await conn.query(`SELECT 1 FROM nam_hoc WHERE truong_hoc_id = ? AND daXoa = 0`, [id]);
+            if (tonTaiNamHoc[0].length > 0) {
+                return { success: false, message: 'Không thể xóa trường học đang được sử dụng', messageType: 'error' };
             }
-            const [rows] = await conn.query(`DELETE FROM truong_hoc WHERE truong_hoc_id = ?`, [id]);
+            const [rows] = await conn.query(`UPDATE truong_hoc SET daXoa=1 WHERE truong_hoc_id = ?`, [id]);
             await conn.commit();
             return { success: true, message: 'Xóa trường học thành công', messageType: 'success' }
         }

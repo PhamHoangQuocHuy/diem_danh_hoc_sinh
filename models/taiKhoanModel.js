@@ -33,6 +33,11 @@ class TaiKhoanModel {
             ten_vai_tro,
             loai_bang_cap = [],
         } = taiKhoan;
+        const today = new Date();
+        const dob = new Date(ngaysinh);
+        if( dob > today) {
+            return { success: false, message: 'Ngày sinh không hợp lệ', messageType: 'error' };
+        }
         const conn = await pool.getConnection();
         try {
             await conn.beginTransaction();
@@ -82,7 +87,7 @@ class TaiKhoanModel {
     static async hienThiTaiKhoan(limit, offset) {
         if (limit === undefined || offset === undefined) {
             // Nếu không có phân trang, trả về tất cả bản ghi
-            const [rows] = await pool.query('SELECT * FROM tai_khoan');
+            const [rows] = await pool.query('SELECT * FROM tai_khoan wHERE daXoa = 0');
             return rows;
         }
 
@@ -147,7 +152,7 @@ class TaiKhoanModel {
             }
 
             // Xóa tài khoản
-            await conn.execute('DELETE FROM tai_khoan WHERE tai_khoan_id = ?', [id]);
+            await conn.execute('UPDATE tai_khoan SET daXoa=1 WHERE tai_khoan_id = ?', [id]);
 
             // 4. Nếu có ảnh đại diện riêng thì xóa file
             if (anh_dai_dien && anh_dai_dien !== 'default_avatar.jpg') {

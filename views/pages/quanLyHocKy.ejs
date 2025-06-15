@@ -33,7 +33,6 @@
         <thead>
             <tr class="bg-gray-200">
                 <th class="py-2 px-4 border-b text-center">ID</th>
-                <th class="py-2 px-4 border-b text-center">Tên trường</th>
                 <th class="py-2 px-4 border-b text-center">Tên học kỳ</th>
                 <th class="py-2 px-4 border-b text-center">Năm học</th>
                 <th class="py-2 px-4 border-b text-center">Ngày bắt đầu</th>
@@ -43,20 +42,16 @@
         </thead>
         <tbody id="semesterTableBody">
             <% if(danhSachHocKy && danhSachHocKy.length> 0) { %>
-                <% danhSachHocKy.forEach((hocKy, index) => { %>
+                <% danhSachHocKy.forEach((hocKy, index)=> { %>
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="py-2 px-4 border-b text-center">
                             <%= index + 1 %>
                         </td>
                         <td class="py-2 px-4 border-b text-center">
-                            <%= danhSachTruongHoc.find(truongHoc=> truongHoc.truong_hoc_id ===
-                                hocKy.truong_hoc_id).ten_truong %>
-                        </td>
-                        <td class="py-2 px-4 border-b text-center">
                             <%= hocKy.ten_hoc_ky %>
                         </td>
                         <td class="py-2 px-4 border-b text-center">
-                            <%= hocKy.nam_hoc %>
+                            <%= danhSachNamHoc.find(namHoc=> namHoc.nam_hoc_id === hocKy.nam_hoc_id).ten_nam_hoc %>
                         </td>
                         <td class="py-2 px-4 border-b text-center">
                             <%= formatDate(hocKy.ngay_bat_dau) %>
@@ -67,10 +62,10 @@
                         <td class="py-2 px-4 border-b text-center">
                             <!-- SỬA -->
                             <button onclick="toggleEditModal(this)" data-id="<%= hocKy.hoc_ky_id %>"
-                                data-ten_truong_hoc="<%= danhSachTruongHoc.find(truongHoc => truongHoc.truong_hoc_id === hocKy.truong_hoc_id).ten_truong %>"
-                                data-ten_hoc_ky="<%= hocKy.ten_hoc_ky %>" data-nam_hoc="<%= hocKy.nam_hoc %>"
-                                data-ngay_bat_dau="<%= hocKy.ngay_bat_dau %>"
-                                data-ngay_ket_thuc="<%= hocKy.ngay_ket_thuc %>"
+                                data-ten_nam_hoc="<%= danhSachNamHoc.find(namHoc => namHoc.nam_hoc_id === hocKy.nam_hoc_id).ten_nam_hoc %>"
+                                data-ten_hoc_ky="<%= hocKy.ten_hoc_ky %>"
+                                data-ngay_bat_dau="<%= formatDate(hocKy.ngay_bat_dau) %>"
+                                data-ngay_ket_thuc="<%= formatDate(hocKy.ngay_ket_thuc) %>"
                                 class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
                                 aria-label="Sửa học kỳ 1">
                                 <i class="fas fa-edit mr-1"></i> Sửa
@@ -112,9 +107,17 @@
                     </select>
                 </div>
                 <div class="mb-4">
-                    <label for="academicYear" class="block text-sm font-medium">Năm học</label>
-                    <input type="text" id="academicYear" name="nam_hoc" required
-                        class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    <label for="schoolSelect" class="block text-sm font-medium">Chọn năm học</label>
+                    <select name="nam_hoc_id" id="schoolSelect" required
+                        class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500"
+                        onchange="updateSelectedSchoolName()">
+                        <option value="" selected disabled>-- Chọn năm học --</option>
+                        <% danhSachNamHoc.forEach(namHoc=> { %>
+                            <option value="<%= namHoc.nam_hoc_id %>">
+                                <%= namHoc.ten_nam_hoc %>
+                            </option>
+                            <% }) %>
+                    </select>
                 </div>
                 <div class="mb-4">
                     <label for="startDate" class="block text-sm font-medium">Ngày bắt đầu</label>
@@ -126,21 +129,6 @@
                     <input type="date" id="endDate" name="ngay_ket_thuc" required
                         class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
                 </div>
-                <div class="mb-4">
-                    <label for="schoolSelect" class="block text-sm font-medium">Chọn trường</label>
-                    <select name="truong_hoc_id" id="schoolSelect" required
-                        class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500"
-                        onchange="updateSelectedSchoolName()">
-                        <option value="" selected disabled>-- Chọn trường --</option>
-                        <% danhSachTruongHoc.forEach(truong=> { %>
-                            <option value="<%= truong.truong_hoc_id %>">
-                                <%= truong.ten_truong %>
-                            </option>
-                            <% }) %>
-                    </select>
-
-                </div>
-
                 <div class="flex justify-end">
                     <button type="button" onclick="toggleAddModal()"
                         class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md mr-2 hover:bg-gray-400 transition-colors">Hủy</button>
@@ -165,9 +153,15 @@
                     </select>
                 </div>
                 <div class="mb-4">
-                    <label for="editAcademicYear" class="block text-sm font-medium">Năm học</label>
-                    <input type="text" id="editAcademicYear" name="nam_hoc" required
-                        class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    <label for="editSchoolSelect" class="block text-sm font-medium">Chọn năm học</label>
+                    <select name="nam_hoc_id" id="editSchoolSelect" required
+                        class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500">
+                        <% danhSachNamHoc.forEach(namHoc=> { %>
+                            <option value="<%= namHoc.nam_hoc_id %>">
+                                <%= namHoc.ten_nam_hoc %>
+                            </option>
+                            <% }) %>
+                    </select>
                 </div>
                 <div class="mb-4">
                     <label for="editStartDate" class="block text-sm font-medium">Ngày bắt đầu</label>
@@ -179,17 +173,6 @@
                     <input type="date" id="editEndDate" name="ngay_ket_thuc" required
                         class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
                 </div>
-                <div class="mb-4">
-                    <label for="editSchoolSelect" class="block text-sm font-medium">Chọn trường</label>
-                    <select name="truong_hoc_id" id="editSchoolSelect" required
-                        class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500">
-                        <% danhSachTruongHoc.forEach(truong=> { %>
-                            <option value="<%= truong.truong_hoc_id %>">
-                                <%= truong.ten_truong %>
-                            </option>
-                            <% }) %>
-                    </select>
-                </div>
                 <div class="flex justify-end">
                     <button type="button" onclick="toggleEditModal()"
                         class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md mr-2 hover:bg-gray-400 transition-colors">Hủy</button>
@@ -200,8 +183,9 @@
             </form>
         </div>
     </div>
-
 </div>
+
+
 <!-- THÊM -->
 <script>
     function toggleAddModal() {
@@ -219,38 +203,40 @@
 
         if (button) {
             const id = button.getAttribute('data-id');
-
-            // Lấy dữ liệu từ dòng bảng
-            const row = button.closest("tr");
-            const cells = row.querySelectorAll("td");
-
-            const tenHocKy = cells[2].innerText.trim();
-            const namHoc = cells[3].innerText.trim();
-            const ngayBatDau = convertToInputDate(cells[4].innerText.trim());
-            const ngayKetThuc = convertToInputDate(cells[5].innerText.trim());
-            const tenTruong = cells[1].innerText.trim();
+            const tenHocKy = button.getAttribute('data-ten_hoc_ky');
+            const tenNamHoc = button.getAttribute('data-ten_nam_hoc');
+            const ngayBatDau = convertToInputDate(button.getAttribute('data-ngay_bat_dau'));
+            const ngayKetThuc = convertToInputDate(button.getAttribute('data-ngay_ket_thuc'));
 
             // Gán dữ liệu vào form sửa
             document.getElementById("editSemesterId").value = id;
             document.getElementById("editSemesterName").value = tenHocKy;
-            document.getElementById("editAcademicYear").value = namHoc;
+
+            const namHocSelect = document.getElementById("editSchoolSelect");
+            for (let option of namHocSelect.options) {
+                option.selected = (option.text.trim() === tenNamHoc);
+            }
+
             document.getElementById("editStartDate").value = ngayBatDau;
             document.getElementById("editEndDate").value = ngayKetThuc;
-
-            const truongSelect = document.getElementById("editSchoolSelect");
-            for (let option of truongSelect.options) {
-                option.selected = (option.text.trim() === tenTruong);
-            }
 
             // Cập nhật action form động
             document.getElementById("editSemesterForm").action = `/hoc-ky/sua/${id}`;
         }
     }
 
-
     function convertToInputDate(dateStr) {
-        const [day, month, year] = dateStr.split("/");
-        return `${year}-${month}-${day}`;
+        if (!dateStr) return '';
+        const [day, month, year] = dateStr.split('/');
+        if (day && month && year) {
+            return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        }
+        // Xử lý trường hợp định dạng YYYY-MM-DD (từ database)
+        const [yearISO, monthISO, dayISO] = dateStr.split('-');
+        if (yearISO && monthISO && dayISO) {
+            return `${yearISO}-${monthISO.padStart(2, '0')}-${dayISO.padStart(2, '0')}`;
+        }
+        return '';
     }
 </script>
 <script>

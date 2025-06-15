@@ -5,11 +5,13 @@ class LopHocController {
             const danhSachLopHoc = await LopHocModel.layDanhSachLopHoc();
             const danhSachGiaoVien = await LopHocModel.layDanhSachGiaoVien();
             const danhSachHocKy = await LopHocModel.layDanhSachHocKy();
+            const danhSachNamHoc = await LopHocModel.layDanhSachNamHoc();
             res.render('admin_index', {
                 page: 'pages/quanLyLopHoc',
                 danhSachLopHoc,
                 danhSachGiaoVien,
                 danhSachHocKy,
+                danhSachNamHoc,
                 message: req.query.message || '',
                 messageType: req.query.messageType || ''
             });
@@ -20,51 +22,13 @@ class LopHocController {
                 danhSachLopHoc: [],
                 danhSachGiaoVien: [],
                 danhSachHocKy: [],
+                danhSachNamHoc: [],
                 message: 'Đã xảy ra lỗi khi lấy danh sách lớp học',
                 messageType: 'error'
             });
         }
     }
-    static async hienThiGiaoVien(req, res) {
-        try {
-            const danhSachGiaoVien = await LopHocModel.layDanhSachGiaoVien();
-            res.render('admin_index', {
-                page: 'pages/quanLyGiaoVien',
-                danhSachGiaoVien,
-                message: req.query.message || '',
-                messageType: req.query.messageType || ''
-            });
-        }
-        catch (error) {
-            console.error(error);
-            res.render('admin_index', {
-                page: 'pages/quanLyGiaoVien',
-                danhSachGiaoVien: [],
-                message: 'Đã xảy ra lỗi khi lấy danh sách giáo viên',
-                messageType: 'error'
-            });
-        }
-    }
-    static async hienthiHocKy(req, res) {
-        try {
-            const danhSachHocKy = await LopHocModel.layDanhSachHocKy();
-            res.render('admin_index', {
-                page: 'pages/quanLyHocKy',
-                danhSachHocKy,
-                message: req.query.message || '',
-                messageType: req.query.messageType || ''
-            });
-        }
-        catch (error) {
-            console.error(error);
-            res.render('admin_index', {
-                page: 'pages/quanLyHocKy',
-                danhSachHocKy: [],
-                message: 'Đã xảy ra lỗi khi lấy danh sách học ký',
-                messageType: 'error'
-            });
-        }
-    }
+   
     static async themLopHoc(req, res) {
         try {
             const { ten_lop, giao_vien_id } = req.body;

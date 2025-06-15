@@ -1,14 +1,13 @@
 const hocKyModel = require('../models/hocKyModel');
-const TruongHocModel = require('../models/truongHocModel');
 class HocKyController {
     static async hienThiHocKy(req, res) {
         try {
             const danhSachHocKy = await hocKyModel.hienthiHocKy();
-            const danhSachTruongHoc = await TruongHocModel.hienthiTruongHoc();
+            const danhSachNamHoc = await hocKyModel.hienThiNamHoc();
             return res.render('admin_index', {
                 page: 'pages/quanLyHocKy',
                 danhSachHocKy,
-                danhSachTruongHoc,
+                danhSachNamHoc,
                 message: req.query.message || '',
                 messageType: req.query.messageType || ''
             });
@@ -17,7 +16,7 @@ class HocKyController {
             return res.render('admin_index', {
                 page: 'pages/quanLyHocKy',
                 danhSachHocKy: [],
-                danhSachTruongHoc: [],
+                danhSachNamHoc: [],
                 message: 'Có lỗi khi lấy danh sách học kỳ',
                 messageType: 'error'
             });
@@ -26,22 +25,21 @@ class HocKyController {
     static async themHocKy(req, res) {
         const {
             ten_hoc_ky,
-            truong_hoc_id,
-            nam_hoc,
+            nam_hoc_id,
             ngay_bat_dau,
             ngay_ket_thuc
         } = req.body
-        const result = await hocKyModel.themMoiHocKy({ ten_hoc_ky, truong_hoc_id, nam_hoc, ngay_bat_dau, ngay_ket_thuc });
+        const result = await hocKyModel.themMoiHocKy({ ten_hoc_ky, nam_hoc_id, ngay_bat_dau, ngay_ket_thuc });
         if (result.success) {
             return res.redirect(`/hoc-ky?message=Thêm học kỳ thành công&messageType=success`);
         } else {
             //console.log(result.message);
             const danhSachHocKy = await hocKyModel.hienthiHocKy();
-            const danhSachTruongHoc = await TruongHocModel.hienthiTruongHoc();
+            const danhSachNamHoc = await hocKyModel.hienThiNamHoc();
             return res.render('admin_index', {
                 page: 'pages/quanLyHocKy',
                 danhSachHocKy,
-                danhSachTruongHoc,
+                danhSachNamHoc,
                 message: result.message,
                 messageType: 'error'
             });
@@ -53,22 +51,22 @@ class HocKyController {
             const result = await hocKyModel.xoaThongTinHocKy(id);
             if (result.success) {
                 const danhSachHocKy = await hocKyModel.hienthiHocKy();
-                const danhSachTruongHoc = await TruongHocModel.hienthiTruongHoc();
+                const danhSachNamHoc = await hocKyModel.hienThiNamHoc();
                 return res.render('admin_index', {
                     page: 'pages/quanLyHocKy',
                     danhSachHocKy,
-                    danhSachTruongHoc,
+                    danhSachNamHoc,
                     message: 'Xóa học kỳ thành công',
                     messageType: 'success',
                 });
             }
             else {
                 const danhSachHocKy = await hocKyModel.hienthiHocKy();
-                const danhSachTruongHoc = await TruongHocModel.hienthiTruongHoc();
+                const danhSachNamHoc = await hocKyModel.hienThiNamHoc();
                 return res.render('admin_index', {
                     page: 'pages/quanLyHocKy',
                     danhSachHocKy,
-                    danhSachTruongHoc,
+                    danhSachNamHoc,
                     message: 'Xóa học kỳ thất bại',
                     messageType: 'error',
                 });
@@ -77,11 +75,11 @@ class HocKyController {
         catch (error) {
             console.log(error);
             const danhSachHocKy = await hocKyModel.hienthiHocKy();
-            const danhSachTruongHoc = await TruongHocModel.hienthiTruongHoc();
+            const danhSachNamHoc = await hocKyModel.hienThiNamHoc();
             return res.render('admin_index', {
                 page: 'pages/quanLyHocKy',
                 danhSachHocKy,
-                danhSachTruongHoc,
+                danhSachNamHoc,
                 message: 'Có lỗi khi xóa học kỳ',
                 messageType: 'error',
             });
@@ -90,10 +88,8 @@ class HocKyController {
     }
     static async suaHocKy(req, res) {
         try {
-            const { id, ten_hoc_ky, truong_hoc_id, nam_hoc, ngay_bat_dau, ngay_ket_thuc } = req.body;
-            //console.log('Dữ liệu sửa học kỳ:', { id, ten_hoc_ky, truong_hoc_id, nam_hoc, ngay_bat_dau, ngay_ket_thuc });
-            const result = await hocKyModel.suaThongTinHocKy(id, { ten_hoc_ky, truong_hoc_id, nam_hoc, ngay_bat_dau, ngay_ket_thuc });
-            //console.log('Kết quả sửa học kỳ:', result);
+            const { id, ten_hoc_ky, nam_hoc_id, ngay_bat_dau, ngay_ket_thuc } = req.body;
+            const result = await hocKyModel.suaThongTinHocKy(id, { ten_hoc_ky, nam_hoc_id, ngay_bat_dau, ngay_ket_thuc });
             if (result.success) {
                 return res.redirect(`/hoc-ky?message=Sửa học kỳ thành công&messageType=success`);
             } else {
@@ -102,11 +98,11 @@ class HocKyController {
         } catch (error) {
             console.error(error);
             const danhSachHocKy = await hocKyModel.hienthiHocKy();
-            const danhSachTruongHoc = await TruongHocModel.hienthiTruongHoc();
+            const danhSachNamHoc = await hocKyModel.hienThiNamHoc();
             return res.render('admin_index', {
                 page: 'pages/quanLyHocKy',
                 danhSachHocKy,
-                danhSachTruongHoc,
+                danhSachNamHoc,
                 message: 'Có lỗi khi cập nhật học kỳ',
                 messageType: 'error',
             });
@@ -118,51 +114,54 @@ class HocKyController {
             return res.render('admin_index', {
                 page: 'pages/quanLyHocKy',
                 danhSachHocKy: [],
-                danhSachTruongHoc: [],
+                danhSachNamHoc: [],
                 message: 'Bạn phải nhập từ khóa tìm kiếm',
                 messageType: 'error'
             });
         }
         try {
-            const danhSachHocKy = await hocKyModel.timHocKyTheoNamHoc(tim_kiem);
-            const danhSachTruongHoc = await TruongHocModel.hienthiTruongHoc();
-            if(danhSachHocKy.length === 0) {
+            const result = await hocKyModel.timHocKyTheoNamHoc(tim_kiem);
+            const danhSachHocKy = await hocKyModel.hienthiHocKy();
+            const danhSachNamHoc = await hocKyModel.hienThiNamHoc();
+            if (result.success) {
                 return res.render('admin_index', {
                     page: 'pages/quanLyHocKy',
                     danhSachHocKy,
-                    danhSachTruongHoc,
-                    message: `Không tìm thấy kết quả: ${tim_kiem}`,
+                    danhSachNamHoc,
+                    message: `Kết quả tìm kiếm: ${tim_kiem}`,
+                    messageType: 'success'
+                });
+            }
+            else {
+                return res.render('admin_index', {
+                    page: 'pages/quanLyHocKy',
+                    danhSachHocKy: [],
+                    danhSachNamHoc: [],
+                    message: `Không tìm thấy kết quả phù hợp với từ khóa: ${tim_kiem}`,
                     messageType: 'error'
                 });
             }
-            return res.render('admin_index', {
-                page: 'pages/quanLyHocKy',
-                danhSachHocKy,
-                danhSachTruongHoc,
-                message: `Kết quả tìm kiếm: ${tim_kiem}`,
-                messageType: 'success'
-            });
         }
         catch (error) {
             console.log('Lỗi khi tìm học kỳ: ', error);
             return res.render('admin_index', {
                 page: 'pages/quanLyHocKy',
                 danhSachHocKy: [],
-                danhSachTruongHoc: [],
+                danhSachNamHoc: [],
                 message: `Không tìm thấy kêt quả phù hợp: ${tim_kiem}`,
                 messageType: 'error'
             });
         }
     }
-    static async locHocKy(req,res){
+    static async locHocKy(req, res) {
         try {
-            const ten_hoc_ky  = req.query.ten_hoc_ky || '';
+            const ten_hoc_ky = req.query.ten_hoc_ky || '';
             const danhSachHocKy = await hocKyModel.locTheoHocKy(ten_hoc_ky);
-            const danhSachTruongHoc = await TruongHocModel.hienthiTruongHoc();
+            const danhSachNamHoc = await hocKyModel.hienThiNamHoc();
             return res.render('admin_index', {
                 page: 'pages/quanLyHocKy',
                 danhSachHocKy: danhSachHocKy || [],
-                danhSachTruongHoc: danhSachTruongHoc || [],
+                danhSachNamHoc: danhSachNamHoc || [],
                 message: '',
                 messageType: '',
             });
@@ -171,7 +170,7 @@ class HocKyController {
             return res.render('admin_index', {
                 page: 'pages/quanLyHocKy',
                 danhSachHocKy: [],
-                danhSachTruongHoc: [],
+                danhSachNamHoc: [],
                 message: 'Có lỗi khi lọc học kỳ',
                 messageType: 'error',
             });

@@ -48,18 +48,10 @@
                                             <% }) %>
                         </td>
                         <td class="py-2 px-4 border-b text-center">
-                            <% danhSachHocKy.forEach(hk=> { %>
-                                <% if(hk.hoc_ky_id===lopHoc.hoc_ky_id) { %>
-                                    <%= hk.ten_hoc_ky %>
-                                        <% } %>
-                                            <% }) %>
+                            <%= lopHoc.ten_hoc_ky %>
                         </td>
                         <td class="py-2 px-4 border-b text-center">
-                            <% danhSachHocKy.forEach(hk=> { %>
-                                <% if(hk.hoc_ky_id===lopHoc.hoc_ky_id) { %>
-                                    <%= hk.nam_hoc %>
-                                        <% } %>
-                                            <% }) %>
+                            <%= lopHoc.ten_nam_hoc %>
                         </td>
                         <td class="py-2 px-4 border-b text-center">
                             <!-- SỬA -->
@@ -97,8 +89,8 @@
             <form id="addClassForm" method="post" action="/lop-hoc/them">
                 <div class="mb-4">
                     <label for="className" class="block text-sm font-medium">Tên lớp</label>
-                    <input type="text" id="className" name="ten_lop" required pattern="^[a-zA-ZÀ-ỹ1-9\s]+$"
-                        title="Tên lớp học chỉ được chứa chữ cái và khoảng trắng"
+                    <input type="text" id="className" name="ten_lop" required pattern="^Lớp [1-5]A[1-9]$"
+                        title="Tên lớp phải có định dạng 'Lớp [1-5]A[1-9]' (VD: Lớp 1A1)"
                         class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
                 </div>
                 <div class="mb-4">
@@ -136,7 +128,8 @@
                                         </svg>
                                     </span>
                                     <span class="text-sm text-gray-700">
-                                        <%= hocKy.ten_hoc_ky %> - <%= hocKy.nam_hoc %>
+                                        <%= hocKy.ten_hoc_ky %> - <%= danhSachNamHoc.find(nam=> nam.nam_hoc_id ===
+                                                hocKy.nam_hoc_id)?.ten_nam_hoc || '' %>
                                     </span>
                                 </label>
                                 <% }); %>
@@ -161,8 +154,8 @@
                 <input type="hidden" name="lop_hoc_id" id="editClassId">
                 <div class="mb-4">
                     <label for="editclassName" class="block text-sm font-medium">Tên lớp</label>
-                    <input type="text" id="editclassName" name="ten_lop" required pattern="^[a-zA-ZÀ-ỹ1-9\s]+$" readonly
-                        title="Tên lớp học chỉ được chứa chữ cái và khoảng trắng"
+                    <input type="text" id="editclassName" name="ten_lop" required pattern="^Lớp [1-5]A[1-9]$" readonly
+                        title="Tên lớp phải có định dạng 'Lớp [1-5]A[1-9]' (VD: Lớp 1A1)"
                         class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
                 </div>
                 <div class="mb-4">
@@ -197,7 +190,7 @@
                                         </svg>
                                     </span>
                                     <span class="text-sm text-gray-700">
-                                        <%= hocKy.ten_hoc_ky %> - <%= hocKy.nam_hoc %>
+                                        <%= hocKy.ten_hoc_ky %> - <%= danhSachNamHoc.find(namHoc => namHoc.nam_hoc_id === hocKy.nam_hoc_id)?.ten_nam_hoc || '' %>
                                     </span>
                                 </label>
                                 <% }); %>

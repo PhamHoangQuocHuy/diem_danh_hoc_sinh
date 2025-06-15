@@ -43,33 +43,22 @@ class truongHocController {
     static async xoaTruongHoc(req, res) {
         try {
             const { id } = req.params;
-            const kiemTra = await TruongHocModel.kiemTraHocKy(id);
-            if(kiemTra.length > 0) {
-                const danhSachTruongHoc = await TruongHocModel.hienthiTruongHoc();
-                return res.render('admin_index', {
-                    page: 'pages/quanLyTruongHoc',
-                    danhSachTruongHoc,
-                    message: 'Trường học đang có học kỳ, không thể xóa',
-                    messageType: 'error',
-                });
-            }
             const result = await TruongHocModel.xoaTruongHoc(id);
+            const danhSachTruongHoc = await TruongHocModel.hienthiTruongHoc();
             if (result.success) {
-                const danhSachTruongHoc = await TruongHocModel.hienthiTruongHoc();
-                res.render('admin_index', {
+                return res.render('admin_index', {
                     page: 'pages/quanLyTruongHoc',
                     danhSachTruongHoc,
                     message: 'Xóa trường học thành công',
                     messageType: 'success',
                 });
             } else {
-                const danhSachTruongHoc = await TruongHocModel.hienthiTruongHoc();
-                res.render('admin_index', {
+                return res.render('admin_index', {
                     page: 'pages/quanLyTruongHoc',
                     danhSachTruongHoc,
-                    message: 'Xóa trường học thất bại',
+                    message: `${result.message}`,
                     messageType: 'error',
-                });
+                }); 
             }
         } catch (error) {
             console.log(error);
@@ -78,7 +67,7 @@ class truongHocController {
                 page: 'pages/quanLyTruongHoc',
                 danhSachTruongHoc,
                 message: 'Có lỗi khi xóa trường học',
-                messageType: 'info',
+                messageType: 'error',
             });
         }
     }

@@ -10,15 +10,14 @@ class TaiKhoanController {
     static async hienThiDanhSachTaiKhoan(req, res) {
         let conn;
         try {
+            // Phân trang
             const page = parseInt(req.query.page) || 1;
-            const limit = 5; 
+            const limit = 5;
             const offset = (page - 1) * limit;
-
-
             const danhSachTaiKhoan = await TaiKhoanModel.hienThiTaiKhoan(limit, offset);
             const totalTaiKhoan = await TaiKhoanModel.demTongTaiKhoan();
             const totalPages = Math.ceil(totalTaiKhoan / limit);
-            
+
 
             conn = await pool.getConnection();
             for (let taiKhoan of danhSachTaiKhoan) {
@@ -76,6 +75,7 @@ class TaiKhoanController {
             if (req.file) {
                 tempFilePath = path.join(__dirname, '../images', req.file.filename);
             }
+            // Kiểm tra email, sdt, so_cmnd
             if (await TaiKhoanModel.kiemTraEmail(email)) {
                 if (tempFilePath && fs.existsSync(tempFilePath)) {
                     fs.unlinkSync(tempFilePath);
@@ -237,6 +237,7 @@ class TaiKhoanController {
 
         try {
             const danhSachTaiKhoan = await TaiKhoanModel.hienThiTaiKhoan();
+            // Kiểm tra email, sdt, so_cmnd trùng lặp trong DB
             if (danhSachTaiKhoan.some(tk => tk.email === taiKhoan.email && tk.tai_khoan_id != id)) {
                 return res.render('admin_index', {
                     page: 'pages/quanLyTaiKhoan',
@@ -266,6 +267,7 @@ class TaiKhoanController {
                     formData: req.body,
                 });
             }
+            // Kiểm tra loại bằng cấp nếu là giáo viên
             if (taiKhoan.ten_vai_tro === 'Giáo viên' && taiKhoan.loai_bang_cap.length === 0) {
                 return res.render('admin_index', {
                     page: 'pages/quanLyTaiKhoan',
@@ -312,12 +314,19 @@ class TaiKhoanController {
     }
     static async timTaiKhoan(req, res) {
         const { tim_kiem } = req.query;
+        const page = parseInt(req.query.page) || 1;
+        const limit = 5;
+        const offset = (page - 1) * limit;
+        const totalTaiKhoan = await TaiKhoanModel.demTongTaiKhoan();
+        const totalPages = Math.ceil(totalTaiKhoan / limit);
         try {
             if (!tim_kiem || tim_kiem.trim() === '') {
-                const danhSachTaiKhoan = await TaiKhoanModel.hienThiTaiKhoan();
+                const danhSachTaiKhoan = await TaiKhoanModel.hienThiTaiKhoan(limit, offset);
                 return res.render('admin_index', {
                     page: 'pages/quanLyTaiKhoan',
                     danhSachTaiKhoan,
+                    currentPage: page,
+                    totalPages,
                     message: 'Vui lòng nhập tên để tìm kiếm.',
                     messageType: 'error',
                 });
@@ -326,14 +335,18 @@ class TaiKhoanController {
             if (danhSachTaiKhoan.length > 0) {
                 return res.render('admin_index', {
                     page: 'pages/quanLyTaiKhoan',
-                    danhSachTaiKhoan,
+                    danhSachTaiKhoan: danhSachTaiKhoan.slice(offset, offset + limit),// Cắt danh sách theo trang hiện tại
+                    currentPage: page,
+                    totalPages,
                     message: `Đã tìm thấy tài khoản với "${tim_kiem}"`,
                     messageType: 'success',
                 });
             }
             return res.render('admin_index', {
                 page: 'pages/quanLyTaiKhoan',
-                danhSachTaiKhoan,
+                danhSachTaiKhoan: danhSachTaiKhoan.slice(offset, offset + limit),
+                currentPage: page,
+                totalPages,
                 message: `Không tìm thấy tài khoản với "${tim_kiem}"`,
                 messageType: 'error',
             });
@@ -342,6 +355,8 @@ class TaiKhoanController {
             res.render('admin_index', {
                 page: 'pages/quanLyTaiKhoan',
                 danhSachTaiKhoan: [],
+                currentPage: page,
+                totalPages,
                 message: "Đã xảy ra lỗi",
                 messageType: 'error',
             });
@@ -364,13 +379,21 @@ class TaiKhoanController {
     }
     static async locTheoVaiTro(req, res) {
         try {
+            // Phân trang
+            const page = parseInt(req.query.page) || 1;
+            const limit = 5;
+            const offset = (page - 1) * limit;
+            const totalTaiKhoan = await TaiKhoanModel.demTongTaiKhoan();
+            const totalPages = Math.ceil(totalTaiKhoan / limit);
             const ten_vai_tro = req.query.ten_vai_tro || '';
             const dsTaiKhoan = await TaiKhoanModel.layTaiKhoanTheoVaiTro(ten_vai_tro);
             return res.render('admin_index', {
                 page: 'pages/quanLyTaiKhoan',
-                danhSachTaiKhoan: dsTaiKhoan || [],
+                danhSachTaiKhoan: dsTaiKhoan.slice(offset, offset + limit), // Cắt danh sách theo trang hiện tại
                 message: '',
-                messageType: 'info'
+                messageType: 'info',
+                currentPage: page,
+                totalPages
             })
         }
         catch (error) {
