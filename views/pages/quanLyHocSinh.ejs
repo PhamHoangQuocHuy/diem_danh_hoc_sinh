@@ -1,4 +1,33 @@
 <style>
+    .tab-buttons {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .tab-button {
+        padding: 8px 16px;
+        background-color: #e5e7eb;
+        /* Tailwind gray-200 */
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .tab-button.active {
+        background-color: #3b82f6;
+        /* Tailwind blue-500 */
+        color: white;
+    }
+
+    .tab-pane {
+        display: none;
+    }
+
+    .tab-pane.active {
+        display: block;
+    }
+
     #parentSuggestions {
         max-height: 192px;
         /* max-h-48 */
@@ -91,17 +120,31 @@
                             <%= hocSinh.loai_hoc_sinh %>
                         </td>
                         <td class="py-2 px-4 border-b text-center">
+                            <!-- XEM CHI TIẾT -->
+                            <form action="/hoc-sinh/chi-tiet/<%= hocSinh.hoc_sinh_id %>" method="get"
+                                class="inline-flex items-center">
+                                <button
+                                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
+                                    aria-label="Xem chi tiết học sinh 1" onclick="viewDetails(this)">
+                                    <i class="fas fa-eye mr-1"></i> Xem chi tiết
+                                </button>
+                            </form>
+                            <!-- SỬA -->
                             <button
                                 class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                                aria-label="Xem chi tiết học sinh 1" onclick="viewDetails()">
-                                <i class="fas fa-eye mr-1"></i> Xem chi tiết
-                            </button>
-                            <button
-                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                                aria-label="Sửa học sinh 1">
+                                aria-label="Sửa học sinh 1" data-id="<%= hocSinh.hoc_sinh_id %>"
+                                data-ho_ten="<%= hocSinh.ho_ten %>"
+                                data-ngay_sinh="<%= formatDate(hocSinh.ngay_sinh) %>"
+                                data-gioi_tinh="<%= hocSinh.gioi_tinh %>" data-dia_chi="<%= hocSinh.dia_chi %>"
+                                data-loai_hoc_sinh="<%= hocSinh.loai_hoc_sinh %>"
+                                data-duong_dan_anh='<%- JSON.stringify(hocSinh.duong_dan_anh || []) %>'
+                                data-phu_huynh='<%= JSON.stringify(hocSinh.phu_huynh || []) %>'
+                                onclick="editStudent(this)">
                                 <i class="fas fa-edit mr-1"></i> Sửa
                             </button>
-                            <form action="/hoc-sinh/xoa/<%= hocSinh.hoc_sinh_id %>" method="post" class="inline-flex items-center"
+                            <!-- XÓA -->
+                            <form action="/hoc-sinh/xoa/<%= hocSinh.hoc_sinh_id %>" method="post"
+                                class="inline-flex items-center"
                                 onsubmit="return confirm('Bạn có chắc chắn muốn xóa học sinh này?');">
                                 <button
                                     class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300 transition-colors"
@@ -212,6 +255,105 @@
             </form>
         </div>
     </div>
+
+    <!-- Modal Sửa thông tin học sinh -->
+    <div id="editModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-60 hidden p-2">
+        <div class="bg-white rounded-xl p-5 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-auto font-sans">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Sửa thông tin học sinh</h2>
+            <form id="editStudentForm" method="post" action="/hoc-sinh/sua/" enctype="multipart/form-data">
+                <input type="hidden" id="studentId_edit" name="hoc_sinh_id" />
+                <input type="hidden" id="removed_images" name="removed_images">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="col-span-2">
+                        <label for="fullName_edit" class="block text-sm font-medium text-gray-700">Họ tên</label>
+                        <input type="text" id="fullName_edit" name="ho_ten" pattern="^[a-zA-ZÀ-ỹ\s]+$"
+                            title="Họ tên chỉ được chứa chữ cái và khoảng trắng"
+                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50" />
+                    </div>
+                    <div>
+                        <label for="dob_edit" class="block text-sm font-medium text-gray-700">Ngày sinh</label>
+                        <input type="date" id="dob_edit" name="ngay_sinh"
+                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50" />
+                    </div>
+                    <div>
+                        <label for="gender_edit" class="block text-sm font-medium text-gray-700">Giới tính</label>
+                        <select id="gender_edit" name="gioi_tinh"
+                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50">
+                            <option value="" disabled>Chọn</option>
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="studentType_edit" class="block text-sm font-medium text-gray-700">Loại học
+                            sinh</label>
+                        <select id="studentType_edit" name="loai_hoc_sinh"
+                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50">
+                            <option value="" disabled>Chọn</option>
+                            <option value="Bán trú">Bán trú</option>
+                            <option value="Không bán trú">Không bán trú</option>
+                        </select>
+                    </div>
+                    <div class="col-span-2">
+                        <label for="address_edit" class="block text-sm font-medium text-gray-700">Địa chỉ</label>
+                        <input type="text" id="address_edit" name="dia_chi"
+                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50" />
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Chọn phụ huynh và mối quan hệ (ít
+                            nhất 1 phụ huynh)</label>
+                        <div id="phuHuynhContainer"
+                            class="grid grid-cols-1 gap-2 max-h-60 overflow-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+                            <% danhSachPhuHuynh.forEach(function(p) { %>
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox"
+                                        class="ph-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-400"
+                                        value="<%= p.phu_huynh_id %>" />
+                                    <span>
+                                        <%= p.ho_ten %> - <%= p.email %>
+                                    </span>
+                                    <select disabled
+                                        class="ml-auto ph-select border border-gray-200 rounded px-2 py-1 text-sm bg-white text-gray-700">
+                                        <option value="" selected disabled>-- Mối quan hệ --</option>
+                                        <option value="Cha">Cha</option>
+                                        <option value="Mẹ">Mẹ</option>
+                                        <option value="Người giám hộ">Người giám hộ</option>
+                                    </select>
+                                </div>
+                                <% }) %>
+                        </div>
+                    </div>
+                    <!-- HÌNH ẢNH -->
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Ảnh học sinh (chọn đúng 3 ảnh)
+                        </label>
+                        <div class="relative w-fit mb-2">
+                            <input type="file" id="duong_dan_anh_edit" name="duong_dan_anh[]" multiple
+                                accept="image/jpeg,image/png,image/jpg"
+                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                onchange="previewMultipleImages(this, document.getElementById('previewContainerEdit'))" />
+                            <div
+                                class="image-placeholder w-48 h-20 flex flex-col items-center justify-center border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors text-center relative z-0">
+                                <span class="text-xs text-gray-500">Chọn tối đa 3 ảnh</span>
+                            </div>
+                        </div>
+                        <!-- Vùng hiển thị preview ảnh -->
+                        <div id="previewContainerEdit" class="flex gap-4 flex-wrap mt-2"></div>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-4 gap-2">
+                    <button type="button" onclick="toggleEditModal()"
+                        class="bg-gray-200 text-gray-700 px-4 py-1.5 rounded-lg hover:bg-gray-300 transition-colors duration-200">Hủy</button>
+                    <button type="submit"
+                        class="bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-4 py-1.5 rounded-lg hover:from-indigo-600 hover:to-blue-600 transition-colors duration-200">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Xem chi tiết học sinh -->
+    
 </div>
 <!-- THÊM -->
 <script type="">
@@ -261,8 +403,7 @@
         document.getElementById('parentSuggestions').classList.add('hidden');
     }
 </script>
-
-<!-- CHECKBOX & VALIDATION -->
+<!-- CHECKBOX -->
 <script>
     // Bật/tắt dropdown mối quan hệ khi chọn checkbox phụ huynh
     document.querySelectorAll('.ph-checkbox').forEach((checkbox) => {
@@ -279,10 +420,197 @@
             }
         });
     });
+</script>
+<!-- SỬA -->
+<script>
+    // Hàm hiển thị ảnh cũ
+    function previewOldImages(images, previewContainer) {
+        previewContainer.innerHTML = ''; // Xóa các ảnh cũ
 
+        if (!Array.isArray(images)) return;
+
+        images.forEach(img => {
+            const imgDiv = document.createElement('div');
+            imgDiv.className = 'relative';
+            const fullSrc = img.startsWith('/') ? img : '/' + img;
+
+            imgDiv.innerHTML = `
+            <img src="${fullSrc}" class="w-20 h-20 object-cover rounded-lg" alt="Ảnh học sinh cũ" onerror="this.style.display='none'" />
+            <button type="button" class="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs" onclick="removeImage(this)">×</button>
+        `;
+            previewContainer.appendChild(imgDiv);
+
+            console.log("Đã tạo preview ảnh cũ:", fullSrc);
+        });
+    }
+
+    // Hàm xem trước ảnh mới + nút xóa
+    function previewMultipleImages(input, previewContainer) {
+        previewContainer.innerHTML = ''; // Xóa các ảnh cũ
+
+        const files = input.files;
+        if (!files || files.length === 0) return;
+
+        if (files.length > 3) {
+            alert("Chỉ được chọn tối đa 3 ảnh!");
+            input.value = ''; // Reset input nếu vượt quá
+            return;
+        }
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const imgDiv = document.createElement('div');
+                imgDiv.className = 'relative';
+                imgDiv.innerHTML = `
+                    <img src="${e.target.result}" class="w-20 h-20 object-cover rounded-lg" alt="Ảnh mới" />
+                    <button type="button" class="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs" onclick="removeImage(this)">×</button>
+                `;
+                previewContainer.appendChild(imgDiv);
+            };
+
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Hàm xóa ảnh
+    function removeImage(button) {
+        const imgDiv = button.parentElement;
+        const imgSrc = imgDiv.querySelector('img').src;
+        const removedImagesInput = document.getElementById('removed_images');
+        let removedImages = removedImagesInput.value ? JSON.parse(removedImagesInput.value) : [];
+
+        // Extract the image path
+        const relativeSrc = imgSrc.replace(window.location.origin, '');
+        removedImages.push(relativeSrc);
+        removedImagesInput.value = JSON.stringify(removedImages);
+
+        imgDiv.remove();
+    }
+
+    // Bật/tắt modal sửa
+    function toggleEditModal() {
+        const modal = document.getElementById('editModal');
+        modal.classList.toggle('hidden');
+
+        // Reset removed_images khi mở modal
+        const removedImagesInput = document.getElementById('removed_images');
+        if (removedImagesInput) {
+            removedImagesInput.value = '';
+        }
+    }
+
+    // Hàm xử lý khi bấm nút "Sửa"
+    function editStudent(button) {
+        console.log('Dữ liệu từ button:', button.dataset);
+
+        const hocSinh = {
+            hoc_sinh_id: button.getAttribute('data-id'),
+            ho_ten: button.getAttribute('data-ho_ten'),
+            ngay_sinh: button.getAttribute('data-ngay_sinh'),
+            gioi_tinh: button.getAttribute('data-gioi_tinh'),
+            dia_chi: button.getAttribute('data-dia_chi'),
+            loai_hoc_sinh: button.getAttribute('data-loai_hoc_sinh')
+        };
+
+        // Chuyển đổi ngày sinh sang yyyy-mm-dd
+        if (hocSinh.ngay_sinh) {
+            const [day, month, year] = hocSinh.ngay_sinh.split('/');
+            if (day && month && year) {
+                document.getElementById('dob_edit').value = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            } else {
+                document.getElementById('dob_edit').value = '';
+                console.warn('Định dạng ngày không hợp lệ:', hocSinh.ngay_sinh);
+            }
+        } else {
+            document.getElementById('dob_edit').value = '';
+        }
+
+        // Gán dữ liệu vào form
+        document.getElementById('studentId_edit').value = hocSinh.hoc_sinh_id || '';
+        document.getElementById('fullName_edit').value = hocSinh.ho_ten || '';
+        document.getElementById('gender_edit').value = hocSinh.gioi_tinh || '';
+        document.getElementById('studentType_edit').value = hocSinh.loai_hoc_sinh || '';
+        document.getElementById('address_edit').value = hocSinh.dia_chi || '';
+
+        // Cập nhật action form
+        document.getElementById('editStudentForm').action = `/hoc-sinh/sua/${hocSinh.hoc_sinh_id || ''}`;
+
+        // Parse & hiển thị ảnh cũ
+        const rawData = button.getAttribute('data-duong_dan_anh');
+        console.log("Raw data-duong_dan_anh:", rawData);
+
+        let currentImages;
+        try {
+            currentImages = JSON.parse(rawData);
+            if (typeof currentImages === 'string') {
+                currentImages = JSON.parse(currentImages); // nếu lồng JSON thì parse thêm lần nữa
+            }
+            console.log("Ảnh parse thành công:", currentImages);
+        } catch (e) {
+            console.error("Lỗi parse JSON ảnh:", e);
+            currentImages = [];
+        }
+
+        // Gán data-current-images vào input ảnh
+        const duongDanAnhInput = document.getElementById('duong_dan_anh_edit');
+        duongDanAnhInput.setAttribute('data-current-images', JSON.stringify(currentImages));
+
+        // Hiển thị ảnh cũ
+        const previewContainerEdit = document.getElementById('previewContainerEdit');
+        previewOldImages(currentImages, previewContainerEdit);
+
+        // Xử lý phụ huynh và mối quan hệ
+        const phuHuynhData = JSON.parse(button.getAttribute('data-phu_huynh') || '[]');
+        const checkboxes = document.querySelectorAll('#editModal .ph-checkbox');
+        const selects = document.querySelectorAll('#editModal .ph-select');
+
+        checkboxes.forEach((checkbox, index) => {
+            const id = parseInt(checkbox.value);
+            const matched = phuHuynhData.find(p => p.phu_huynh_id === id);
+            if (matched) {
+                checkbox.checked = true;
+                selects[index].disabled = false;
+                selects[index].value = matched.moi_quan_he;
+                selects[index].name = 'moi_quan_he[]';
+                checkbox.name = 'phu_huynh_ids[]';
+            } else {
+                checkbox.checked = false;
+                selects[index].disabled = true;
+                selects[index].value = '';
+                selects[index].name = '';
+                checkbox.name = '';
+            }
+        });
+
+        // Bật/tắt select khi tick checkbox
+        checkboxes.forEach((checkbox, index) => {
+            checkbox.removeEventListener('change', handleCheckboxChange); // Xóa listener cũ
+            checkbox.addEventListener('change', handleCheckboxChange);
+            function handleCheckboxChange() {
+                selects[index].disabled = !this.checked;
+                if (!this.checked) {
+                    selects[index].value = '';
+                    selects[index].name = '';
+                    this.name = '';
+                } else {
+                    selects[index].name = 'moi_quan_he[]';
+                    this.name = 'phu_huynh_ids[]';
+                }
+            }
+        });
+
+        toggleEditModal();
+    }
+</script>
+<!-- XEM CHI TIẾT -->
+<script>
 
 </script>
 
+<!-- FORMAT DATE -->
 <% function formatDate(dateStr) { if (!dateStr) return '' ; const d=new Date(dateStr); const
     day=String(d.getDate()).padStart(2, '0' ); const month=String(d.getMonth() + 1).padStart(2, '0' ); const
     year=d.getFullYear(); return `${day}/${month}/${year}`; } %>
