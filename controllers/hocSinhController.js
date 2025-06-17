@@ -179,33 +179,59 @@ class HocSinhController {
             return res.redirect(`/hoc-sinh?message=Đã xảy ra lỗi khi cập nhật học sinh&messageType=error`);
         }
     }
+    static async timKiemHocSinh(req, res) {
+        try {
+            const tim_kiem = req.query.tim_kiem;
+            if (!tim_kiem || tim_kiem.trim() === '') {
+                return res.redirect('/hoc-sinh?message=Vui lọc nhập tên học sinh&messageType=error');
+            }
+            const result = await HocSinhModel.timThongTinHocSinh(tim_kiem);
+            const danhSachHocSinh = await HocSinhModel.layDanhSachHocSinh();
+            const danhSachPhuHuynh = await HocSinhModel.layDanhSachPhuHuynh();
+            if (result.length > 0) {
+                res.render('admin_index', {
+                    page: 'pages/quanLyHocSinh',
+                    danhSachHocSinh,
+                    danhSachPhuHuynh,
+                    message: `Đã tìm học sinh với tên: ${tim_kiem}`,
+                    messageType: 'success'
+                });
+            } else {
+                res.render('admin_index', {
+                    page: 'pages/quanLyHocSinh',
+                    danhSachHocSinh: [],
+                    danhSachPhuHuynh: [],
+                    message: `Không tìm thấy học sinh với tên: ${tim_kiem}`,
+                    messageType: 'error'
+                });
+            }
+        }
+        catch (error) {
+            console.log(error);
+            return res.redirect(`/hoc-sinh?message=Đã xảy ra lỗi khi tìm học sinh&messageType=error`);
+        }
+    }
     static async chiTietHocSinh(req, res) {
         try {
-            const hocSinhId = req.params.id;
-            const chiTietHocSinh = await HocSinhModel.layThongTinChiTietHocSinh(hocSinhId);
-            if (!chiTietHocSinh.success) {
-                return res.status(404).json(chiTietHocSinh);
-            }
-            return res.json({ success: true, chiTietHocSinh: chiTietHocSinh.hocSinh });
-        } catch (error) {
-            console.error(error);
-            return res.status(500).json({ success: false, message: 'Đã xảy ra lỗi khi lấy chi tiết học sinh', messageType: 'error' });
-        }
-    }
-    static async chiTietPhuHuynhTheoHocSinhId(req, res) {
-        try {
-            const hocSinhId = req.params.id;
-            const chiTietHocSinh = await HocSinhModel.layThongTinChiTietHocSinh(hocSinhId);
-            if (!chiTietHocSinh.success) {
-                return res.status(404).json(chiTietHocSinh);
-            }
-            return res.json({ success: true, danhSachPhuHuynh: chiTietHocSinh.hocSinh.phu_huynh });
-        } catch (error) {
-            console.error(error);
-            return res.status(500).json({ success: false, message: 'Đã xảy ra lỗi khi lấy danh sách phụ huynh', messageType: 'error' });
-        }
-    }
+            const { id } = req.params;
+            const result = await HocSinhModel.thongTinChiTietHocSinh(id);
+            if (!result.success) {
+                return res.render('admin_index', {
+                    page: 'pages/quanLyHocSinh',
+                    danhSachHocSinh: [],
+                    danhSachPhuHuynh: [],
+                    message: result.message,
+                    messageType: result.messageType
+                });
 
-    static async timKiemHocSinh(req, res) { }
+            }
+            const danhSachPhuHuynh = await HocSinhModel.layDanhSachPhuHuynh();
+            return res.status(200).json(result);
+        }
+        catch (error) {
+            console.log(error);
+            return res.redirect(`/hoc-sinh?message=Đã xảy ra lỗi khi tìm học sinh&messageType=error`);
+        }
+    }
 }
 module.exports = HocSinhController;

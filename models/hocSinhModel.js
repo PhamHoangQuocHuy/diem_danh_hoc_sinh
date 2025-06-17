@@ -267,82 +267,71 @@ class HocSinhModel {
             if (conn) conn.release();
         }
     }
-    static async layThongTinChiTietHocSinh(id) {
+    static async timThongTinHocSinh(tim_kiem) {
         const conn = await pool.getConnection();
         try {
-            // 1. Lấy thông tin học sinh
-            const [hocSinhRows] = await conn.query(`
-                SELECT * FROM hoc_sinh 
-                WHERE hoc_sinh_id = ? AND daXoa = 0
-            `, [id]);
-            if (hocSinhRows.length === 0) {
-                return { success: false, message: 'Học sinh không tồn tại hoặc đã bị xóa!', messageType: 'error' };
+            if (!tim_kiem || tim_kiem.trim() === '') {
+                return { success: false, message: 'Vui lòng nhập từ khóa tìm kiếm', messageType: 'error' };
             }
-            const hocSinh = hocSinhRows[0];
 
-            // 2. Lấy thông tin hình ảnh
-            const [hinhAnhRows] = await conn.query(`
-                SELECT duong_dan_anh FROM hinh_anh_hoc_sinh 
-                WHERE hoc_sinh_id = ?
-            `, [id]);
-
-            // 3. Lấy thông tin mối quan hệ
-            const [moiQuanHe] = await conn.query(`
-                SELECT phu_huynh_id, moi_quan_he FROM phu_huynh_hoc_sinh
-                WHERE hoc_sinh_id = ?
-            `, [id]);
-
-            // 4. Lấy thông tin chi tiết của từng phụ huynh
-            const phuHuynhPromises = moiQuanHe.map(async (qh) => {
-                const phuHuynhDetail = await HocSinhModel.layThongTinChiTietPhuHuynh(qh.phu_huynh_id);
-                return phuHuynhDetail.success ? { ...phuHuynhDetail.phuHuynh, moi_quan_he: qh.moi_quan_he } : null;
-            });
-            const phuHuynhDetails = (await Promise.all(phuHuynhPromises)).filter(ph => ph !== null);
-
-            return {
-                success: true,
-                hocSinh: {
-                    ...hocSinh,
-                    duong_dan_anh: hinhAnhRows.map(img => img.duong_dan_anh),
-                    phu_huynh: phuHuynhDetails
-                },
-                message: 'Lấy thông tin chi tiết học sinh thành công!',
-                messageType: 'success'
-            };
-        } catch (error) {
-            console.log('Lỗi khi lấy thông tin chi tiết học sinh: ', error);
-            return { success: false, message: 'Lỗi khi lấy thông tin chi tiết học sinh', messageType: 'error' };
-        } finally {
-            if (conn) conn.release();
+            const [rows] = await conn.query(`SELECT * FROM hoc_sinh WHERE ho_ten LIKE ?`, [`%${tim_kiem}%`]);
+            return rows;
+        }
+        catch (error) {
+            console.log(error);
+            return { success: false, message: 'Đã xảy ra lỗi khi tìm học sinh', messageType: 'error' };
+        }
+        finally {
+            conn.release();
         }
     }
-
-    static async layThongTinChiTietPhuHuynh(id) {
+    static async thongTinChiTietHocSinh(id) {
         const conn = await pool.getConnection();
         try {
-            const [phuHuynhRows] = await conn.query(`
-                SELECT p.phu_huynh_id, t.ho_ten, t.email, t.sdt, t.ngaysinh, t.gioi_tinh, t.dia_chi, t.so_cmnd
-                FROM phu_huynh p
+            // Lấy thông tin học sinh
+            const [hocSinh] = await conn.query(`
+                SELECT * FROM hoc_sinh WHERE hoc_sinh_id = ${id} AND daXoa = 0
+                `)
+            if (hocSinh.length === 0) {
+                return {
+                    success: false,
+                    message: `Không tìm thấy học sinh với id: ${id}`,
+                    messageType: 'error',
+                    data: null
+                };
+            }
+            // Lấy hình ảnh
+            const [hinhAnh] = await conn.query(`
+                SELECT duong_dan_anh FROM hinh_anh_hoc_sinh
+                WHERE hoc_sinh_id = ?
+                `, [id]);
+            // Lấy thông tin phụ huynh
+            const [phuHuynh] = await conn.query(`
+                SELECT t.ho_ten, t.ngaysinh, t.gioi_tinh, t.dia_chi, t.email, t.anh_dai_dien 
+                FROM phu_huynh_hoc_sinh phs
+                JOIN phu_huynh p ON phs.phu_huynh_id = p.phu_huynh_id
                 JOIN tai_khoan t ON p.tai_khoan_id = t.tai_khoan_id
-                WHERE p.phu_huynh_id = ? AND t.daXoa = 0
+                WHERE phs.hoc_sinh_id = ? AND t.daXoa = 0
             `, [id]);
-            if (phuHuynhRows.length === 0) {
-                return { success: false, message: 'Phụ huynh không tồn tại hoặc đã bị xóa!', messageType: 'error' };
-            }
-            const phuHuynh = phuHuynhRows[0];
             return {
                 success: true,
-                phuHuynh,
-                message: 'Lấy thông tin chi tiết phụ huynh thành công!',
-                messageType: 'success'
-            };
-        } catch (error) {
-            console.log('Lỗi khi lấy thông tin chi tiết phụ huynh: ', error);
-            return { success: false, message: 'Lỗi khi lấy thông tin chi tiết phụ huynh', messageType: 'error' };
-        } finally {
-            if (conn) conn.release();
+                message: 'Lấy thông tin thành công',
+                messageType: 'success',
+                data: {
+                    ...hocSinh[0],
+                    duong_dan_anh: hinhAnh.map(img => img.duong_dan_anh),
+                    phu_huynh: phuHuynh
+                }
+            }
+        }
+        catch (error) {
+            console.log(error);
+            return res.redirect(`/hoc-sinh?message=Đã xảy ra lỗi khi tìm học sinh&messageType=error`);
+        }
+        finally {
+            conn.release();
         }
     }
-    static async TimKiemHocSinh(tenHocSinh) { }
 }
+
 module.exports = HocSinhModel;

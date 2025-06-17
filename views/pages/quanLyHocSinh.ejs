@@ -121,14 +121,12 @@
                         </td>
                         <td class="py-2 px-4 border-b text-center">
                             <!-- XEM CHI TIẾT -->
-                            <form action="/hoc-sinh/chi-tiet/<%= hocSinh.hoc_sinh_id %>" method="get"
-                                class="inline-flex items-center">
-                                <button
-                                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                                    aria-label="Xem chi tiết học sinh 1" onclick="viewDetails(this)">
-                                    <i class="fas fa-eye mr-1"></i> Xem chi tiết
-                                </button>
-                            </form>
+                            <button data-id="<%= hocSinh.hoc_sinh_id %>"
+                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
+                                aria-label="Xem chi tiết học sinh <%= hocSinh.hoc_sinh_id %>"
+                                onclick="viewDetails('<%= hocSinh.hoc_sinh_id %>')">
+                                <i class="fas fa-eye mr-1"></i> Xem chi tiết
+                            </button>
                             <!-- SỬA -->
                             <button
                                 class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
@@ -353,7 +351,32 @@
     </div>
 
     <!-- Modal Xem chi tiết học sinh -->
-    
+    <div id="detailModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-60 hidden p-2">
+        <div class="bg-white rounded-xl p-5 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-auto font-sans">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Chi tiết học sinh</h2>
+            <div id="studentDetails" class="space-y-4">
+                <div><strong>Thông tin học sinh:</strong></div>
+                <div><strong>Họ tên:</strong> <span id="studentFullName"></span></div>
+                <div><strong>Ngày sinh:</strong> <span id="studentDOB"></span></div>
+                <div><strong>Giới tính:</strong> <span id="studentGender"></span></div>
+                <div><strong>Địa chỉ:</strong> <span id="studentAddress"></span></div>
+                <div><strong>Loại học sinh:</strong> <span id="studentType_view"></span></div>
+                <div><strong>Ảnh học sinh:</strong>
+                    <div id="studentImages" class="flex gap-2 flex-wrap"></div>
+                </div>
+
+                <div><strong>Thông tin phụ huynh:</strong></div>
+                <div id="parentDetails"></div>
+            </div>
+            <div class="flex justify-end mt-4">
+                <button type="button" onclick="toggleDetailModal()"
+                    class="bg-gray-200 text-gray-700 px-4 py-1.5 rounded-lg hover:bg-gray-300 transition-colors duration-200">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+
+
 </div>
 <!-- THÊM -->
 <script type="">
@@ -607,9 +630,86 @@
 </script>
 <!-- XEM CHI TIẾT -->
 <script>
+    function viewDetails(id) {
+        // Gọi API để lấy thông tin chi tiết
+        fetch(`/hoc-sinh/chi-tiet/${id}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Lỗi mạng hoặc không tìm thấy học sinh');
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Phản hồi không phải JSON');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    console.log('DATA:', data);
 
+                    const hocSinh = data.data;
+
+                    // Cập nhật thông tin học sinh
+                    document.getElementById('studentFullName').textContent = hocSinh.ho_ten || '';
+                    document.getElementById('studentDOB').textContent = formatDate(hocSinh.ngay_sinh) || '';
+                    document.getElementById('studentGender').textContent = hocSinh.gioi_tinh || '';
+                    document.getElementById('studentAddress').textContent = hocSinh.dia_chi || '';
+                    document.getElementById('studentType_view').textContent = hocSinh.loai_hoc_sinh || '';
+
+                    // Hiển thị ảnh học sinh
+                    const studentImages = document.getElementById('studentImages');
+                    studentImages.innerHTML = '';
+                    hocSinh.duong_dan_anh.forEach(img => {
+                        const imgElement = document.createElement('img');
+                        imgElement.src = `/${img}`;
+                        imgElement.alt = 'Ảnh học sinh';
+                        imgElement.className = 'w-20 h-20 object-cover rounded-lg mr-2';
+                        studentImages.appendChild(imgElement);
+                    });
+
+                    // Hiển thị thông tin phụ huynh
+                    const parentDetails = document.getElementById('parentDetails');
+                    parentDetails.innerHTML = '';
+                    hocSinh.phu_huynh.forEach(ph => {
+                        const parentHTML = `
+                        <div class="ml-4 border-l-2 border-gray-200 pl-4 mb-2">
+                            <div><strong>Họ tên:</strong> ${ph.ho_ten || ''}</div>
+                            <div><strong>Ngày sinh:</strong> ${formatDate(ph.ngaysinh) || ''}</div>
+                            <div><strong>Giới tính:</strong> ${ph.gioi_tinh || ''}</div>
+                            <div><strong>Địa chỉ:</strong> ${ph.dia_chi || ''}</div>
+                            <div><strong>Email:</strong> ${ph.email || ''}</div>
+                            <div><strong>Ảnh đại diện:</strong> 
+                                <img src="/images/${ph.anh_dai_dien || 'default_avatar.jpg'}" alt="Ảnh đại diện" class="w-20 h-20 object-cover rounded-lg">
+                            </div>
+                        </div>
+                    `;
+                        parentDetails.innerHTML += parentHTML;
+                    });
+
+                    toggleDetailModal();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi khi lấy chi tiết:', error);
+                alert('Đã xảy ra lỗi khi xem chi tiết học sinh');
+            });
+    }
+
+    function toggleDetailModal() {
+        const modal = document.getElementById('detailModal');
+        modal.classList.toggle('hidden');
+    }
+
+    // Hàm format date
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
 </script>
-
 <!-- FORMAT DATE -->
 <% function formatDate(dateStr) { if (!dateStr) return '' ; const d=new Date(dateStr); const
     day=String(d.getDate()).padStart(2, '0' ); const month=String(d.getMonth() + 1).padStart(2, '0' ); const
