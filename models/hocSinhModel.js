@@ -1,3 +1,5 @@
+const path = require('path');
+const fs = require('fs');
 const pool = require('../config/connect_database');
 class HocSinhModel {
     static async layDanhSachHocSinh() {
@@ -290,8 +292,8 @@ class HocSinhModel {
         try {
             // Lấy thông tin học sinh
             const [hocSinh] = await conn.query(`
-                SELECT * FROM hoc_sinh WHERE hoc_sinh_id = ${id} AND daXoa = 0
-                `)
+                SELECT * FROM hoc_sinh WHERE hoc_sinh_id = ? AND daXoa = 0
+                `, [id]);
             if (hocSinh.length === 0) {
                 return {
                     success: false,
@@ -307,7 +309,7 @@ class HocSinhModel {
                 `, [id]);
             // Lấy thông tin phụ huynh
             const [phuHuynh] = await conn.query(`
-                SELECT t.ho_ten, t.ngaysinh, t.gioi_tinh, t.dia_chi, t.email, t.anh_dai_dien 
+                SELECT t.ho_ten, t.ngaysinh, t.gioi_tinh, t.dia_chi, t.email, t.anh_dai_dien, phs.moi_quan_he 
                 FROM phu_huynh_hoc_sinh phs
                 JOIN phu_huynh p ON phs.phu_huynh_id = p.phu_huynh_id
                 JOIN tai_khoan t ON p.tai_khoan_id = t.tai_khoan_id
@@ -332,6 +334,155 @@ class HocSinhModel {
             conn.release();
         }
     }
+    static async locHocSinhTheoLoaiHocSinh(loai_hoc_sinh) {
+        const conn = await pool.getConnection();
+        try {
+            const [rows] = await conn.query(`SELECT * FROM hoc_sinh WHERE loai_hoc_sinh = ? AND daXoa = 0`, [loai_hoc_sinh]);
+            return rows;
+        }
+        catch (error) {
+            console.log(error);
+            return [];
+        }
+        finally {
+            conn.release();
+        }
+    }
+    static async themNhieuHocSinh(danhSachHocSinh) {
+        let conn;
+        try {
+            conn = await pool.getConnection();
+            await conn.beginTransaction();
+            let danhSachLoi = []
+            for (const [index, hocSinh] of danhSachHocSinh.entries()) {
+                const dong = index + 2; // Dòng trong Excel (bắt đầu từ 2 do có header)
+                // Kiểm tra trùng lặp
+                const [trungLapCheck] = await conn.execute(`SELECT 1 FROM hoc_sinh
+                    WHERE ho_ten = ? AND ngay_sinh = ?`, [hocSinh.ho_ten, hocSinh.ngay_sinh]);
+                if (trungLapCheck.length > 0) {
+                    danhSachLoi.push({ dong, loi: `Học sinh ${hocSinh.ho_ten} với ngày sinh ${hocSinh.ngay_sinh} đã tồn tại` });
+                    continue;
+                }
+                // Chuẩn bị dữ liệu (Khớp với các cột trong excel)
+                const {
+                    ho_ten,
+                    ngay_sinh,
+                    gioi_tinh,
+                    dia_chi,
+                    loai_hoc_sinh,
+                    anh1,
+                    anh2,
+                    anh3,
+                    phu_huynh_id_1,
+                    moi_quan_he_1,
+                    phu_huynh_id_2,
+                    moi_quan_he_2
+                } = hocSinh
+                // 1. Kiểm tra đủ thông tin
+                if (!ho_ten || !ngay_sinh || !gioi_tinh || !dia_chi || !loai_hoc_sinh || !anh1 || !anh2 || !anh3 || !phu_huynh_id_1 || !moi_quan_he_1) {
+                    danhSachLoi.push({ dong, loi: `Vui lòng điền đàn đủ thông tin bắt buộc` });
+                    continue;
+                }
+                // 2. Kiểm tra đủ 3 ảnh
+                if (!anh1 || !anh2 || !anh3) {
+                    danhSachLoi.push({ dong, loi: `Phải có đủ 3 ảnh` });
+                    continue;
+                }
+                // 3. Kiểm tra ít nhất 1 mối quan hệ với phụ huynh
+                const phuHuynhIds = [phu_huynh_id_1].concat(phu_huynh_id_2 || []);
+                const moiQuanHes = [moi_quan_he_1].concat(moi_quan_he_2 || []); // Nối mảng hoặc chuỗi
+                if (phuHuynhIds.filter(id => id).length < 1) {
+                    danhSachLoi.push({ dong, loi: `Phải có ít nhất 1 mối quan hệ với phụ huynh` });
+                    continue;
+                }
+                // 4. Kiểm tra ngày sinh
+                const today = new Date();
+                const ngaySinh = new Date(ngay_sinh);
+                if (ngaySinh > today) {
+                    danhSachLoi.push({ dong, loi: `Ngày sinh không hợp lý` });
+                    continue;
+                }
+                // 5. Kiểm tra giới tính hợp lệ
+                if (!['Nam', 'Nữ'].includes(gioi_tinh)) {
+                    danhSachLoi.push({ dong, loi: `Giới tính chỉ có Nam hoặc Nữ` });
+                    continue;
+                }
+                // 6. Kiểm tra loại học sinh hợp lệ
+                if (!['Bán trú', 'Không bán trú'].includes(loai_hoc_sinh)) {
+                    danhSachLoi.push({ dong, loi: `Loại học sinh chỉ có Bán trú hoặc Không bán trú` });
+                    continue;
+                }
+                // 7. Thêm học sinh
+                const [result] = await conn.execute(`
+                    INSERT INTO hoc_sinh (ho_ten, ngay_sinh, gioi_tinh, dia_chi, loai_hoc_sinh)
+                    VALUES (?, ?, ?, ?, ?)`, [ho_ten, ngay_sinh, gioi_tinh, dia_chi, loai_hoc_sinh]);
+                const hocSinhId = result.insertId;
+                // 8. Xử lý ảnh
+                const duongDanAnh = [anh1, anh2, anh3];
+                const duongDanMoi = await diChuyenVaDoiTenAnh(hocSinhId, ho_ten, duongDanAnh);
+                for (const duongDan of duongDanMoi) {
+                    if (duongDan) {
+                        await conn.execute(`
+                            INSERT INTO hinh_anh_hoc_sinh (hoc_sinh_id, duong_dan_anh)
+                            VALUES (?, ?)
+                            `, [hocSinhId, duongDan]);
+                    }
+                }
+                // 9. Thêm mối quan hệ với phụ huynh
+                for (let i = 0; i < phuHuynhIds.length; i++) {
+                    if (phuHuynhIds[i]) {
+                        await conn.execute(`
+                            INSERT INTO phu_huynh_hoc_sinh (hoc_sinh_id, phu_huynh_id, moi_quan_he)
+                            VALUES (?, ?, ?)
+                            `, [hocSinhId, phuHuynhIds[i], moiQuanHes[i]]);
+                    }
+                }
+            }
+            if (danhSachLoi.length > 0) {
+                await conn.rollback();
+                return { success: false, message: 'Đã xảy ra lỗi khi thêm học sinh', messageType: 'error', danhSachLoi };
+            }
+            await conn.commit();
+            return { success: true, message: 'Thêm học sinh thành công', messageType: 'success' };
+        }
+        catch (error) {
+            if (conn) await conn.rollback();
+            console.log(error);
+            return {
+                success: false,
+                message: 'Thêm hàng loạt học sinh thất bại',
+                messageType: 'error',
+                errorDetails: {
+                    dong: parseInt(error.message.match(/dòng \d+/)?.[0]?.replace('dòng ', '') || 0),
+                    loi: error.message
+                }
+            };
+        } finally {
+            if (conn) conn.release();
+        }
+    }
+    
 }
-
+async function diChuyenVaDoiTenAnh(hocSinhId, hoTen, anhDuongDan) {
+    const duongDanMoi = [];
+    const hoTenMoi = hoTen.normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Bỏ dấu
+        .replace(/đ/g, 'd').replace(/Đ/g, 'D') // Chuyển đ -> d
+        .replace(/\s+/g, '_') // Bỏ khoảng trắng
+        .replace(/[^a-zA-Z0-9_-]/g, ''); // Loại ký tự đặc biệt
+    const destinationDir = path.join(__dirname, '../public/images/temp'); // Thư mục chứa ảnh
+    if (!fs.existsSync(destinationDir)) {
+        fs.mkdirSync(destinationDir, { recursive: true });
+    }
+    for (let i = 0; i < anhDuongDan.length; i++) {
+        if (anhDuongDan[i] && fs.existsSync(anhDuongDan[i])) {
+            const ext = path.extname(anhDuongDan[i]);
+            const newFileName = `${hocSinhId}_${hoTenMoi}_${i + 1}${ext}`
+            const newPath = path.join(destinationDir, newFileName);
+            fs.copyFileSync(anhDuongDan[i], newPath);
+            duongDanMoi.push(`images/temp/${newFileName}`); // Tên duong_dan_anh
+        }
+    }
+    return duongDanMoi;
+}
 module.exports = HocSinhModel;

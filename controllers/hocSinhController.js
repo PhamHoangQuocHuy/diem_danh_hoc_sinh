@@ -2,6 +2,8 @@ const pool = require('../config/connect_database');
 const path = require('path');
 const fs = require('fs');
 const HocSinhModel = require('../models/hocSinhModel');
+const xlsx = require('xlsx');
+
 class HocSinhController {
     static async hienThiHocSinh(req, res) {
         try {
@@ -215,6 +217,7 @@ class HocSinhController {
         try {
             const { id } = req.params;
             const result = await HocSinhModel.thongTinChiTietHocSinh(id);
+            //console.log(result);
             if (!result.success) {
                 return res.render('admin_index', {
                     page: 'pages/quanLyHocSinh',
@@ -231,6 +234,107 @@ class HocSinhController {
         catch (error) {
             console.log(error);
             return res.redirect(`/hoc-sinh?message=Đã xảy ra lỗi khi tìm học sinh&messageType=error`);
+        }
+    }
+    static async locHocSinh(req, res) {
+        try {
+            const { loai_hoc_sinh } = req.query;
+            let danhSach;
+            if (loai_hoc_sinh && loai_hoc_sinh !== '') {
+                danhSach = await HocSinhModel.locHocSinhTheoLoaiHocSinh(loai_hoc_sinh);
+            }
+            else {
+                danhSach = await HocSinhModel.layDanhSachHocSinh();
+            }
+            return res.render('admin_index', {
+                page: 'pages/quanLyHocSinh',
+                danhSachHocSinh: danhSach,
+                danhSachPhuHuynh: await HocSinhModel.layDanhSachPhuHuynh(),
+                message: '',
+                messageType: ''
+            })
+        }
+        catch (error) {
+            console.log(error);
+            return res.redirect(`/hoc-sinh?message=Đã xảy ra lỗi khi tìm học sinh&messageType=error`);
+        }
+    }
+    static async themHangLoat(req, res) {
+        try {
+            const filePath = req.file.path; //Đường dẫn từ file multerExcel
+            const workbook = xlsx.readFile(filePath);
+            const sheetName = workbook.SheetNames[0];
+            const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+            const danhSachHocSinh = [];
+            const danhSachLoi = [];
+            for (let index = 0; index < data.length; index++) {
+                const row = data[index];
+                const {
+                    ho_ten,
+                    ngay_sinh,
+                    gioi_tinh,
+                    dia_chi,
+                    loai_hoc_sinh,
+                    anh1,
+                    anh2,
+                    anh3,
+                    phu_huynh_id_1,
+                    moi_quan_he_1,
+                    phu_huynh_id_2,
+                    moi_quan_he_2
+                } = row;
+                // Xử lý định dạng ngày sinh
+                let ngaySinhFormatted = '';
+                if (typeof ngay_sinh === 'number') {
+                    const dateObj = new Date(Math.round((ngay_sinh - 25569) * 86400 * 1000));
+                    ngaySinhFormatted = dateObj.toISOString().split('T')[0];
+                } else if (typeof ngay_sinh === 'string') {
+                    ngaySinhFormatted = new Date(ngay_sinh).toISOString().split('T')[0];
+                }
+                // Chuẩn bị dữ liệu
+                const hocSinh = {
+                    ho_ten,
+                    ngay_sinh: ngaySinhFormatted,
+                    gioi_tinh,
+                    dia_chi,
+                    loai_hoc_sinh,
+                    anh1,
+                    anh2,
+                    anh3,
+                    phu_huynh_id_1,
+                    moi_quan_he_1,
+                    phu_huynh_id_2,
+                    moi_quan_he_2
+                };
+
+                danhSachHocSinh.push(hocSinh);
+            }
+            // Thêm học sinh
+            const result = await HocSinhModel.themNhieuHocSinh(danhSachHocSinh);
+            if (result.success) {
+                fs.unlinkSync(filePath); // Xóa file tạm
+                return res.status(200).json({
+                    message: `Đã thêm ${danhSachHocSinh.length} học sinh thành công`,
+                    soLuongThanhCong: danhSachHocSinh.length,
+                    soLuongLoi: 0,
+                    danhSachLoi: [],
+                });
+            } else {
+                return res.status(400).json({
+                    message: result.message,
+                    soLuongThanhCong: 0,
+                    soLuongLoi: result.danhSachLoi ? result.danhSachLoi.length : 1,
+                    danhSachLoi: result.danhSachLoi || [result.errorDetails],
+                });
+            }
+        } catch (error) {
+            console.error('Lỗi khi thêm hàng loạt học sinh:', error);
+            return res.status(500).json({
+                message: 'Lỗi hệ thống khi thêm học sinh hàng loạt',
+                soLuongThanhCong: 0,
+                soLuongLoi: 1,
+                danhSachLoi: [{ loi: error.message, dong: 0 }],
+            });
         }
     }
 }

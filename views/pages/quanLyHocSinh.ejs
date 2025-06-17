@@ -1,4 +1,73 @@
 <style>
+    .message-box {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+        text-align: center;
+    }
+
+    .message-success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .message-error {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .tab-buttons {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .tab-button {
+        padding: 8px 16px;
+        background-color: #e5e7eb;
+        /* Tailwind gray-200 */
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        font-weight: 500;
+    }
+
+    .tab-button.active {
+        background-color: #3b82f6;
+        /* Tailwind blue-500 */
+        color: white;
+    }
+
+    .tab-pane {
+        display: none;
+    }
+
+    .tab-pane.active {
+        display: block;
+    }
+
+    #studentDetails div {
+        padding: 8px 0;
+        border-bottom: 1px solid #e5e7eb;
+        /* Tailwind gray-200 */
+    }
+
+    #studentDetails div:last-child {
+        border-bottom: none;
+        /* Remove border for the last item */
+    }
+
+    #parentDetails div {
+        padding: 8px 0;
+        border-bottom: 1px solid #e5e7eb;
+        /* Tailwind gray-200 */
+    }
+
+    #parentDetails div:last-child {
+        border-bottom: none;
+        /* Remove border for the last item */
+    }
+
     .tab-buttons {
         display: flex;
         gap: 8px;
@@ -73,6 +142,7 @@
         display: none;
     }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <div class="container mx-auto p-6">
     <h1 class="text-3xl font-bold mb-6 text-center">Quản lý học sinh</h1>
 
@@ -87,12 +157,38 @@
                 </button>
             </form>
         </div>
+        <!-- LỌC -->
+        <form id="filterForm" action="/hoc-sinh/loc" method="get">
+            <select id="vaiTroSelect" name="loai_hoc_sinh"
+                class="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring focus:ring-blue-500">
+                <option value="">Tất cả học sinh</option>
+                <option value="Bán trú">Bán trú</option>
+                <option value="Không bán trú">Không bán trú</option>
+            </select>
+            <button type="submit" class="ml-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Lọc</button>
+        </form>
         <button onclick="toggleAddModal()"
             class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors shadow-md focus:outline-none focus:ring focus:ring-blue-400 flex items-center gap-2">
             <i class="fas fa-plus"></i> Thêm học sinh
         </button>
     </div>
-
+    <!-- THÊM HÀNG LOẠT -->
+    <div style="float: right;" class="inline-flex">
+        <!-- Thêm input file và nút upload -->
+        <form id="uploadExcelForm" style="display: flex;">
+            <div class="mb-4 col-span-2">
+                <label for="excelFile" class="block text-sm font-medium mb-2">Tải lên file Excel</label>
+                <input type="file" id="excelFile" name="excelFile" accept=".xlsx, .xls"
+                    style="margin-right: 40px; width: 480px;"
+                    class="border border-gray-300 rounded-md px-4 py-2 w-200px focus:outline-none focus:ring focus:ring-blue-500" />
+            </div>
+            <button type="button" onclick="uploadExcel()"
+                style="padding-left:35px;padding-right: 20px; height: 50px; margin-top: 20px;"
+                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-green-400 mt-4">
+                Thêm hàng loạt
+            </button>
+        </form>
+    </div>
     <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
         <thead>
             <tr class="bg-gray-200">
@@ -354,26 +450,50 @@
     <div id="detailModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-60 hidden p-2">
         <div class="bg-white rounded-xl p-5 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-auto font-sans">
             <h2 class="text-2xl font-bold text-gray-800 mb-4">Chi tiết học sinh</h2>
-            <div id="studentDetails" class="space-y-4">
-                <div><strong>Thông tin học sinh:</strong></div>
-                <div><strong>Họ tên:</strong> <span id="studentFullName"></span></div>
-                <div><strong>Ngày sinh:</strong> <span id="studentDOB"></span></div>
-                <div><strong>Giới tính:</strong> <span id="studentGender"></span></div>
-                <div><strong>Địa chỉ:</strong> <span id="studentAddress"></span></div>
-                <div><strong>Loại học sinh:</strong> <span id="studentType_view"></span></div>
-                <div><strong>Ảnh học sinh:</strong>
-                    <div id="studentImages" class="flex gap-2 flex-wrap"></div>
-                </div>
 
-                <div><strong>Thông tin phụ huynh:</strong></div>
-                <div id="parentDetails"></div>
+            <!-- Tab buttons -->
+            <div class="tab-buttons mb-4">
+                <button class="tab-button active" onclick="showTab('studentInfo')">Thông tin học sinh</button>
+                <button class="tab-button" onclick="showTab('parentInfo')">Thông tin phụ huynh</button>
             </div>
+
+            <!-- Tab panes -->
+            <div id="studentInfo" class="tab-pane active">
+                <div id="studentDetails" class="space-y-4">
+                    <div class="flex justify-between">
+                        <strong>Họ tên:</strong> <span id="studentFullName" class="text-gray-600"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <strong>Ngày sinh:</strong> <span id="studentDOB" class="text-gray-600"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <strong>Giới tính:</strong> <span id="studentGender" class="text-gray-600"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <strong>Địa chỉ:</strong> <span id="studentAddress" class="text-gray-600"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <strong>Loại học sinh:</strong> <span id="studentType_view" class="text-gray-600"></span>
+                    </div>
+                    <div class="flex flex-col">
+                        <strong>Ảnh học sinh:</strong>
+                        <div id="studentImages" class="flex gap-2 flex-wrap mt-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="parentInfo" class="tab-pane">
+                <div id="parentDetails" class="space-y-4"></div>
+            </div>
+
             <div class="flex justify-end mt-4">
                 <button type="button" onclick="toggleDetailModal()"
                     class="bg-gray-200 text-gray-700 px-4 py-1.5 rounded-lg hover:bg-gray-300 transition-colors duration-200">Đóng</button>
             </div>
         </div>
     </div>
+
+
 
 
 
@@ -630,6 +750,22 @@
 </script>
 <!-- XEM CHI TIẾT -->
 <script>
+    function showTab(tabName) {
+        const tabs = document.querySelectorAll('.tab-pane');
+        const buttons = document.querySelectorAll('.tab-button');
+        tabs.forEach(tab => {
+            tab.classList.remove('active');
+        });
+        buttons.forEach(button => {
+            button.classList.remove('active');
+        });
+        document.getElementById(tabName).classList.add('active');
+        const activeButton = Array.from(buttons).find(button => button.textContent.includes(tabName === 'studentInfo' ? 'Thông tin học sinh' : 'Thông tin phụ huynh'));
+        if (activeButton) {
+            activeButton.classList.add('active');
+        }
+    }
+
     function viewDetails(id) {
         // Gọi API để lấy thông tin chi tiết
         fetch(`/hoc-sinh/chi-tiet/${id}`)
@@ -676,6 +812,7 @@
                             <div><strong>Giới tính:</strong> ${ph.gioi_tinh || ''}</div>
                             <div><strong>Địa chỉ:</strong> ${ph.dia_chi || ''}</div>
                             <div><strong>Email:</strong> ${ph.email || ''}</div>
+                            <div><strong>Mối quan hệ:</strong> ${ph.moi_quan_he || ''}</div>
                             <div><strong>Ảnh đại diện:</strong> 
                                 <img src="/images/${ph.anh_dai_dien || 'default_avatar.jpg'}" alt="Ảnh đại diện" class="w-20 h-20 object-cover rounded-lg">
                             </div>
@@ -708,6 +845,76 @@
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const year = d.getFullYear();
         return `${day}/${month}/${year}`;
+    }
+</script>
+<!-- LỌC -->
+<script>
+    // Set lại option đã chọn nếu có trên URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const loaiHocSinh = urlParams.get('loai_hoc_sinh');
+    if (loaiHocSinh) {
+        document.getElementById('vaiTroSelect').value = loaiHocSinh;
+    }
+</script>
+<!-- THÊM HÀNG LOẠT -->
+<script>
+    async function uploadExcel() {
+        const fileInput = document.getElementById('excelFile');
+        const file = fileInput.files[0];
+        if (!file) {
+            alert('Vui lòng chọn file Excel!');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('excelFile', file);
+
+        try {
+            const response = await fetch('/hoc-sinh/them-hang-loat', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    
+                }
+            });
+
+            const result = await response.json();
+            const messageBox = document.createElement('div');
+            messageBox.className = `message-box message-${result.messageType || 'error'}`;
+            messageBox.style.fontSize = '16px';
+
+            if (response.ok) {
+                messageBox.textContent = result.message;
+                document.querySelector('.container').prepend(messageBox);
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                messageBox.textContent = result.message;
+                if (result.danhSachLoi && result.danhSachLoi.length > 0) {
+                    const errorList = document.createElement('ul');
+                    errorList.className = 'list-disc list-inside mt-2';
+                    result.danhSachLoi.forEach(err => {
+                        const li = document.createElement('li');
+                        li.textContent = `Dòng ${err.dong}: ${err.loi}`; // Điều chỉnh vì không có email
+                        errorList.appendChild(li);
+                    });
+                    messageBox.appendChild(errorList);
+                } else if (result.errorDetails) {
+                    const li = document.createElement('li');
+                    li.textContent = `Dòng ${result.errorDetails.dong}: ${result.errorDetails.loi}`;
+                    const errorList = document.createElement('ul');
+                    errorList.className = 'list-disc list-inside mt-2';
+                    errorList.appendChild(li);
+                    messageBox.appendChild(errorList);
+                }
+                document.querySelector('.container').prepend(messageBox);
+            }
+        } catch (error) {
+            const messageBox = document.createElement('div');
+            messageBox.className = 'message-box message-error';
+            messageBox.textContent = 'Lỗi hệ thống khi tải lên file Excel';
+            document.querySelector('.container').prepend(messageBox);
+            console.error('Lỗi khi tải lên:', error);
+        }
     }
 </script>
 <!-- FORMAT DATE -->
