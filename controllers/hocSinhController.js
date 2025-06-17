@@ -193,7 +193,7 @@ class HocSinhController {
             if (result.length > 0) {
                 res.render('admin_index', {
                     page: 'pages/quanLyHocSinh',
-                    danhSachHocSinh,
+                    danhSachHocSinh: result,
                     danhSachPhuHuynh,
                     message: `Đã tìm học sinh với tên: ${tim_kiem}`,
                     messageType: 'success'

@@ -277,7 +277,29 @@ class HocSinhModel {
             }
 
             const [rows] = await conn.query(`SELECT * FROM hoc_sinh WHERE ho_ten LIKE ?`, [`%${tim_kiem}%`]);
-            return rows;
+            // Bổ sung thông tin ảnh + phụ huynh cho mỗi học sinh
+            const result = await Promise.all(rows.map(async (hs) => {
+                const [hinhAnh] = await conn.query(`
+                SELECT duong_dan_anh FROM hinh_anh_hoc_sinh 
+                WHERE hoc_sinh_id = ?
+            `, [hs.hoc_sinh_id]);
+
+                const [phuHuynh] = await conn.query(`
+                SELECT p.phu_huynh_id, t.ho_ten, t.email, phs.moi_quan_he 
+                FROM phu_huynh_hoc_sinh phs
+                JOIN phu_huynh p ON phs.phu_huynh_id = p.phu_huynh_id
+                JOIN tai_khoan t ON p.tai_khoan_id = t.tai_khoan_id
+                WHERE phs.hoc_sinh_id = ?
+            `, [hs.hoc_sinh_id]);
+
+                return {
+                    ...hs,
+                    duong_dan_anh: hinhAnh.map(img => img.duong_dan_anh),
+                    phu_huynh: phuHuynh
+                };
+            }));
+
+            return result;
         }
         catch (error) {
             console.log(error);
@@ -338,7 +360,29 @@ class HocSinhModel {
         const conn = await pool.getConnection();
         try {
             const [rows] = await conn.query(`SELECT * FROM hoc_sinh WHERE loai_hoc_sinh = ? AND daXoa = 0`, [loai_hoc_sinh]);
-            return rows;
+            // Bổ sung thông tin ảnh + phụ huynh cho mỗi học sinh
+            const result = await Promise.all(rows.map(async (hs) => {
+                const [hinhAnh] = await conn.query(`
+                SELECT duong_dan_anh FROM hinh_anh_hoc_sinh 
+                WHERE hoc_sinh_id = ?
+            `, [hs.hoc_sinh_id]);
+
+                const [phuHuynh] = await conn.query(`
+                SELECT p.phu_huynh_id, t.ho_ten, t.email, phs.moi_quan_he 
+                FROM phu_huynh_hoc_sinh phs
+                JOIN phu_huynh p ON phs.phu_huynh_id = p.phu_huynh_id
+                JOIN tai_khoan t ON p.tai_khoan_id = t.tai_khoan_id
+                WHERE phs.hoc_sinh_id = ?
+            `, [hs.hoc_sinh_id]);
+
+                return {
+                    ...hs,
+                    duong_dan_anh: hinhAnh.map(img => img.duong_dan_anh),
+                    phu_huynh: phuHuynh
+                };
+            }));
+
+            return result;
         }
         catch (error) {
             console.log(error);
@@ -461,7 +505,7 @@ class HocSinhModel {
             if (conn) conn.release();
         }
     }
-    
+
 }
 async function diChuyenVaDoiTenAnh(hocSinhId, hoTen, anhDuongDan) {
     const duongDanMoi = [];

@@ -189,11 +189,24 @@
             </button>
         </form>
     </div>
+    <!-- Xuất danh sách -->
+    <div style="float: left;" class="inline-flex">
+        <form action="/hoc-sinh/xuat-excel" method="GET">
+            <button type="submit" style="padding-left:20px; padding-right: 20px; height: 50px; margin-top: 20px;"
+                class="bg-green-800 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-green-400 mt-4">
+                Xuất Excel
+            </button>
+        </form>
+    </div>
+
+
+
     <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
         <thead>
             <tr class="bg-gray-200">
                 <th class="py-2 px-4 border-b text-center">ID</th>
                 <th class="py-2 px-4 border-b text-center">Họ tên</th>
+                <th class="py-2 px-4 border-b text-center">Hình học sinh</th>
                 <th class="py-2 px-4 border-b text-center">Ngày sinh</th>
                 <th class="py-2 px-4 border-b text-center">Loại học sinh</th>
                 <th class="py-2 px-4 border-b text-center">Hành động</th>
@@ -208,6 +221,17 @@
                         </td>
                         <td class="py-2 px-4 border-b text-center">
                             <%= hocSinh.ho_ten %>
+                        </td>
+                        <td class="py-2 px-4 border-b text-center">
+                            <% if (hocSinh.duong_dan_anh && hocSinh.duong_dan_anh.length> 0) { %>
+                                <img src="/<%= hocSinh.duong_dan_anh[0] %>"
+                                    class="w-16 h-16 rounded-md object-cover mx-auto" alt="Ảnh học sinh">
+                                <% } else { %>
+                                    <div
+                                        class="w-16 h-16 rounded-md bg-gray-200 mx-auto flex items-center justify-center">
+                                        <span class="text-gray-500 text-xs">No image</span>
+                                    </div>
+                                    <% } %>
                         </td>
                         <td class="py-2 px-4 border-b text-center">
                             <%= formatDate(hocSinh.ngay_sinh) %>
@@ -874,7 +898,7 @@
                 method: 'POST',
                 body: formData,
                 headers: {
-                    
+
                 }
             });
 
@@ -886,7 +910,7 @@
             if (response.ok) {
                 messageBox.textContent = result.message;
                 document.querySelector('.container').prepend(messageBox);
-                setTimeout(() => location.reload(), 2000);
+                setTimeout(() => location.reload(), 2000); // Refesh trang sau 2s
             } else {
                 messageBox.textContent = result.message;
                 if (result.danhSachLoi && result.danhSachLoi.length > 0) {
@@ -894,7 +918,7 @@
                     errorList.className = 'list-disc list-inside mt-2';
                     result.danhSachLoi.forEach(err => {
                         const li = document.createElement('li');
-                        li.textContent = `Dòng ${err.dong}: ${err.loi}`; // Điều chỉnh vì không có email
+                        li.textContent = `Dòng ${err.dong}: ${err.loi}`; // Thông báo lỗi
                         errorList.appendChild(li);
                     });
                     messageBox.appendChild(errorList);
