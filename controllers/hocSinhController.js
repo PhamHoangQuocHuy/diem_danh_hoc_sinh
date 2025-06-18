@@ -337,5 +337,37 @@ class HocSinhController {
             });
         }
     }
+    static async xuatExcel(req, res) {
+        try {
+            const danhSach = await HocSinhModel.xuatFileExcel();
+            const data = danhSach.map(hs => ({
+                'Học sinh id': hs.hoc_sinh_id,
+                'Họ tên': hs.ho_ten,
+                'Ngày sinh': hs.ngay_sinh,
+                'Giới tính': hs.gioi_tinh,
+                'Địa chỉ': hs.dia_chi,
+                'Loại học sinh': hs.loai_hoc_sinh,
+            }));
+            const workbook = xlsx.utils.book_new();
+            const worksheet = xlsx.utils.json_to_sheet(data);
+            xlsx.utils.book_append_sheet(workbook, worksheet, 'Danh sách học sinh');  // sheet -> workbook với tên : 'Danh sách học sinh'
+            const dirPath = path.join(__dirname, '../../export/excel');
+            const filePath = path.join(dirPath, 'danhSachHocSinh_Export.xlsx');
+            if (!fs.existsSync(dirPath)) {
+                fs.mkdirSync(dirPath, { recursive: true }); // Tạo folder nếu không tồn tại
+            }
+
+            xlsx.writeFile(workbook, filePath);
+            res.download(filePath, 'danhSachHocSinh_Export.xlsx', err => {
+                if (err) console.log('Lỗi gửi file: ', err);
+                fs.unlink(filePath, () => { }); // Xóa file khi xuất thành công
+            });
+
+        }
+        catch (error) {
+            console.log(error);
+            return res.redirect(`/hoc-sinh?message=Đã xảy ra lỗi khi xuất file excel&messageType=error`);
+        }
+    }
 }
 module.exports = HocSinhController;

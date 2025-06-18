@@ -1,4 +1,6 @@
+const path = require('path');
 const pool = require('../config/connect_database');
+const fs = require('fs');
 class LopHocModel {
     static async layDanhSachLopHoc() {
         const conn = await pool.getConnection();
@@ -53,6 +55,20 @@ class LopHocModel {
         const conn = await pool.getConnection();
         try {
             const [rows] = await conn.query('SELECT * FROM nam_hoc JOIN hoc_ky ON nam_hoc.nam_hoc_id = hoc_ky.nam_hoc_id WHERE nam_hoc.daXoa = 0');
+            return rows;
+        }
+        catch (error) {
+            console.log(error);
+            return [];
+        }
+        finally {
+            conn.release();
+        }
+    }
+    static async layThongTinHocSinh() {
+        const conn = await pool.getConnection();
+        try {
+            const [rows] = await conn.query('SELECT * FROM hoc_sinh WHERE daXoa = 0');
             return rows;
         }
         catch (error) {
@@ -164,7 +180,6 @@ class LopHocModel {
             if (conn) conn.release();
         }
     }
-
     static async xoaThongTinLopHoc(id) {
         let conn;
         try {
@@ -289,7 +304,6 @@ class LopHocModel {
             if (conn) conn.release();
         }
     }
-
     static async timThongTinLopHoc(tim_kiem) {
         try {
             if (!tim_kiem || tim_kiem.trim() === '') {
@@ -306,6 +320,169 @@ class LopHocModel {
         } catch (error) {
             console.error('Lỗi khi tìm kiếm lớp học: ', error);
             return { success: false, message: `Tìm kiếm lớp học thất bại: ${error.message}`, messageType: 'error' };
+        }
+    }
+    static async themTheoDanhSach(hocSinhIds, lopHocId) {
+        if (!hocSinhIds || hocSinhIds.length === 0) {
+            return {
+                success: false,
+                message: 'Vui lòng chọn học sinh',
+                messageType: 'error'
+            }
+        }
+        const conn = await pool.getConnection();
+        try {
+            await conn.beginTransaction();
+            // Duyệt qua danh sách học sinh
+            for (const hocSinhId of hocSinhIds) {
+                //Kiểm tra học sinh có tồn tại trong lớp đó chưa ?
+                const [rows] = await conn.query(`SELECT * FROM hoc_sinh_lop_hoc
+                    WHERE lop_hoc_id = ? AND hoc_sinh_id = ?`, [lopHocId, hocSinhId]);
+                if (rows.length === 0) {
+                    await conn.query(`INSERT INTO hoc_sinh_lop_hoc (lop_hoc_id, hoc_sinh_id) 
+                        VALUES (?, ?)`, [lopHocId, hocSinhId]);
+                }
+                else {
+                    await conn.rollback();
+                    return {
+                        success: false,
+                        message: `Học sinh ${hocSinhId} đa tồn tại trong lớp học`,
+                        messageType: 'error'
+                    }
+                }
+            }
+            await conn.commit();
+            return {
+                success: true,
+                message: `Thêm học sinh vào lớp học thành công`,
+                messageType: 'success'
+            }
+        }
+        catch (error) {
+            await conn.rollback();
+            console.log(error);
+            return {
+                success: false,
+                message: `Thêm học sinh vào lớp học thất bại: ${error.message}`,
+                messageType: 'error'
+            }
+        }
+        finally {
+            if (conn) conn.release();
+        }
+    }
+    static async themHangLoatTuExcel(hocSinhList, lopHocId) {
+        const conn = await pool.getConnection();
+        const danhSachLoi = [];
+        try {
+            await conn.beginTransaction();
+            for (let i = 0; i < hocSinhList.length; i++) {
+                const hs = hocSinhList[i];
+                const rowNum = i + 2; // Dòng 1 là tiêu đề
+                const hocSinhId = hs['Học sinh id']; // Cột trong excel
+                // Kiểm tra có học sinh chưa
+                if (!hocSinhId) {
+                    danhSachLoi.push({
+                        dong: rowNum,
+                        loi: 'Thiếu học sinh id'
+                    });
+                    continue;
+                }
+                const [rows] = await conn.query(`SELECT * FROM hoc_sinh_lop_hoc
+                    WHERE lop_hoc_id = ? AND hoc_sinh_id = ?`, [lopHocId, hocSinhId]);
+                if (rows.length > 0) {
+                    danhSachLoi.push({
+                        dong: rowNum,
+                        loi: `Học sinh ${hocSinhId} đa tồn tại trong lớp học`
+                    });
+                    continue;
+                }
+            }
+            // Nếu có lỗi
+            if (danhSachLoi.length > 0) {
+                await conn.rollback();
+                const messageLoi = danhSachLoi.map(err => `Dòng ${err.dong}: ${err.loi}`).join('\n');
+                return {
+                    success: false,
+                    message: `${messageLoi}`,
+                    messageType: 'error'
+                }
+            }
+            // Nếu không có lỗi => Tiến hành thêm
+            for (let i = 0; i < hocSinhList.length; i++) {
+                const hs = hocSinhList[i];
+                const hocSinhId = hs['Học sinh id']; // Cột trong excel
+                await conn.query(`INSERT INTO hoc_sinh_lop_hoc (lop_hoc_id, hoc_sinh_id) 
+                    VALUES (?, ?)`, [lopHocId, hocSinhId]);
+
+            }
+            await conn.commit();
+            return {
+                success: true,
+                message: `Đã thêm ${hocSinhList.length} học sinh vào lớp học`,
+                messageType: 'success'
+            }
+        }
+        catch (error) {
+            await conn.rollback();
+            console.log(error);
+            return {
+                success: false,
+                message: `Thêm học sinh vào lớp học thất bại: ${error.message}`,
+                messageType: 'error'
+            }
+        }
+        finally {
+            if (conn) conn.release();
+        }
+    }
+    static async capNhatDuongDanAnhTheoNamHoc(lopHocId, hocSinhIds) {
+        const conn = await pool.getConnection();
+        try {
+            // 1. Lấy ten_nam_hoc từ lop_hoc_id
+            const [rows] = await conn.query(`
+                SELECT nh.ten_nam_hoc FROM lop_hoc lh
+                JOIN hoc_ky hk ON lh.hoc_ky_id = hk.hoc_ky_id
+                JOIN nam_hoc nh ON hk.nam_hoc_id = nh.nam_hoc_id
+                WHERE lh.lop_hoc_id = ? 
+                `, [lopHocId]);
+            if (rows.length === 0) {
+                throw new Error(`Lớp học ID ${lopHocId} khôn tồn tại`);
+            }
+            const tenNamHoc = rows[0].ten_nam_hoc;
+            const thuMucMoi = path.join('public', 'images', tenNamHoc);
+            // 2. Tạo năm học nếu chưa tồn tại
+            if (!fs.existsSync(thuMucMoi)) {
+                fs.mkdirSync(thuMucMoi, { recursive: true });
+            }
+            for (const hocSinhId of hocSinhIds) {
+                const [anhRows] = await conn.query(`
+                    SELECT hinh_anh_hoc_sinh_id, duong_dan_anh FROM hinh_anh_hoc_sinh
+                    WHERE hoc_sinh_id = ?
+                    `, [hocSinhId]);
+                for (const anh of anhRows) {
+                    const tenAnh = path.basename(anh.duong_dan_anh);
+                    const duongDanCu = path.join('public', anh.duong_dan_anh);
+                    const duongDanMoi = path.join('public', 'images', tenNamHoc, tenAnh);
+                    // 3. Di chuyển ảnh
+                    if (fs.existsSync(duongDanCu)) {
+                        fs.renameSync(duongDanCu, duongDanMoi);
+                    }
+                    // 4. Cập nhật lại đường dẫn trong DB
+                    const duongDanAnhMoi = `images/${tenNamHoc}/${tenAnh}`;
+                    await conn.query(`
+                        UPDATE hinh_anh_hoc_sinh
+                        SET duong_dan_anh = ?
+                        WHERE hinh_anh_hoc_sinh_id = ?
+                        `, [duongDanAnhMoi, anh.hinh_anh_hoc_sinh_id]);
+                }
+            }
+        }
+        catch (error) {
+            console.log(error);
+        }
+        finally {
+            if (conn) conn.release();
         }
     }
 }

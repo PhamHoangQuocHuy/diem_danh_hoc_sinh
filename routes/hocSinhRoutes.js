@@ -13,4 +13,6 @@ router.get('/chi-tiet/:id', AuthMiddleware.kiemTraToken, HocSinhController.chiTi
 router.get('/tim-kiem', AuthMiddleware.kiemTraToken, HocSinhController.timKiemHocSinh);
 router.get('/loc', AuthMiddleware.kiemTraToken, HocSinhController.locHocSinh);
 router.post('/them-hang-loat', AuthMiddleware.kiemTraToken, uploadExcel, HocSinhController.themHangLoat);
+router.get('/xuat-excel', AuthMiddleware.kiemTraToken, HocSinhController.xuatExcel);
+
 module.exports = router;

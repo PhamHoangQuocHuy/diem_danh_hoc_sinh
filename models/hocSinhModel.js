@@ -505,7 +505,20 @@ class HocSinhModel {
             if (conn) conn.release();
         }
     }
-
+    static async xuatFileExcel(){
+        const conn = await pool.getConnection();
+        try{
+            const [rows] = await conn.query(`SELECT * FROM hoc_sinh WHERE daXoa=0`);
+            return rows;
+        }
+        catch(error){
+            console.log(error);
+            return [];
+        }
+        finally{
+            if(conn) conn.release();
+        }
+    }
 }
 async function diChuyenVaDoiTenAnh(hocSinhId, hoTen, anhDuongDan) {
     const duongDanMoi = [];

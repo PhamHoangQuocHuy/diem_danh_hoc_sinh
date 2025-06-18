@@ -1,4 +1,5 @@
 const LopHocModel = require('../models/lopHocModel');
+const xlsx = require('xlsx');
 class LopHocController {
     static async hienThiLopHoc(req, res) {
         try {
@@ -6,12 +7,14 @@ class LopHocController {
             const danhSachGiaoVien = await LopHocModel.layDanhSachGiaoVien();
             const danhSachHocKy = await LopHocModel.layDanhSachHocKy();
             const danhSachNamHoc = await LopHocModel.layDanhSachNamHoc();
+            const danhSachHocSinh = await LopHocModel.layThongTinHocSinh();
             res.render('admin_index', {
                 page: 'pages/quanLyLopHoc',
                 danhSachLopHoc,
                 danhSachGiaoVien,
                 danhSachHocKy,
                 danhSachNamHoc,
+                danhSachHocSinh,
                 message: req.query.message || '',
                 messageType: req.query.messageType || ''
             });
@@ -23,12 +26,12 @@ class LopHocController {
                 danhSachGiaoVien: [],
                 danhSachHocKy: [],
                 danhSachNamHoc: [],
+                danhSachHocSinh: [],
                 message: 'Đã xảy ra lỗi khi lấy danh sách lớp học',
                 messageType: 'error'
             });
         }
     }
-   
     static async themLopHoc(req, res) {
         try {
             const { ten_lop, giao_vien_id } = req.body;
@@ -97,7 +100,7 @@ class LopHocController {
     static async timLopHoc(req, res) {
         try {
             const { tim_kiem } = req.query;
-            if(!tim_kiem || tim_kiem.trim() === ''){
+            if (!tim_kiem || tim_kiem.trim() === '') {
                 return res.redirect(`/lop-hoc?message=Vui lòng nhập tìm kiếm&messageType=error`);
             }
             const result = await LopHocModel.timThongTinLopHoc(tim_kiem);
@@ -113,7 +116,7 @@ class LopHocController {
                     message: `Đã tìm kiếm lớp học: ${tim_kiem}`,
                     messageType: 'success'
                 });
-            }else{
+            } else {
                 res.render('admin_index', {
                     page: 'pages/quanLyLopHoc',
                     danhSachLopHoc: [],
@@ -130,6 +133,68 @@ class LopHocController {
                 page: 'pages/quanLyLopHoc',
                 danhSachLopHoc: [],
                 message: 'Đã xảy ra lỗi khi lấy danh sách lớp học',
+                messageType: 'error'
+            });
+        }
+    }
+    static async themHocSinh(req, res) {
+        try {
+            const { hoc_sinh_ids, lop_hoc_id } = req.body;
+            // Validate
+            if (!lop_hoc_id || !hoc_sinh_ids || hoc_sinh_ids.length === 0) {
+                return res.redirect(`/lop-hoc?message=Thiếu thông tin học sinh hoặc lớp học&messageType=error`);
+            }
+            // Nếu chỉ có 1 checkbox thì hoc_sinh_ids sẽ là chuỗi, ta ép về mảng
+            const danhSachHocSinh = Array.isArray(hoc_sinh_ids) ? hoc_sinh_ids : [hoc_sinh_ids];
+            const ketQua = await LopHocModel.themTheoDanhSach(danhSachHocSinh, lop_hoc_id);
+
+            // Nếu thêm thành công thì cập nhật ảnh
+            if (ketQua.success) {
+                await LopHocModel.capNhatDuongDanAnhTheoNamHoc(lop_hoc_id, danhSachHocSinh);
+            }
+            return res.redirect(`/lop-hoc?message=${ketQua.message}&messageType=${ketQua.messageType}`);
+        }
+        catch {
+            console.error(error);
+            res.redirect(`/lop-hoc?message=Đã xảy ra lỗi khi thêm học sinh&messageType=error`);
+        }
+    }
+    static async themHangLoat(req, res) {
+        try {
+            const lopHocId = req.body.lop_hoc_id;
+            if (!lopHocId) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Thiếu mã lớp học',
+                    messageType: 'error'
+                });
+            }
+            // Kiểm tra file đã tải chưa ?
+            if (!req.file || !req.file.path) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Không có file Excel tải lên',
+                    messageType: 'error'
+                });
+            }
+            // Đọc file excel
+            const workbook = xlsx.readFile(req.file.path);
+            const sheetName = workbook.SheetNames[0];
+            const hocSinhList = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+            // Gọi model xử lý thêm vào lớp
+            const result = await LopHocModel.themHangLoatTuExcel(hocSinhList, lopHocId);
+            // Nếu thêm thành công thì cập nhật ảnh
+            if (result.success) {
+                const danhSachHocSinhId = hocSinhList.map(hs => hs['Học sinh id']);
+                await LopHocModel.capNhatDuongDanAnhTheoNamHoc(lopHocId, danhSachHocSinhId);
+            }
+            res.status(result.success ? 200 : 400).json(result);
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({
+                success: false,
+                message: 'Đã xảy ra lỗi khi thêm học sinh',
                 messageType: 'error'
             });
         }

@@ -54,6 +54,12 @@
                             <%= lopHoc.ten_nam_hoc %>
                         </td>
                         <td class="py-2 px-4 border-b text-center">
+                            <!-- THÊM HỌC SINH VÀO LỚP -->
+                            <button data-id="<%= lopHoc.lop_hoc_id %>" onclick="moModalThemHocSinh(this)"
+                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 focus:outline-none focus:ring focus:ring-green-300 mr-2 transition-colors"
+                                aria-label="Thêm học sinh vào lớp <%= lopHoc.ten_lop %>">
+                                <i class="fas fa-user-plus mr-1"></i> Thêm học sinh
+                            </button>
                             <!-- SỬA -->
                             <button data-id="<%= lopHoc.lop_hoc_id %>" data-ten_lop="<%= lopHoc.ten_lop %>"
                                 data-giao_vien_id="<%= lopHoc.giao_vien_id %>" data-hoc_ky_id="<%= lopHoc.hoc_ky_id %>"
@@ -146,6 +152,7 @@
             </form>
         </div>
     </div>
+
     <!-- Modal sửa lớp học -->
     <div id="editModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
         <div class="bg-white rounded-lg p-6 w-1/3 shadow-lg">
@@ -190,7 +197,8 @@
                                         </svg>
                                     </span>
                                     <span class="text-sm text-gray-700">
-                                        <%= hocKy.ten_hoc_ky %> - <%= danhSachNamHoc.find(namHoc => namHoc.nam_hoc_id === hocKy.nam_hoc_id)?.ten_nam_hoc || '' %>
+                                        <%= hocKy.ten_hoc_ky %> - <%= danhSachNamHoc.find(namHoc=> namHoc.nam_hoc_id ===
+                                                hocKy.nam_hoc_id)?.ten_nam_hoc || '' %>
                                     </span>
                                 </label>
                                 <% }); %>
@@ -207,6 +215,102 @@
             </form>
         </div>
     </div>
+
+    <!-- Modal Thêm Học Sinh Vào Lớp -->
+    <div id="themHocSinhModal"
+        class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+        <div class="bg-white rounded-lg p-6 w-full max-w-4xl shadow-lg">
+            <h2 class="text-xl font-semibold mb-4 text-center">Thêm học sinh vào lớp</h2>
+
+            <!-- Tabs -->
+            <div class="mb-4 border-b border-gray-200">
+                <ul class="flex text-sm font-medium text-center text-gray-500">
+                    <li class="mr-2">
+                        <button onclick="switchTab(1)" id="tabButton1"
+                            class="inline-block px-4 py-2 rounded-t-lg bg-gray-100 hover:bg-gray-200 active-tab">Chọn từ
+                            danh sách</button>
+                    </li>
+                    <li>
+                        <button onclick="switchTab(2)" id="tabButton2"
+                            class="inline-block px-4 py-2 rounded-t-lg hover:bg-gray-200">Tải file Excel</button>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Nội dung tabs -->
+            <div>
+                <!-- Tab 1: Danh sách học sinh -->
+                <div id="tabContent1">
+                    <form id="formThemHocSinhTuDanhSach" action="/lop-hoc/them-hoc-sinh" method="POST">
+                        <input type="hidden" name="lop_hoc_id" id="lopHocIdDanhSach" />
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-lg font-semibold text-gray-800">Danh sách học sinh</h3>
+                            <span class="text-sm text-gray-500">Chọn học sinh để thêm vào lớp</span>
+                        </div>
+                        <!-- Danh sách học sinh -->
+                        <div
+                            class="max-h-72 overflow-y-auto border border-gray-200 rounded-md p-4 bg-gray-50 shadow-inner space-y-2">
+                            <% if (danhSachHocSinh && danhSachHocSinh.length> 0) { %>
+                                <% danhSachHocSinh.forEach(hs=> { %>
+                                    <label
+                                        class="flex items-center justify-between bg-white border rounded-lg px-4 py-2 hover:bg-blue-50 transition cursor-pointer">
+                                        <div class="flex items-center space-x-3">
+                                            <input type="checkbox" name="hoc_sinh_ids[]" value="<%= hs.hoc_sinh_id %>"
+                                                class="form-checkbox text-blue-600 w-5 h-5">
+                                            <div>
+                                                <p class="font-medium text-gray-800">
+                                                    <%= hs.ho_ten %>
+                                                </p>
+                                                <p class="text-sm text-gray-500">Ngày sinh: <%= formatDate(hs.ngay_sinh)
+                                                        %>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </label>
+                                    <% }) %>
+                                        <% } else { %>
+                                            <p class="text-gray-500 italic text-center">Không có học sinh nào trong danh
+                                                sách</p>
+                                            <% } %>
+                        </div>
+                        <!-- Nút Thêm -->
+                        <div class="flex justify-end mt-5">
+                            <button type="submit"
+                                class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-semibold shadow-md transition duration-150 ease-in-out">
+                                Thêm vào lớp
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+
+                <!-- Tab 2: Thêm hàng loạt bằng Excel -->
+                <div id="tabContent2" class="hidden">
+                    <form id="uploadExcelForm" enctype="multipart/form-data">
+                        <input type="hidden" name="lop_hoc_id" id="lopHocIdExcel" />
+                        <div class="mb-4">
+                            <label for="excelFile" class="block text-sm font-medium mb-2">Tải lên file Excel</label>
+                            <input type="file" id="excelFile" name="excelFile" accept=".xlsx, .xls"
+                                class="border border-gray-300 rounded-md px-4 py-2 w-full focus:ring focus:ring-blue-500" />
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="button" onclick="uploadExcelForm()"
+                                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition">Thêm
+                                hàng loạt</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Nút đóng -->
+            <div class="flex justify-end mt-6">
+                <button type="button" onclick="toggleThemHocSinhModal()"
+                    class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+
 </div>
 <!-- THÊM -->
 <script>
@@ -280,3 +384,84 @@
         }
     });
 </script>
+<!-- THÊM HỌC SINH VÀO LỚP HỌC -->
+<script>
+    function switchTab(tabNumber) {
+        document.getElementById('tabContent1').classList.toggle('hidden', tabNumber !== 1);
+        document.getElementById('tabContent2').classList.toggle('hidden', tabNumber !== 2);
+
+        document.getElementById('tabButton1').classList.toggle('bg-gray-100', tabNumber === 1);
+        document.getElementById('tabButton1').classList.toggle('bg-white', tabNumber !== 1);
+
+        document.getElementById('tabButton2').classList.toggle('bg-gray-100', tabNumber === 2);
+        document.getElementById('tabButton2').classList.toggle('bg-white', tabNumber !== 2);
+    }
+    function toggleThemHocSinhModal() {
+        const modal = document.getElementById('themHocSinhModal');
+        modal.classList.toggle('hidden');
+        switchTab(1); // reset về tab 1 khi mở lại
+    }
+    function moModalThemHocSinh(button) {
+        const lopHocId = button.getAttribute('data-id');
+        if (!lopHocId) {
+            alert("Thiếu mã lớp học");
+            return;
+        }
+
+        document.getElementById('lopHocIdDanhSach').value = lopHocId;
+        document.getElementById('lopHocIdExcel').value = lopHocId;
+
+        toggleThemHocSinhModal();
+    }
+    async function uploadExcelForm() {
+        const form = document.getElementById('uploadExcelForm');
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch('/lop-hoc/them-hang-loat', {
+                method: 'POST',
+                body: formData
+            })
+            const result = await response.json();
+            const messageBox = document.createElement('div');
+            messageBox.className = `message-box message-${result.messageType || 'error'}`;
+            messageBox.style.fontSize = '16px';
+            messageBox.style.padding = '10px';
+            messageBox.style.marginTop = '10px';
+            // Gắn thông báo chính
+            messageBox.textContent = result.message;
+            // Nếu có danh sách lỗi chi tiết
+            if (result.danhSachLoi && result.danhSachLoi.length > 0) {
+                const errorList = document.createElement('ul');
+                errorList.className = 'list-disc list-inside mt-2';
+                result.danhSachLoi.forEach(err => {
+                    const li = document.createElement('li');
+                    li.textContent = `Dòng ${err.dong} (Email: ${err.email || 'không có'}): ${err.loi}`;
+                    errorList.appendChild(li);
+                });
+                messageBox.appendChild(errorList);
+            }
+
+            // Gắn vào đầu container
+            document.querySelector('.container').prepend(messageBox);
+
+            // Nếu thành công thì reload
+            if (response.ok && result.success) {
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            }
+        }
+        catch (error) {
+            const messageBox = document.createElement('div');
+            messageBox.className = 'message-box message-error';
+            messageBox.textContent = 'Lỗi hệ thống khi tải lên file Excel';
+            document.querySelector('.container').prepend(messageBox);
+            console.error('Lỗi khi tải lên:', error);
+        }
+    }
+</script>
+<!-- FORMAT DATE -->
+<% function formatDate(dateStr) { if (!dateStr) return '' ; const d=new Date(dateStr); const
+    day=String(d.getDate()).padStart(2, '0' ); const month=String(d.getMonth() + 1).padStart(2, '0' ); const
+    year=d.getFullYear(); return `${day}/${month}/${year}`; } %>
