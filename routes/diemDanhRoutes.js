@@ -5,4 +5,5 @@ const AuthMiddleware = require('../middlewares/authMiddleWare');
 
 router.get('/', AuthMiddleware.kiemTraToken, DiemDanhController.hienThiDiemDanh);
 
+
 module.exports = router;

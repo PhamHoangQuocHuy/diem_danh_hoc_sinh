@@ -5,7 +5,7 @@
         gap: 0.5rem;
         margin-top: 0.5rem;
     }
-    
+
     .tag {
         background-color: #e2e8f0;
         padding: 0.25rem 0.5rem;
@@ -14,16 +14,16 @@
         align-items: center;
         gap: 0.5rem;
     }
-    
+
     .tag-remove {
         cursor: pointer;
         color: #718096;
     }
-    
+
     .tag-remove:hover {
         color: #e53e3e;
     }
-    
+
     .modal-hidden {
         display: none;
     }
@@ -33,203 +33,199 @@
 
     <div class="mb-4 flex justify-between items-center">
         <div class="relative w-1/3">
-            <input type="text" id="search" placeholder="Tìm kiếm giáo viên..."
-                class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-            <button class="absolute right-0 top-0 mt-2 mr-2" aria-label="Search">
-                <i class="fas fa-search text-gray-500"></i>
-            </button>
+            <form action="/giao-vien/tim" method="get">
+                <input type="text" id="search" name="tim_kiem" placeholder="Tìm kiếm giáo viên..."
+                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                <button class="absolute right-0 top-0 mt-2 mr-2" aria-label="Search">
+                    <i class="fas fa-search text-gray-500"></i>
+                </button>
+            </form>
         </div>
-        <button onclick="toggleAddModal()"
-            class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors shadow-md focus:outline-none focus:ring focus:ring-blue-400 flex items-center gap-2">
-            <i class="fas fa-plus"></i> Thêm giáo viên
-        </button>
     </div>
 
     <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
         <thead>
             <tr class="bg-gray-200">
-                <th class="py-2 px-4 border-b text-left">ID</th>
-                <th class="py-2 px-4 border-b text-left">Họ tên</th>
-                <th class="py-2 px-4 border-b text-left">Email</th>
-                <th class="py-2 px-4 border-b text-left">Số điện thoại</th>
-                <th class="py-2 px-4 border-b text-left">Vai trò</th>
-                <th class="py-2 px-4 border-b text-left">Hành động</th>
+                <th class="py-2 px-4 border-b text-center">ID</th>
+                <th class="py-2 px-4 border-b text-center">Họ tên</th>
+                <th class="py-2 px-4 border-b text-center">Email</th>
+                <th class="py-2 px-4 border-b text-center">Số điện thoại</th>
+                <th class="py-2 px-4 border-b text-center">Địa chỉ</th>
+                <th class="py-2 px-4 border-b text-center">Hành động</th>
             </tr>
         </thead>
         <tbody id="accountTableBody">
-            <tr>
-                <td class="py-2 px-4 border-b">1</td>
-                <td class="py-2 px-4 border-b">Nguyễn Văn A</td>
-                <td class="py-2 px-4 border-b">nguyenvana@example.com</td>
-                <td class="py-2 px-4 border-b">0123456789</td>
-                <td class="py-2 px-4 border-b">Giáo viên</td>
-                <td class="py-2 px-4 border-b">
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                        aria-label="Xem chi tiết giáo viên 1" onclick="viewDetails(1)">
-                        <i class="fas fa-eye mr-1"></i> Xem chi tiết
-                    </button>
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                        aria-label="Sửa giáo viên 1">
-                        <i class="fas fa-edit mr-1"></i> Sửa
-                    </button>
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300 transition-colors"
-                        aria-label="Xóa giáo viên 1">
-                        <i class="fas fa-trash-alt mr-1"></i> Xóa
-                    </button>
-                </td>
-            </tr>
-            <tr>
-                <td class="py-2 px-4 border-b">2</td>
-                <td class="py-2 px-4 border-b">Trần Thị B</td>
-                <td class="py-2 px-4 border-b">tranthib@example.com</td>
-                <td class="py-2 px-4 border-b">0987654321</td>
-                <td class="py-2 px-4 border-b">Giáo viên</td>
-                <td class="py-2 px-4 border-b">
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                        aria-label="Xem chi tiết giáo viên 2" onclick="viewDetails(2)">
-                        <i class="fas fa-eye mr-1"></i> Xem chi tiết
-                    </button>
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                        aria-label="Sửa giáo viên 2">
-                        <i class="fas fa-edit mr-1"></i> Sửa
-                    </button>
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300 transition-colors"
-                        aria-label="Xóa giáo viên 2">
-                        <i class="fas fa-trash-alt mr-1"></i> Xóa
-                    </button>
-                </td>
-            </tr>
+            <% if(danhSachGiaoVien && danhSachGiaoVien.length> 0) { %>
+                <% danhSachGiaoVien.forEach((giaoVien,index)=> { %>
+
+                    <tr>
+                        <td class="py-2 px-4 border-b text-center">
+                            <%= index + 1 %>
+                        </td>
+                        <td class="py-2 px-4 border-b text-center">
+                            <%= giaoVien.ho_ten %>
+                        </td>
+                        <td class="py-2 px-4 border-b text-center">
+                            <%= giaoVien.email %>
+                        </td>
+                        <td class="py-2 px-4 border-b text-center">
+                            <%= giaoVien.sdt %>
+                        </td>
+                        <td class="py-2 px-4 border-b text-center">
+                            <%= giaoVien.dia_chi %>
+                        </td>
+                        <td class="py-2 px-4 border-b text-center">
+                            <!-- XEM CHI TIẾT -->
+                            <button data-id="<%= giaoVien.tai_khoan_id %>"
+                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
+                                aria-label="Xem chi tiết tài khoản <%= giaoVien.tai_khoan_id %>"
+                                onclick="viewDetails(this.dataset.id)">
+                                <i class="fas fa-eye mr-1"></i> Xem chi tiết
+                            </button>
+                        </td>
+                    </tr>
+                    <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="7" class="py-2 px-4 border-b text-center">Không có giáo viên</td>
+                            </tr>
+                            <% } %>
         </tbody>
     </table>
 
-    <!-- Modal thêm giáo viên -->
-    <div id="addModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden overflow-auto p-4">
-        <div class="bg-white rounded-lg p-6 w-full max-w-4xl shadow-lg max-h-full overflow-auto">
-            <h2 class="text-xl font-semibold mb-4">Thêm giáo viên</h2>
-            <form id="addAccountForm">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="mb-4">
-                        <label for="fullName" class="block text-sm font-medium">Họ tên</label>
-                        <input type="text" id="fullName" name="fullName" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+
+    <!-- Modal xem chi tiết tài khoản -->
+    <div id="viewModal"
+        class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden overflow-auto p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-4xl shadow-lg max-h-[90vh] overflow-y-auto">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-b pb-2">Chi tiết tài khoản</h2>
+
+            <div class="space-y-6">
+                <div class="flex items-center gap-6">
+                    <div class="w-1/4">
+                        <label class="block text-sm font-medium text-gray-700">Ảnh đại diện</label>
+                        <img id="viewAvatar" src="" alt="Ảnh đại diện"
+                            class="w-40 h-40 object-cover border border-gray-300 rounded-lg mt-2" />
                     </div>
-                    <div class="mb-4">
-                        <label for="email" class="block text-sm font-medium">Email</label>
-                        <input type="email" id="email" name="email" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                    </div>
-                    <div class="mb-4">
-                        <label for="phone" class="block text-sm font-medium">Số điện thoại</label>
-                        <input type="tel" id="phone" name="phone" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                    </div>
-                    <div class="mb-4">
-                        <label for="dob" class="block text-sm font-medium">Ngày sinh</label>
-                        <input type="date" id="dob" name="dob" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                    </div>
-                    <div class="mb-4">
-                        <label for="gender" class="block text-sm font-medium">Giới tính</label>
-                        <select id="gender" name="gender" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500">
-                            <option value="" disabled selected>Chọn giới tính</option>
-                            <option value="Nam">Nam</option>
-                            <option value="Nữ">Nữ</option>
-                        </select>
-                    </div>
-                    <div class="mb-4">
-                        <label for="role" class="block text-sm font-medium">Vai trò</label>
-                        <input type="text" id="role" name="role" value="Giáo viên" readonly
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500 bg-gray-100" />
-                    </div>
-                    <div class="mb-4 col-span-2">
-                        <label for="address" class="block text-sm font-medium">Địa chỉ</label>
-                        <input type="text" id="address" name="address" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                    </div>
-                    <div class="mb-4 col-span-2">
-                        <label for="idNumber" class="block text-sm font-medium">Số CMND/CCCD</label>
-                        <input type="text" id="idNumber" name="idNumber" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                    </div>
-                    <div class="mb-4 col-span-2">
-                        <label for="password" class="block text-sm font-medium">Mật khẩu</label>
-                        <input type="password" id="password" name="password" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                    </div>
-                    
-                    <!-- Phần bằng cấp hiển thị ngay -->
-                    <div class="mb-4 col-span-2">
-                        <div class="flex items-end gap-2">
-                            <div class="flex-grow">
-                                <label for="degree" class="block text-sm font-medium">Bằng cấp</label>
-                                <input type="text" id="degree" name="degree"
-                                    class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                            </div>
-                            <button type="button" onclick="addDegree()"
-                                class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors h-[42px]">
-                                Thêm bằng cấp
-                            </button>
+                    <div class="w-3/4 grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Họ tên</label>
+                            <p id="viewFullName" class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50">
+                            </p>
                         </div>
-                        <div id="degreeTags" class="tag-container">
-                            <!-- Các tag bằng cấp sẽ được thêm vào đây -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Số điện thoại</label>
+                            <p id="viewPhone" class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Email</label>
+                            <p id="viewEmail" class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Ngày sinh</label>
+                            <p id="viewDob" class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50">
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Giới tính</label>
+                            <p id="viewGender" class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Vai trò</label>
+                            <p id="viewRole" class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50"></p>
                         </div>
                     </div>
                 </div>
-                <div class="flex justify-end mt-6">
-                    <button type="button" onclick="toggleAddModal()"
-                        class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md mr-2 hover:bg-gray-400 transition-colors">Hủy</button>
-                    <button type="submit"
-                        class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors">Thêm</button>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Địa chỉ</label>
+                    <p id="viewAddress" class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50 w-full"></p>
                 </div>
-            </form>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Số CMND/CCCD</label>
+                    <p id="viewIdNumber" class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50 w-full"></p>
+                </div>
+
+                <div id="viewDegreesSection" class="mt-4" style="display: none;">
+                    <label class="block text-sm font-medium text-gray-700">Bằng cấp</label>
+                    <ul id="viewDegreesList"
+                        class="border border-gray-300 rounded-md px-3 py-2 mt-1 bg-gray-50 list-disc list-inside">
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end gap-4">
+                <button onclick="toggleViewModal()"
+                    class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-gray-400">
+                    Đóng
+                </button>
+            </div>
         </div>
     </div>
+
+
 </div>
 
+
+<!-- SCRIPT XEM CHI TIẾT -->
 <script>
-    function toggleAddModal() {
-        const modal = document.getElementById('addModal');
+    function toggleViewModal() {
+        const modal = document.getElementById('viewModal');
         modal.classList.toggle('hidden');
-        // Reset form khi mở modal
-        if (!modal.classList.contains('hidden')) {
-            document.getElementById('addAccountForm').reset();
-            document.getElementById('degreeTags').innerHTML = '';
+    }
+
+    async function viewDetails(id) {
+        try {
+            const response = await fetch(`/giao-vien/chi-tiet/${id}`);
+            if (!response.ok) {
+                alert('Không tìm thấy tài khoản');
+                return;
+            }
+            const data = await response.json();
+
+            // Gán dữ liệu vào các thẻ <p>
+            document.getElementById('viewFullName').innerText = data.ho_ten || '';
+            document.getElementById('viewEmail').innerText = data.email || '';
+            document.getElementById('viewPhone').innerText = data.sdt || '';
+            if (data.ngaysinh) {
+                const dob = new Date(data.ngaysinh);
+                const formattedDob = dob.toLocaleDateString('vi-VN'); // "dd/mm/yyyy"
+                document.getElementById('viewDob').innerText = formattedDob;
+            } else {
+                document.getElementById('viewDob').innerText = '';
+            }
+
+            document.getElementById('viewGender').innerText = data.gioi_tinh || '';
+            document.getElementById('viewRole').innerText = data.ten_vai_tro || '';
+            document.getElementById('viewAddress').innerText = data.dia_chi || '';
+            document.getElementById('viewIdNumber').innerText = data.so_cmnd || '';
+            document.getElementById('viewAvatar').src = data.anh_dai_dien || '/images/default_avatar.jpg';
+
+
+
+
+            // Xử lý phần bằng cấp (nếu có)
+            const degreesSection = document.getElementById('viewDegreesSection');
+            const degreesList = document.getElementById('viewDegreesList');
+            if (data.bang_cap && data.bang_cap.length > 0) {
+                degreesSection.style.display = 'block';
+                degreesList.innerHTML = '';
+                data.bang_cap.forEach(degree => {
+                    const li = document.createElement('li');
+                    // Giả sử trường bằng cấp có tên là ten_bang_cap
+                    li.textContent = degree.loai_bang_cap || 'Không rõ bằng cấp';
+                    degreesList.appendChild(li);
+                });
+            } else {
+                degreesSection.style.display = 'none';
+                degreesList.innerHTML = '';
+            }
+
+            toggleViewModal();
+        } catch (error) {
+            alert('Lỗi tải thông tin tài khoản');
+            console.error(error);
         }
-    }
-
-    function addDegree() {
-        const degreeInput = document.getElementById('degree');
-        const degreeValue = degreeInput.value.trim();
-        
-        if (degreeValue) {
-            const degreeTags = document.getElementById('degreeTags');
-            
-            // Tạo tag mới
-            const tag = document.createElement('div');
-            tag.className = 'tag';
-            tag.innerHTML = `
-                <span>${degreeValue}</span>
-                <span class="tag-remove" onclick="removeDegree(this)">×</span>
-                <input type="hidden" name="degrees[]" value="${degreeValue}">
-            `;
-            
-            degreeTags.appendChild(tag);
-            degreeInput.value = ''; // Xóa nội dung input sau khi thêm
-        }
-    }
-
-    function removeDegree(element) {
-        element.parentElement.remove(); // Xóa tag khi click vào dấu ×
-    }
-
-    function viewDetails(accountId) {
-        alert("Xem chi tiết giáo viên: " + accountId);
     }
 </script>

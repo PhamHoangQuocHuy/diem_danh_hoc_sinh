@@ -464,10 +464,16 @@ class LopHocModel {
                     const tenAnh = path.basename(anh.duong_dan_anh);
                     const duongDanCu = path.join('public', anh.duong_dan_anh);
                     const duongDanMoi = path.join('public', 'images', tenNamHoc, tenAnh);
+                    //console.log(`→ Di chuyển từ: ${duongDanCu}`);
+
                     // 3. Di chuyển ảnh
                     if (fs.existsSync(duongDanCu)) {
                         fs.renameSync(duongDanCu, duongDanMoi);
+                        //console.log(`✓ Di chuyển tới: ${duongDanMoi}`);
                     }
+                    // else {
+                    //     console.warn(`✗ File không tồn tại để di chuyển: ${duongDanCu}`);
+                    // }
                     // 4. Cập nhật lại đường dẫn trong DB
                     const duongDanAnhMoi = `images/${tenNamHoc}/${tenAnh}`;
                     await conn.query(`

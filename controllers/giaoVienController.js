@@ -2,10 +2,72 @@ const giaoVienModel = require('../models/giaoVienModel');
 class GiaoVienController {
     static async hienThiGiaoVien(req, res) {
         try {
-            res.status(200).render('admin_index', { page: 'pages/quanLyGiaoVien' });
+            const danhSachGiaoVien = await giaoVienModel.layDanhSachGiaoVien();
+            return res.render('admin_index', { 
+                page: 'pages/quanLyGiaoVien', 
+                danhSachGiaoVien,
+                message: req.query.message || '',
+                messageType: req.query.messageType || ''
+             });
         } catch (error) {
             console.error(error);
-            res.status(500).render('error', { message: 'Đã xảy ra lỗi khi lấy thông tin .' });
+            return res.render('admin_index', {
+                page: 'pages/quanLyGiaoVien',
+                danhSachGiaoVien: [],
+                message: 'Đã xảy ra lỗi khi lấy danh sách giáo viên',
+                messageType: 'error'
+            })
+        }
+    }
+    static async chiTietGiaoVien(req, res) {
+        const { id } = req.params;
+        try {
+            const giaoVien = await giaoVienModel.thongTinChiTietGiaoVien(id);
+            if (!giaoVien) {
+                return res.status(404).json({ message: 'Không tìm thấy tài khoản' });
+            }
+            const anhDaiDien = giaoVien.anh_dai_dien || 'default_avatar.jpg';
+            giaoVien.anh_dai_dien = `/images/${anhDaiDien}`;
+            res.json(giaoVien);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Lỗi server' });
+        }
+    }
+    static async timGiaoVien(req, res) {
+        const { tim_kiem } = req.query;
+        try {
+            if(!tim_kiem || tim_kiem.trim() === '') {
+                return res.render('admin_index', {
+                    page: 'pages/quanLyGiaoVien',
+                    danhSachGiaoVien: [],
+                    message: 'Vui lồn nhập tìm kiếm',
+                    messageType: 'error'
+                })
+            }
+            const danhSachGiaoVien = await giaoVienModel.timGiaoVienTheoTen(tim_kiem);
+            if(danhSachGiaoVien.length === 0) {
+                return res.render('admin_index', {
+                    page: 'pages/quanLyGiaoVien',
+                    danhSachGiaoVien: [],
+                    message: `Không tìm thấy giáo viên với tên: ${tim_kiem}`,
+                    messageType: 'error'
+                })
+            }
+            return res.render('admin_index', {
+                page: 'pages/quanLyGiaoVien',
+                danhSachGiaoVien,
+                message: `Đã tìm thấy giáo viên: ${tim_kiem}`,
+                messageType: 'success'
+            });
+        } catch (error) {
+            console.error(error);
+            return res.render('admin_index', {
+                page: 'pages/quanLyGiaoVien',
+                danhSachGiaoVien: [],
+                message: 'Đã xảy ra lỗi khi lấy danh sách giáo viên',
+                messageType: 'error'
+            })
         }
     }
 }

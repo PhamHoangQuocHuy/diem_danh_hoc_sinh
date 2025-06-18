@@ -5,7 +5,7 @@
         gap: 0.5rem;
         margin-top: 0.5rem;
     }
-    
+
     .tag {
         background-color: #e2e8f0;
         padding: 0.25rem 0.5rem;
@@ -14,16 +14,16 @@
         align-items: center;
         gap: 0.5rem;
     }
-    
+
     .tag-remove {
         cursor: pointer;
         color: #718096;
     }
-    
+
     .tag-remove:hover {
         color: #e53e3e;
     }
-    
+
     .modal-hidden {
         display: none;
     }
@@ -48,144 +48,189 @@
     <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
         <thead>
             <tr class="bg-gray-200">
-                <th class="py-2 px-4 border-b text-left">ID</th>
-                <th class="py-2 px-4 border-b text-left">Họ tên</th>
-                <th class="py-2 px-4 border-b text-left">Email</th>
-                <th class="py-2 px-4 border-b text-left">Số điện thoại</th>
-                <th class="py-2 px-4 border-b text-left">Vai trò</th>
-                <th class="py-2 px-4 border-b text-left">Hành động</th>
+                <th class="py-2 px-4 border-b text-center">ID</th>
+                <th class="py-2 px-4 border-b text-center">Họ tên</th>
+                <th class="py-2 px-4 border-b text-center">Email</th>
+                <th class="py-2 px-4 border-b text-center">Số điện thoại</th>
+                <th class="py-2 px-4 border-b text-center">Địa chỉ</th>
+                <th class="py-2 px-4 border-b text-center">Hành động</th>
             </tr>
         </thead>
         <tbody id="accountTableBody">
-            <tr>
-                <td class="py-2 px-4 border-b">1</td>
-                <td class="py-2 px-4 border-b">Nguyễn Văn A</td>
-                <td class="py-2 px-4 border-b">nguyenvana@example.com</td>
-                <td class="py-2 px-4 border-b">0123456789</td>
-                <td class="py-2 px-4 border-b">Phụ huynh</td>
-                <td class="py-2 px-4 border-b">
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                        aria-label="Xem chi tiết phụ huynh 1" onclick="viewDetails(1)">
-                        <i class="fas fa-eye mr-1"></i> Xem chi tiết
-                    </button>
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                        aria-label="Sửa phụ huynh 1">
-                        <i class="fas fa-edit mr-1"></i> Sửa
-                    </button>
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300 transition-colors"
-                        aria-label="Xóa phụ huynh 1">
-                        <i class="fas fa-trash-alt mr-1"></i> Xóa
-                    </button>
-                </td>
-            </tr>
-            <tr>
-                <td class="py-2 px-4 border-b">2</td>
-                <td class="py-2 px-4 border-b">Trần Thị B</td>
-                <td class="py-2 px-4 border-b">tranthib@example.com</td>
-                <td class="py-2 px-4 border-b">0987654321</td>
-                <td class="py-2 px-4 border-b">Phụ huynh</td>
-                <td class="py-2 px-4 border-b">
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                        aria-label="Xem chi tiết phụ huynh 2" onclick="viewDetails(2)">
-                        <i class="fas fa-eye mr-1"></i> Xem chi tiết
-                    </button>
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                        aria-label="Sửa phụ huynh 2">
-                        <i class="fas fa-edit mr-1"></i> Sửa
-                    </button>
-                    <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300 transition-colors"
-                        aria-label="Xóa phụ huynh 2">
-                        <i class="fas fa-trash-alt mr-1"></i> Xóa
-                    </button>
-                </td>
-            </tr>
+            <% if(danhSachPhuHuynh && danhSachPhuHuynh.length> 0) { %>
+                <% danhSachPhuHuynh.forEach((phuHuynh,index)=> { %>
+                    <tr>
+                        <td class="centerpy-2 px-4 border-b text-center">
+                            <%= index + 1 %>
+                        </td>
+                        <td class="centerpy-2 px-4 border-b text-center">
+                            <%= phuHuynh.ho_ten %>
+                        </td>
+                        <td class="centerpy-2 px-4 border-b text-center">
+                            <%= phuHuynh.email %>
+                        </td>
+                        <td class="centerpy-2 px-4 border-b text-center">
+                            <%= phuHuynh.sdt %>
+                        </td>
+                        <td class="centerpy-2 px-4 border-b text-center">
+                            <%= phuHuynh.dia_chi %>
+                        </td>
+                        <td class="centerpy-2 px-4 border-b text-center">
+                            <button data-id="<%= phuHuynh.phu_huynh_id %>"
+                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
+                                aria-label="Xem chi tiết học sinh <%= phuHuynh.phu_huynh_id %>"
+                                onclick="viewDetails('<%= phuHuynh.phu_huynh_id %>')">
+                                <i class="fas fa-eye mr-1"></i> Xem chi tiết
+                            </button>
+                        </td>
+                    </tr>
+                    <% }) %>
+                        <% }else{ %>
+                            <tr>
+                                <td colspan="6" class="py-2 px-4 border-b text-center">Không có dữ liệu</td>
+                            </tr>
+                            <% } %>
+
         </tbody>
     </table>
 
-    <!-- Modal thêm phụ huynh -->
-    <div id="addModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden overflow-auto p-4">
-        <div class="bg-white rounded-lg p-6 w-full max-w-4xl shadow-lg max-h-full overflow-auto">
-            <h2 class="text-xl font-semibold mb-4">Thêm phụ huynh</h2>
-            <form id="addAccountForm">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="mb-4">
-                        <label for="fullName" class="block text-sm font-medium">Họ tên</label>
-                        <input type="text" id="fullName" name="fullName" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+    <!-- Modal Xem chi tiết phụ huynh -->
+    <div id="detailModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-60 hidden p-2">
+        <div class="bg-white rounded-xl p-5 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-auto font-sans">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Chi tiết phụ huynh</h2>
+
+            <!-- Tab buttons -->
+            <div class="tab-buttons mb-4">
+                <button class="tab-button active" onclick="showTab('parentInfo')">Thông tin phụ huynh</button>
+                <button class="tab-button" onclick="showTab('studentInfo')">Thông tin học sinh</button>
+            </div>
+
+            <!-- Tab panes -->
+            <div id="studentInfo" class="tab-pane">
+                <div id="studentDetails" class="space-y-4">
+                    <div class="flex justify-between">
+                        <strong>Họ tên:</strong> <span id="studentFullName" class="text-gray-600"></span>
                     </div>
-                    <div class="mb-4">
-                        <label for="email" class="block text-sm font-medium">Email</label>
-                        <input type="email" id="email" name="email" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    <div class="flex justify-between">
+                        <strong>Ngày sinh:</strong> <span id="studentDOB" class="text-gray-600"></span>
                     </div>
-                    <div class="mb-4">
-                        <label for="phone" class="block text-sm font-medium">Số điện thoại</label>
-                        <input type="tel" id="phone" name="phone" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    <div class="flex justify-between">
+                        <strong>Giới tính:</strong> <span id="studentGender" class="text-gray-600"></span>
                     </div>
-                    <div class="mb-4">
-                        <label for="dob" class="block text-sm font-medium">Ngày sinh</label>
-                        <input type="date" id="dob" name="dob" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    <div class="flex justify-between">
+                        <strong>Địa chỉ:</strong> <span id="studentAddress" class="text-gray-600"></span>
                     </div>
-                    <div class="mb-4">
-                        <label for="gender" class="block text-sm font-medium">Giới tính</label>
-                        <select id="gender" name="gender" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500">
-                            <option value="" disabled selected>Chọn giới tính</option>
-                            <option value="Nam">Nam</option>
-                            <option value="Nữ">Nữ</option>
-                        </select>
+                    <div class="flex justify-between">
+                        <strong>Loại học sinh:</strong> <span id="studentType_view" class="text-gray-600"></span>
                     </div>
-                    <div class="mb-4">
-                        <label for="role" class="block text-sm font-medium">Vai trò</label>
-                        <input type="text" id="role" name="role" value="Phụ huynh" readonly
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500 bg-gray-100" />
-                    </div>
-                    <div class="mb-4 col-span-2">
-                        <label for="address" class="block text-sm font-medium">Địa chỉ</label>
-                        <input type="text" id="address" name="address" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                    </div>
-                    <div class="mb-4 col-span-2">
-                        <label for="idNumber" class="block text-sm font-medium">Số CMND/CCCD</label>
-                        <input type="text" id="idNumber" name="idNumber" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
-                    </div>
-                    <div class="mb-4 col-span-2">
-                        <label for="password" class="block text-sm font-medium">Mật khẩu</label>
-                        <input type="password" id="password" name="password" required
-                            class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
+                    <div class="flex flex-col">
+                        <strong>Ảnh học sinh:</strong>
+                        <div id="studentImages" class="flex gap-2 flex-wrap mt-2"></div>
                     </div>
                 </div>
-                <div class="flex justify-end mt-6">
-                    <button type="button" onclick="toggleAddModal()"
-                        class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md mr-2 hover:bg-gray-400 transition-colors">Hủy</button>
-                    <button type="submit"
-                        class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors">Thêm</button>
-                </div>
-            </form>
+            </div>
+
+            <div id="parentInfo" class="tab-pane active">
+                <div id="parentDetails" class="space-y-4"></div>
+            </div>
+
+            <div class="flex justify-end mt-4">
+                <button type="button" onclick="toggleDetailModal()"
+                    class="bg-gray-200 text-gray-700 px-4 py-1.5 rounded-lg hover:bg-gray-300 transition-colors duration-200">Đóng</button>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- XEM CHI TIẾT -->
 <script>
-    function toggleAddModal() {
-        const modal = document.getElementById('addModal');
-        modal.classList.toggle('hidden');
-        // Reset form khi mở modal
-        if (!modal.classList.contains('hidden')) {
-            document.getElementById('addAccountForm').reset();
+    function showTab(tabName) {
+        const tabs = document.querySelectorAll('.tab-pane');
+        const buttons = document.querySelectorAll('.tab-button');
+        tabs.forEach(tab => {
+            tab.classList.remove('active');
+        });
+        buttons.forEach(button => {
+            button.classList.remove('active');
+        });
+        document.getElementById(tabName).classList.add('active');
+        const activeButton = Array.from(buttons).find(button => button.textContent.includes(tabName === 'studentInfo' ? 'Thông tin học sinh' : 'Thông tin phụ huynh'));
+        if (activeButton) {
+            activeButton.classList.add('active');
         }
     }
 
-    function viewDetails(accountId) {
-        alert("Xem chi tiết phụ huynh: " + accountId);
+    function viewDetails(id) {
+        fetch(`/phu-huynh/chi-tiet/${id}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Lỗi mạng hoặc không tìm thấy phụ huynh');
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    const { phu_huynh, hoc_sinh } = data.data;
+
+                    // Cập nhật thông tin phụ huynh
+                    const parentDetails = document.getElementById('parentDetails');
+                    parentDetails.innerHTML = `
+                    <div class="ml-4 border-l-2 border-gray-200 pl-4 mb-2">
+                        <div><strong>Họ tên:</strong> ${phu_huynh.ho_ten || ''}</div>
+                        <div><strong>Ngày sinh:</strong> ${formatDate(phu_huynh.ngaysinh) || ''}</div>
+                        <div><strong>Giới tính:</strong> ${phu_huynh.gioi_tinh || ''}</div>
+                        <div><strong>Địa chỉ:</strong> ${phu_huynh.dia_chi || ''}</div>
+                        <div><strong>Email:</strong> ${phu_huynh.email || ''}</div>
+                        <div><strong>Ảnh đại diện:</strong> 
+                            <img src="/images/${phu_huynh.anh_dai_dien || '/images/default_avatar.jpg'}" alt="Ảnh đại diện" class="w-20 h-20 object-cover rounded-lg">
+                        </div>
+                    </div>
+                `;
+
+                    // Cập nhật danh sách học sinh
+                    const studentDetails = document.getElementById('studentDetails');
+                    studentDetails.innerHTML = '';
+
+                    hoc_sinh.forEach(hs => {
+                        const studentImagesHTML = hs.duong_dan_anh.map(img => `
+                        <img src="/${img}" alt="Ảnh học sinh" class="w-20 h-20 object-cover rounded-lg mr-2 mb-2">
+                    `).join('');
+
+                        const hsHTML = `
+                        <div class="mb-6 border-b border-gray-300 pb-4">
+                            <div class="flex justify-between"><strong>Họ tên:</strong> <span class="text-gray-600">${hs.ho_ten}</span></div>
+                            <div class="flex justify-between"><strong>Ngày sinh:</strong> <span class="text-gray-600">${formatDate(hs.ngay_sinh)}</span></div>
+                            <div class="flex justify-between"><strong>Giới tính:</strong> <span class="text-gray-600">${hs.gioi_tinh}</span></div>
+                            <div class="flex justify-between"><strong>Địa chỉ:</strong> <span class="text-gray-600">${hs.dia_chi}</span></div>
+                            <div class="flex justify-between"><strong>Loại học sinh:</strong> <span class="text-gray-600">${hs.loai_hoc_sinh}</span></div>
+                            <div class="mt-2"><strong>Ảnh học sinh:</strong><div class="flex flex-wrap mt-2">${studentImagesHTML}</div></div>
+                        </div>
+                    `;
+                        studentDetails.innerHTML += hsHTML;
+                    });
+
+                    toggleDetailModal();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi khi lấy chi tiết:', error);
+                alert('Đã xảy ra lỗi khi xem chi tiết phụ huynh');
+            });
+    }
+
+
+    function toggleDetailModal() {
+        const modal = document.getElementById('detailModal');
+        modal.classList.toggle('hidden');
+    }
+
+    // Hàm format date
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${day}/${month}/${year}`;
     }
 </script>
