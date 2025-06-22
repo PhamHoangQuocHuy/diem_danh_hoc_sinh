@@ -33,7 +33,8 @@
     <%- include('partials/user_sidebar') %>
       <main class="flex-1 flex flex-col">
         <!-- header -->
-        <%- include('partials/user_header') %>
+        <%- include('partials/user_header',{ message: typeof message !=='undefined' ? message : null, messageType: typeof
+          messageType !=='undefined' ? messageType : null }) %>
 
           <!-- main -->
           <% if (typeof page !=='undefined' ) { %>

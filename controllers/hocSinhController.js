@@ -6,26 +6,50 @@ const xlsx = require('xlsx');
 
 class HocSinhController {
     static async hienThiHocSinh(req, res) {
-        try {
-            const danhSachHocSinh = await HocSinhModel.layDanhSachHocSinh();
-            const danhSachPhuHuynh = await HocSinhModel.layDanhSachPhuHuynh();
-            req.files = []; // Lưu để Multer sử dụng
-            return res.render('admin_index', {
-                page: 'pages/quanLyHocSinh',
-                danhSachHocSinh,
-                danhSachPhuHuynh,
-                message: req.query.message || '',
-                messageType: req.query.messageType || ''
-            });
-        } catch (error) {
-            console.error(error);
-            return res.render('admin_index', {
-                page: 'pages/quanLyHocSinh',
-                danhSachHocSinh: [],
-                danhSachPhuHuynh: [],
-                message: 'Có lỗi khi lấy danh sách học sinh',
-                messageType: 'error'
-            })
+        if (req.taiKhoan.ten_vai_tro === 'Admin') {
+            try {
+                const danhSachHocSinh = await HocSinhModel.layDanhSachHocSinh();
+                const danhSachPhuHuynh = await HocSinhModel.layDanhSachPhuHuynh();
+                req.files = []; // Lưu để Multer sử dụng
+                return res.render('admin_index', {
+                    page: 'pages/quanLyHocSinh',
+                    danhSachHocSinh,
+                    danhSachPhuHuynh,
+                    message: req.query.message || '',
+                    messageType: req.query.messageType || ''
+                });
+            } catch (error) {
+                console.error(error);
+                return res.render('admin_index', {
+                    page: 'pages/quanLyHocSinh',
+                    danhSachHocSinh: [],
+                    danhSachPhuHuynh: [],
+                    message: 'Có lỗi khi lấy danh sách học sinh',
+                    messageType: 'error'
+                })
+            }
+        } else {
+            try {
+                const danhSachHocSinh = await HocSinhModel.layDanhSachHocSinh();
+                const danhSachPhuHuynh = await HocSinhModel.layDanhSachPhuHuynh();
+                req.files = []; // Lưu để Multer sử dụng
+                return res.render('user_index', {
+                    page: 'pages/quanLyHocSinh',
+                    danhSachHocSinh,
+                    danhSachPhuHuynh,
+                    message: req.query.message || '',
+                    messageType: req.query.messageType || ''
+                });
+            } catch (error) {
+                console.error(error);
+                return res.render('user_index', {
+                    page: 'pages/quanLyHocSinh',
+                    danhSachHocSinh: [],
+                    danhSachPhuHuynh: [],
+                    message: 'Có lỗi khi lấy danh sách học sinh',
+                    messageType: 'error'
+                })
+            }
         }
     }
     static async themHocSinh(req, res) {

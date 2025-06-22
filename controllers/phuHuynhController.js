@@ -1,22 +1,46 @@
 const PhuHuynhModel = require('../models/phuHuynhModel');
 class phuHuynhController {
     static async hienThiPhuHuynh(req, res) {
-        try {
-            const danhSachPhuHuynh = await PhuHuynhModel.layDanhSachPhuHuynh();
-            return res.render('admin_index', {
-                page: 'pages/quanLyPhuHuynh',
-                danhSachPhuHuynh,
-                message: req.query.message || '',
-                messageType: req.query.messageType || ''
-            })
-        } catch (error) {
-            console.error(error);
-            return res.render('admin_index', {
-                page: 'pages/quanLyPhuHuynh',
-                danhSachPhuHuynh: [],
-                message: 'Đã xảy ra lỗi khi lấy danh sách phụ huynh',
-                messageType: 'error'
-            })
+        if (req.taiKhoan.ten_vai_tro === 'Admin') {
+            try {
+                const danhSachPhuHuynh = await PhuHuynhModel.layDanhSachPhuHuynh();
+                return res.render('admin_index', {
+                    page: 'pages/quanLyPhuHuynh',
+                    danhSachPhuHuynh,
+                    message: req.query.message || '',
+                    messageType: req.query.messageType || ''
+                })
+            } catch (error) {
+                console.error(error);
+                return res.render('admin_index', {
+                    page: 'pages/quanLyPhuHuynh',
+                    danhSachPhuHuynh: [],
+                    message: 'Đã xảy ra lỗi khi lấy danh sách phụ huynh',
+                    messageType: 'error'
+                })
+            }
+        }
+        else if (req.taiKhoan.ten_vai_tro === 'Giáo viên' || req.taiKhoan.ten_vai_tro === 'Hiệu trưởng') {
+            try {
+                const danhSachPhuHuynh = await PhuHuynhModel.layDanhSachPhuHuynh();
+                return res.render('user_index', {
+                    page: 'pages/quanLyPhuHuynh',
+                    danhSachPhuHuynh,
+                    message: req.query.message || '',
+                    messageType: req.query.messageType || ''
+                })
+            } catch (error) {
+                console.error(error);
+                return res.render('user_index', {
+                    page: 'pages/quanLyPhuHuynh',
+                    danhSachPhuHuynh: [],
+                    message: 'Đã xảy ra lỗi khi lấy danh sách phụ huynh',
+                    messageType: 'error'
+                })
+            }
+        }else{
+            console.log('Bạn không có quyền truy cập');
+            return res.redirect('/');
         }
     }
     static async chiTietPhuHuynh(req, res) {

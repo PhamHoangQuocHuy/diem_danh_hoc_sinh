@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Đăng nhập</title>
+    <title>Đặt Lại Mật Khẩu</title>
     <style>
         * {
             box-sizing: border-box;
@@ -21,8 +22,8 @@
 
         body {
             margin: 0;
-            background: linear-gradient(rgba(120, 157, 183, 0.9), rgba(94, 101, 105, 0.9)), 
-                        url('https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+            background: linear-gradient(rgba(120, 157, 183, 0.9), rgba(94, 101, 105, 0.9)),
+                url('https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
             background-size: cover;
             font-family: 'Arial', sans-serif;
             display: flex;
@@ -33,7 +34,6 @@
             color: #2c3e50;
         }
 
-        /* Logo container */
         .logo-container {
             width: 100px;
             height: 100px;
@@ -47,19 +47,17 @@
             filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
         }
 
-        /* Login box */
         .login-wrapper {
             background: rgba(255, 255, 255, 0.95);
             max-width: 500px;
             width: 90vw;
-            padding: 32px 28px 40px 28px;
+            padding: 20px 28px 40px 28px; /* Adjusted padding-top to 20px */
             border-radius: 20px;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
             text-align: center;
             position: relative;
         }
 
-        /* Decorative elements */
         .decor-circle {
             position: absolute;
             border-radius: 50%;
@@ -87,6 +85,7 @@
             margin-bottom: 24px;
             font-size: 2.2rem;
             color: #2c3e50;
+            margin-top: 0; /* Added to prevent extra space at the top */
         }
 
         form {
@@ -185,30 +184,38 @@
         }
     </style>
 </head>
+
 <body>
-    <main class="login-wrapper" role="main" aria-label="Đăng nhập">
+    <main class="login-wrapper" role="main" aria-label="Đặt lại mật khẩu">
         <div class="logo-container">
         </div>
-        <div class="decor-circle one" aria-hidden="true">
-        </div>
+        <div class="decor-circle one" aria-hidden="true"></div>
         <div class="decor-circle two" aria-hidden="true"></div>
-        <h1>Đăng nhập</h1>
+        <h1>Đặt lại mật khẩu</h1>
+        <p>Nhập mật khẩu mới của bạn bên dưới.</p>
+
         <% if (message) { %>
             <p class="<%= messageType === 'error' ? 'message-error' : 'message-success' %>">
                 <%= message %>
             </p>
         <% } %>
-        <form action="/api/auth/login" method="POST">
-            <label for="email">Email người dùng</label>
-            <input type="email" name="email" placeholder="email@gmail.com" autocomplete="username" required />
+            
+        <form action="/dat-lai-mat-khau" method="POST">
+            <input type="hidden" name="token" value="<%= token %>" />
 
-            <label for="password">Mật khẩu</label>
-            <input type="password" name="mat_khau" placeholder="Nhập mật khẩu" autocomplete="current-password" required />
-            <button type="submit" aria-label="Đăng nhập">Đăng nhập</button>
+            <label for="mat_khau_moi">Mật khẩu mới</label>
+            <input type="password" name="mat_khau_moi" placeholder="Nhập mật khẩu mới" required />
+
+            <label for="nhap_lai_mat_khau">Nhập lại mật khẩu</label>
+            <input type="password" name="nhap_lai_mat_khau" placeholder="Nhập lại mật khẩu mới" required />
+
+            <button type="submit" aria-label="Xác nhận đặt lại mật khẩu">Xác nhận</button>
         </form>
+
         <nav class="help-links" aria-label="Liên kết hỗ trợ">
-            <a href="/quen-mat-khau" tabindex="0">Quên mật khẩu?</a>
+            <a href="/" tabindex="0">Quay lại đăng nhập</a>
         </nav>
     </main>
 </body>
+
 </html>

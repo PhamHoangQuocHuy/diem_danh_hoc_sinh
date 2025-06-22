@@ -328,46 +328,95 @@ class LopHocModel {
                 success: false,
                 message: 'Vui lòng chọn học sinh',
                 messageType: 'error'
-            }
+            };
         }
+
         const conn = await pool.getConnection();
         try {
             await conn.beginTransaction();
-            // Duyệt qua danh sách học sinh
+
+            // 1. Lấy thông tin lớp hiện tại: ten_lop, hoc_ky_id, nam_hoc_id
+            const [[lopHienTai]] = await conn.query(`
+            SELECT lh.ten_lop, hk.hoc_ky_id, nh.nam_hoc_id
+            FROM lop_hoc lh
+            JOIN hoc_ky hk ON lh.hoc_ky_id = hk.hoc_ky_id
+            JOIN nam_hoc nh ON hk.nam_hoc_id = nh.nam_hoc_id
+            WHERE lh.lop_hoc_id = ?
+            LIMIT 1
+        `, [lopHocId]);
+
+            if (!lopHienTai) {
+                await conn.rollback();
+                return {
+                    success: false,
+                    message: 'Không tìm thấy lớp học',
+                    messageType: 'error'
+                };
+            }
+
+            const { ten_lop, hoc_ky_id, nam_hoc_id } = lopHienTai;
+
+            // 2. Duyệt qua từng học sinh
             for (const hocSinhId of hocSinhIds) {
-                //Kiểm tra học sinh có tồn tại trong lớp đó chưa ?
-                const [rows] = await conn.query(`SELECT * FROM hoc_sinh_lop_hoc
-                    WHERE lop_hoc_id = ? AND hoc_sinh_id = ?`, [lopHocId, hocSinhId]);
-                if (rows.length === 0) {
-                    await conn.query(`INSERT INTO hoc_sinh_lop_hoc (lop_hoc_id, hoc_sinh_id) 
-                        VALUES (?, ?)`, [lopHocId, hocSinhId]);
-                }
-                else {
+                // 2.1. Kiểm tra học sinh đã tồn tại trong lớp hiện tại chưa
+                const [trungLopHienTai] = await conn.query(`
+                SELECT * FROM hoc_sinh_lop_hoc
+                WHERE lop_hoc_id = ? AND hoc_sinh_id = ?
+            `, [lopHocId, hocSinhId]);
+
+                if (trungLopHienTai.length > 0) {
                     await conn.rollback();
                     return {
                         success: false,
-                        message: `Học sinh ${hocSinhId} đa tồn tại trong lớp học`,
+                        message: `Học sinh ${hocSinhId} đã tồn tại trong lớp học hiện tại`,
                         messageType: 'error'
-                    }
+                    };
                 }
+
+                // 2.2. Kiểm tra nếu học sinh đã học lớp KHÁC tên trong cùng học kỳ và năm học → lỗi
+                const [trungKhacTenLop] = await conn.query(`
+                SELECT lh.ten_lop
+                FROM hoc_sinh_lop_hoc hslh
+                JOIN lop_hoc lh ON hslh.lop_hoc_id = lh.lop_hoc_id
+                JOIN hoc_ky hk ON lh.hoc_ky_id = hk.hoc_ky_id
+                JOIN nam_hoc nh ON hk.nam_hoc_id = nh.nam_hoc_id
+                WHERE hslh.hoc_sinh_id = ? 
+                AND hk.hoc_ky_id = ? 
+                AND nh.nam_hoc_id = ? 
+                AND lh.ten_lop != ?
+            `, [hocSinhId, hoc_ky_id, nam_hoc_id, ten_lop]);
+
+                if (trungKhacTenLop.length > 0) {
+                    await conn.rollback();
+                    return {
+                        success: false,
+                        message: `Học sinh ${hocSinhId} đã học lớp "${trungKhacTenLop[0].ten_lop}" trong học kỳ này`,
+                        messageType: 'error'
+                    };
+                }
+
+                // 2.3. Thêm vào lớp học
+                await conn.query(`
+                INSERT INTO hoc_sinh_lop_hoc (lop_hoc_id, hoc_sinh_id)
+                VALUES (?, ?)
+            `, [lopHocId, hocSinhId]);
             }
+
             await conn.commit();
             return {
                 success: true,
                 message: `Thêm học sinh vào lớp học thành công`,
                 messageType: 'success'
-            }
-        }
-        catch (error) {
+            };
+        } catch (error) {
             await conn.rollback();
-            console.log(error);
+            console.error(error);
             return {
                 success: false,
                 message: `Thêm học sinh vào lớp học thất bại: ${error.message}`,
                 messageType: 'error'
-            }
-        }
-        finally {
+            };
+        } finally {
             if (conn) conn.release();
         }
     }
@@ -376,63 +425,109 @@ class LopHocModel {
         const danhSachLoi = [];
         try {
             await conn.beginTransaction();
+
+            // 1. Lấy thông tin lớp hiện tại: ten_lop, hoc_ky_id, nam_hoc_id
+            const [[lopHienTai]] = await conn.query(`
+            SELECT lh.ten_lop, hk.hoc_ky_id, nh.nam_hoc_id
+            FROM lop_hoc lh
+            JOIN hoc_ky hk ON lh.hoc_ky_id = hk.hoc_ky_id
+            JOIN nam_hoc nh ON hk.nam_hoc_id = nh.nam_hoc_id
+            WHERE lh.lop_hoc_id = ?
+            LIMIT 1
+        `, [lopHocId]);
+
+            if (!lopHienTai) {
+                await conn.rollback();
+                return {
+                    success: false,
+                    message: 'Không tìm thấy lớp học',
+                    messageType: 'error'
+                };
+            }
+
+            const { ten_lop, hoc_ky_id, nam_hoc_id } = lopHienTai;
+
             for (let i = 0; i < hocSinhList.length; i++) {
                 const hs = hocSinhList[i];
-                const rowNum = i + 2; // Dòng 1 là tiêu đề
-                const hocSinhId = hs['Học sinh id']; // Cột trong excel
-                // Kiểm tra có học sinh chưa
+                const rowNum = i + 2;
+                const hocSinhId = hs['Học sinh id'];
+
                 if (!hocSinhId) {
+                    danhSachLoi.push({ dong: rowNum, loi: 'Thiếu học sinh id' });
+                    continue;
+                }
+
+                // 1. Kiểm tra đã tồn tại trong chính lớp đó chưa
+                const [trungLopHienTai] = await conn.query(`
+                SELECT * FROM hoc_sinh_lop_hoc
+                WHERE lop_hoc_id = ? AND hoc_sinh_id = ?
+            `, [lopHocId, hocSinhId]);
+
+                if (trungLopHienTai.length > 0) {
                     danhSachLoi.push({
                         dong: rowNum,
-                        loi: 'Thiếu học sinh id'
+                        loi: `Học sinh ${hocSinhId} đã tồn tại trong lớp học hiện tại`
                     });
                     continue;
                 }
-                const [rows] = await conn.query(`SELECT * FROM hoc_sinh_lop_hoc
-                    WHERE lop_hoc_id = ? AND hoc_sinh_id = ?`, [lopHocId, hocSinhId]);
-                if (rows.length > 0) {
+
+                // 2. Kiểm tra: Cùng năm học + cùng học kỳ + KHÁC tên lớp => lỗi
+                const [trungKhacTenLop] = await conn.query(`
+                SELECT lh.ten_lop
+                FROM hoc_sinh_lop_hoc hslh
+                JOIN lop_hoc lh ON hslh.lop_hoc_id = lh.lop_hoc_id
+                JOIN hoc_ky hk ON lh.hoc_ky_id = hk.hoc_ky_id
+                JOIN nam_hoc nh ON hk.nam_hoc_id = nh.nam_hoc_id
+                WHERE hslh.hoc_sinh_id = ? 
+                AND hk.hoc_ky_id = ? 
+                AND nh.nam_hoc_id = ? 
+                AND lh.ten_lop != ?
+            `, [hocSinhId, hoc_ky_id, nam_hoc_id, ten_lop]);
+
+                if (trungKhacTenLop.length > 0) {
                     danhSachLoi.push({
                         dong: rowNum,
-                        loi: `Học sinh ${hocSinhId} đa tồn tại trong lớp học`
+                        loi: `Học sinh ${hocSinhId} đã học lớp "${trungKhacTenLop[0].ten_lop}" trong học kỳ này`
                     });
                     continue;
                 }
             }
-            // Nếu có lỗi
+
             if (danhSachLoi.length > 0) {
                 await conn.rollback();
                 const messageLoi = danhSachLoi.map(err => `Dòng ${err.dong}: ${err.loi}`).join('\n');
                 return {
                     success: false,
-                    message: `${messageLoi}`,
+                    message: messageLoi,
                     messageType: 'error'
-                }
+                };
             }
-            // Nếu không có lỗi => Tiến hành thêm
+
+            // 3. Thêm học sinh
             for (let i = 0; i < hocSinhList.length; i++) {
                 const hs = hocSinhList[i];
-                const hocSinhId = hs['Học sinh id']; // Cột trong excel
-                await conn.query(`INSERT INTO hoc_sinh_lop_hoc (lop_hoc_id, hoc_sinh_id) 
-                    VALUES (?, ?)`, [lopHocId, hocSinhId]);
-
+                const hocSinhId = hs['Học sinh id'];
+                await conn.query(`
+                INSERT INTO hoc_sinh_lop_hoc (lop_hoc_id, hoc_sinh_id)
+                VALUES (?, ?)
+            `, [lopHocId, hocSinhId]);
             }
+
             await conn.commit();
             return {
                 success: true,
                 message: `Đã thêm ${hocSinhList.length} học sinh vào lớp học`,
                 messageType: 'success'
-            }
-        }
-        catch (error) {
+            };
+        } catch (error) {
             await conn.rollback();
-            console.log(error);
+            console.error(error);
             return {
                 success: false,
                 message: `Thêm học sinh vào lớp học thất bại: ${error.message}`,
                 messageType: 'error'
-            }
-        }
-        finally {
+            };
+        } finally {
             if (conn) conn.release();
         }
     }
@@ -468,7 +563,7 @@ class LopHocModel {
 
                     // 3. Di chuyển ảnh
                     if (fs.existsSync(duongDanCu)) {
-                        fs.renameSync(duongDanCu, duongDanMoi);
+                        fs.copyFileSync(duongDanCu, duongDanMoi);
                         //console.log(`✓ Di chuyển tới: ${duongDanMoi}`);
                     }
                     // else {
@@ -491,5 +586,6 @@ class LopHocModel {
             if (conn) conn.release();
         }
     }
+
 }
 module.exports = LopHocModel

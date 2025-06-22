@@ -2,34 +2,67 @@ const LopHocModel = require('../models/lopHocModel');
 const xlsx = require('xlsx');
 class LopHocController {
     static async hienThiLopHoc(req, res) {
-        try {
-            const danhSachLopHoc = await LopHocModel.layDanhSachLopHoc();
-            const danhSachGiaoVien = await LopHocModel.layDanhSachGiaoVien();
-            const danhSachHocKy = await LopHocModel.layDanhSachHocKy();
-            const danhSachNamHoc = await LopHocModel.layDanhSachNamHoc();
-            const danhSachHocSinh = await LopHocModel.layThongTinHocSinh();
-            res.render('admin_index', {
-                page: 'pages/quanLyLopHoc',
-                danhSachLopHoc,
-                danhSachGiaoVien,
-                danhSachHocKy,
-                danhSachNamHoc,
-                danhSachHocSinh,
-                message: req.query.message || '',
-                messageType: req.query.messageType || ''
-            });
-        } catch (error) {
-            console.error(error);
-            res.render('admin_index', {
-                page: 'pages/quanLyLopHoc',
-                danhSachLopHoc: [],
-                danhSachGiaoVien: [],
-                danhSachHocKy: [],
-                danhSachNamHoc: [],
-                danhSachHocSinh: [],
-                message: 'Đã xảy ra lỗi khi lấy danh sách lớp học',
-                messageType: 'error'
-            });
+        if (req.taiKhoan.ten_vai_tro === 'Admin') {
+            try {
+                const danhSachLopHoc = await LopHocModel.layDanhSachLopHoc();
+                const danhSachGiaoVien = await LopHocModel.layDanhSachGiaoVien();
+                const danhSachHocKy = await LopHocModel.layDanhSachHocKy();
+                const danhSachNamHoc = await LopHocModel.layDanhSachNamHoc();
+                const danhSachHocSinh = await LopHocModel.layThongTinHocSinh();
+                res.render('admin_index', {
+                    page: 'pages/quanLyLopHoc',
+                    danhSachLopHoc,
+                    danhSachGiaoVien,
+                    danhSachHocKy,
+                    danhSachNamHoc,
+                    danhSachHocSinh,
+                    message: req.query.message || '',
+                    messageType: req.query.messageType || ''
+                });
+            } catch (error) {
+                console.error(error);
+                res.render('admin_index', {
+                    page: 'pages/quanLyLopHoc',
+                    danhSachLopHoc: [],
+                    danhSachGiaoVien: [],
+                    danhSachHocKy: [],
+                    danhSachNamHoc: [],
+                    danhSachHocSinh: [],
+                    message: 'Đã xảy ra lỗi khi lấy danh sách lớp học',
+                    messageType: 'error'
+                });
+            }
+        }
+        else {
+            try {
+                const danhSachLopHoc = await LopHocModel.layDanhSachLopHoc();
+                const danhSachGiaoVien = await LopHocModel.layDanhSachGiaoVien();
+                const danhSachHocKy = await LopHocModel.layDanhSachHocKy();
+                const danhSachNamHoc = await LopHocModel.layDanhSachNamHoc();
+                const danhSachHocSinh = await LopHocModel.layThongTinHocSinh();
+                res.render('user_index', {
+                    page: 'pages/quanLyLopHoc',
+                    danhSachLopHoc,
+                    danhSachGiaoVien,
+                    danhSachHocKy,
+                    danhSachNamHoc,
+                    danhSachHocSinh,
+                    message: req.query.message || '',
+                    messageType: req.query.messageType || ''
+                });
+            } catch (error) {
+                console.error(error);
+                res.render('user_index', {
+                    page: 'pages/quanLyLopHoc',
+                    danhSachLopHoc: [],
+                    danhSachGiaoVien: [],
+                    danhSachHocKy: [],
+                    danhSachNamHoc: [],
+                    danhSachHocSinh: [],
+                    message: 'Đã xảy ra lỗi khi lấy danh sách lớp học',
+                    messageType: 'error'
+                });
+            }
         }
     }
     static async themLopHoc(req, res) {

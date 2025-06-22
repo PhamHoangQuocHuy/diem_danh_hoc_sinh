@@ -18,8 +18,10 @@ const hocSinhRoutes = require('./routes/hocSinhRoutes');
 const phuHuynhRoutes = require('./routes/phuHuynhRoutes');
 const giaoVienRoutes = require('./routes/giaoVienRoutes');
 const diemDanhRoutes = require('./routes/diemDanhRoutes');
+const thucHienDiemDanhRoutes = require('./routes/thucHienDiemDanhRoutes');
 const baoCaoRoutes = require('./routes/baoCaoRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
+const quenMatKhauRoutes = require('./routes/quenMatKhauRoutes');
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -39,6 +41,7 @@ app.get('/admin-dashboard', AuthMiddleware.kiemTraToken, (req, res) => {
 app.get('/user-dashboard', AuthMiddleware.kiemTraToken, (req, res) => {
     res.render('user_index');
 });
+// ADMIN
 app.use('/dashboard', AuthMiddleware.kiemTraToken, dashboardRoutes);
 app.use('/truong-hoc', AuthMiddleware.kiemTraToken, truongHocRoutes);
 app.use('/tai-khoan', AuthMiddleware.kiemTraToken, taiKhoanRoutes);
@@ -48,9 +51,19 @@ app.use('/hoc-ky', AuthMiddleware.kiemTraToken, hocKyRoutes);
 app.use('/hoc-sinh', AuthMiddleware.kiemTraToken, hocSinhRoutes);
 app.use('/giao-vien', AuthMiddleware.kiemTraToken, giaoVienRoutes);
 app.use('/phu-huynh', AuthMiddleware.kiemTraToken, phuHuynhRoutes);
+app.use('/thuc-hien-diem-danh', AuthMiddleware.kiemTraToken, thucHienDiemDanhRoutes);
 app.use('/diem-danh', AuthMiddleware.kiemTraToken, diemDanhRoutes);
 app.use('/bao-cao', AuthMiddleware.kiemTraToken, baoCaoRoutes);
 app.use('/settings', AuthMiddleware.kiemTraToken, settingsRoutes);
+
+app.get('/quen-mat-khau', (req, res) => { // Quên mật khẩu
+    const { message, messageType } = req.query;
+    res.render('auth/quenMatKhau', { message, messageType });
+});
+app.use('/', quenMatKhauRoutes);
+
+
+
 
 app.get('/', (req, res) => { // Trang chủ
     const { message, messageType } = req.query;

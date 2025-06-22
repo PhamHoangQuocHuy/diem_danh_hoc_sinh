@@ -76,56 +76,93 @@ class HocSinhModel {
             if (!ho_ten || !ngay_sinh || !gioi_tinh || !dia_chi || !loai_hoc_sinh) {
                 return { success: false, message: 'Vui lòng điền đầy đủ thông tin bắt buộc!', messageType: 'error' };
             }
-            // Kiểm tra định dạng ngày sinh
+
+            // 2. Kiểm tra ngày sinh hợp lệ
             const today = new Date();
             const dob = new Date(ngay_sinh);
-
             if (dob > today) {
                 return { success: false, message: 'Ngày sinh không hợp lệ (trong tương lai)', messageType: 'error' };
             }
-            // 2. Kiểm tra ít nhất một phụ huynh
+            // 2.1. Kiểm tra tuổi không quá 15 tuổi
+            const ageDiff = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
+            const dayDiff = today.getDate() - dob.getDate();
+
+            // Tính toán chính xác tuổi
+            let age = ageDiff;
+            if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+                age--;
+            }
+
+            if (age > 15) {
+                return {
+                    success: false,
+                    message: 'Học sinh không được lớn hơn 15 tuổi!',
+                    messageType: 'error'
+                };
+            }
+            // 3. Kiểm tra ít nhất một phụ huynh
             if (phu_huynh_ids.length === 0) {
                 return { success: false, message: 'Phải chọn ít nhất một phụ huynh!', messageType: 'error' };
             }
 
-            // Kiểm tra mối quan hệ hợp lệ
-            if (phu_huynh_ids.length !== moi_quan_he.length || moi_quan_he.some(r => !['Cha', 'Mẹ', 'Người giám hộ'].includes(r))) {
+            // 4. Kiểm tra mối quan hệ hợp lệ
+            const quanHeChoPhep = ['Cha', 'Mẹ', 'Người giám hộ'];
+            if (phu_huynh_ids.length !== moi_quan_he.length || moi_quan_he.some(r => !quanHeChoPhep.includes(r))) {
                 return { success: false, message: 'Mỗi phụ huynh phải có mối quan hệ hợp lệ!', messageType: 'error' };
             }
 
-            // Kiểm tra phụ huynh tồn tại
-            const [kqPhuHuynh] = await conn.query(`SELECT COUNT(*) AS total FROM phu_huynh WHERE phu_huynh_id IN (?)`, [phu_huynh_ids]);
+            // 5. Ràng buộc: Không có 2 mối quan hệ giống nhau
+            const demQuanHe = {};
+            for (const quanHe of moi_quan_he) {
+                demQuanHe[quanHe] = (demQuanHe[quanHe] || 0) + 1;
+                if (demQuanHe[quanHe] > 1 && (quanHe === 'Cha' || quanHe === 'Mẹ')) {
+                    return {
+                        success: false,
+                        message: `Không được chọn nhiều hơn 1 người là "${quanHe}"!`,
+                        messageType: 'error'
+                    };
+                }
+            }
+
+            // 6. Kiểm tra phụ huynh tồn tại
+            const [kqPhuHuynh] = await conn.query(
+                `SELECT COUNT(*) AS total FROM phu_huynh WHERE phu_huynh_id IN (?)`,
+                [phu_huynh_ids]
+            );
             if (kqPhuHuynh[0].total !== phu_huynh_ids.length) {
                 return { success: false, message: 'Một hoặc nhiều phụ huynh không tồn tại!', messageType: 'error' };
             }
 
-            // 3. Kiểm tra trùng học sinh
-            const [trung] = await conn.execute(`SELECT COUNT(*) AS count FROM hoc_sinh WHERE ho_ten = ? AND ngay_sinh = ?`, [ho_ten, ngay_sinh]);
+            // 7. Kiểm tra trùng học sinh
+            const [trung] = await conn.execute(
+                `SELECT COUNT(*) AS count FROM hoc_sinh WHERE ho_ten = ? AND ngay_sinh = ?`,
+                [ho_ten, ngay_sinh]
+            );
             if (trung[0].count > 0) {
                 return { success: false, message: 'Học sinh đã tồn tại!', messageType: 'error' };
             }
 
-            // 4. Thêm học sinh
+            // 8. Thêm học sinh
             const [result] = await conn.execute(`
-                INSERT INTO hoc_sinh (ho_ten, ngay_sinh, gioi_tinh, dia_chi, loai_hoc_sinh)
-                VALUES (?, ?, ?, ?, ?)
-            `, [ho_ten, ngay_sinh, gioi_tinh, dia_chi, loai_hoc_sinh]);
-
+            INSERT INTO hoc_sinh (ho_ten, ngay_sinh, gioi_tinh, dia_chi, loai_hoc_sinh)
+            VALUES (?, ?, ?, ?, ?)
+        `, [ho_ten, ngay_sinh, gioi_tinh, dia_chi, loai_hoc_sinh]);
             const hoc_sinh_id = result.insertId;
 
-            // 5. Thêm mối quan hệ phụ huynh
+            // 9. Thêm mối quan hệ phụ huynh
             for (let i = 0; i < phu_huynh_ids.length; i++) {
                 const ph_id = parseInt(phu_huynh_ids[i]);
                 const quan_he = moi_quan_he[i];
                 await conn.execute(`
-                    INSERT INTO phu_huynh_hoc_sinh (hoc_sinh_id, phu_huynh_id, moi_quan_he)
-                    VALUES (?, ?, ?)
-                `, [hoc_sinh_id, ph_id, quan_he]);
+                INSERT INTO phu_huynh_hoc_sinh (hoc_sinh_id, phu_huynh_id, moi_quan_he)
+                VALUES (?, ?, ?)
+            `, [hoc_sinh_id, ph_id, quan_he]);
             }
-            // 6. Commit transaction
+
+            // 10. Commit
             await conn.commit();
 
-            // 7. Trả về kết quả với hoc_sinh_id, nam_hoc và ho_ten
             return {
                 success: true,
                 message: 'Thêm học sinh thành công!',
@@ -136,12 +173,13 @@ class HocSinhModel {
         catch (error) {
             await conn.rollback();
             console.log('Lỗi khi thêm học sinh: ', error);
-            return { success: false, message: 'Them hoc sinh that bai', messageType: 'error' };
+            return { success: false, message: 'Thêm học sinh thất bại', messageType: 'error' };
         }
         finally {
             if (conn) conn.release();
         }
     }
+
     static async xoaThongTinHocSinh(id) {
         const conn = await pool.getConnection();
         try {
@@ -398,15 +436,18 @@ class HocSinhModel {
             conn = await pool.getConnection();
             await conn.beginTransaction();
             let danhSachLoi = []
+
             for (const [index, hocSinh] of danhSachHocSinh.entries()) {
                 const dong = index + 2; // Dòng trong Excel (bắt đầu từ 2 do có header)
+
                 // Kiểm tra trùng lặp
                 const [trungLapCheck] = await conn.execute(`SELECT 1 FROM hoc_sinh
-                    WHERE ho_ten = ? AND ngay_sinh = ?`, [hocSinh.ho_ten, hocSinh.ngay_sinh]);
+                WHERE ho_ten = ? AND ngay_sinh = ?`, [hocSinh.ho_ten, hocSinh.ngay_sinh]);
                 if (trungLapCheck.length > 0) {
                     danhSachLoi.push({ dong, loi: `Học sinh ${hocSinh.ho_ten} với ngày sinh ${hocSinh.ngay_sinh} đã tồn tại` });
                     continue;
                 }
+
                 // Chuẩn bị dữ liệu (Khớp với các cột trong excel)
                 const {
                     ho_ten,
@@ -421,24 +462,39 @@ class HocSinhModel {
                     moi_quan_he_1,
                     phu_huynh_id_2,
                     moi_quan_he_2
-                } = hocSinh
+                } = hocSinh;
+
                 // 1. Kiểm tra đủ thông tin
                 if (!ho_ten || !ngay_sinh || !gioi_tinh || !dia_chi || !loai_hoc_sinh || !anh1 || !anh2 || !anh3 || !phu_huynh_id_1 || !moi_quan_he_1) {
                     danhSachLoi.push({ dong, loi: `Vui lòng điền đàn đủ thông tin bắt buộc` });
                     continue;
                 }
+
                 // 2. Kiểm tra đủ 3 ảnh
                 if (!anh1 || !anh2 || !anh3) {
                     danhSachLoi.push({ dong, loi: `Phải có đủ 3 ảnh` });
                     continue;
                 }
+
                 // 3. Kiểm tra ít nhất 1 mối quan hệ với phụ huynh
                 const phuHuynhIds = [phu_huynh_id_1].concat(phu_huynh_id_2 || []);
-                const moiQuanHes = [moi_quan_he_1].concat(moi_quan_he_2 || []); // Nối mảng hoặc chuỗi
+                const moiQuanHes = [moi_quan_he_1].concat(moi_quan_he_2 || []);
                 if (phuHuynhIds.filter(id => id).length < 1) {
                     danhSachLoi.push({ dong, loi: `Phải có ít nhất 1 mối quan hệ với phụ huynh` });
                     continue;
                 }
+
+                //  3.1: Không được có 2 người là "Cha" hoặc 2 người là "Mẹ"
+                const demQuanHe = {};
+                for (const qh of moiQuanHes) {
+                    if (!qh) continue;
+                    demQuanHe[qh] = (demQuanHe[qh] || 0) + 1;
+                    if (['Cha', 'Mẹ'].includes(qh) && demQuanHe[qh] > 1) {
+                        danhSachLoi.push({ dong, loi: `Học sinh không được có nhiều hơn 1 "${qh}"` });
+                        break;
+                    }
+                }
+
                 // 4. Kiểm tra ngày sinh
                 const today = new Date();
                 const ngaySinh = new Date(ngay_sinh);
@@ -446,46 +502,63 @@ class HocSinhModel {
                     danhSachLoi.push({ dong, loi: `Ngày sinh không hợp lý` });
                     continue;
                 }
+                // 4.1. Kiểm tra tuổi không quá 15 tuổi
+                const ageDiff = today.getFullYear() - ngaySinh.getFullYear();
+                const monthDiff = today.getMonth() - ngaySinh.getMonth();
+                const dayDiff = today.getDate() - ngaySinh.getDate();
+                let age = ageDiff;
+                if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+                    age--;
+                }
+
+                if (age > 15) {
+                    danhSachLoi.push({ dong, loi: `Học sinh không được lớn hơn 15 tuổi` });
+                    continue;
+                }
                 // 5. Kiểm tra giới tính hợp lệ
                 if (!['Nam', 'Nữ'].includes(gioi_tinh)) {
                     danhSachLoi.push({ dong, loi: `Giới tính chỉ có Nam hoặc Nữ` });
                     continue;
                 }
+
                 // 6. Kiểm tra loại học sinh hợp lệ
                 if (!['Bán trú', 'Không bán trú'].includes(loai_hoc_sinh)) {
                     danhSachLoi.push({ dong, loi: `Loại học sinh chỉ có Bán trú hoặc Không bán trú` });
                     continue;
                 }
+
                 // 7. Thêm học sinh
                 const [result] = await conn.execute(`
-                    INSERT INTO hoc_sinh (ho_ten, ngay_sinh, gioi_tinh, dia_chi, loai_hoc_sinh)
-                    VALUES (?, ?, ?, ?, ?)`, [ho_ten, ngay_sinh, gioi_tinh, dia_chi, loai_hoc_sinh]);
+                INSERT INTO hoc_sinh (ho_ten, ngay_sinh, gioi_tinh, dia_chi, loai_hoc_sinh)
+                VALUES (?, ?, ?, ?, ?)`, [ho_ten, ngay_sinh, gioi_tinh, dia_chi, loai_hoc_sinh]);
                 const hocSinhId = result.insertId;
+
                 // 8. Xử lý ảnh
                 const duongDanAnh = [anh1, anh2, anh3];
                 const duongDanMoi = await diChuyenVaDoiTenAnh(hocSinhId, ho_ten, duongDanAnh);
                 for (const duongDan of duongDanMoi) {
                     if (duongDan) {
                         await conn.execute(`
-                            INSERT INTO hinh_anh_hoc_sinh (hoc_sinh_id, duong_dan_anh)
-                            VALUES (?, ?)
-                            `, [hocSinhId, duongDan]);
+                        INSERT INTO hinh_anh_hoc_sinh (hoc_sinh_id, duong_dan_anh)
+                        VALUES (?, ?)`, [hocSinhId, duongDan]);
                     }
                 }
+
                 // 9. Thêm mối quan hệ với phụ huynh
                 for (let i = 0; i < phuHuynhIds.length; i++) {
                     if (phuHuynhIds[i]) {
                         await conn.execute(`
-                            INSERT INTO phu_huynh_hoc_sinh (hoc_sinh_id, phu_huynh_id, moi_quan_he)
-                            VALUES (?, ?, ?)
-                            `, [hocSinhId, phuHuynhIds[i], moiQuanHes[i]]);
+                        INSERT INTO phu_huynh_hoc_sinh (hoc_sinh_id, phu_huynh_id, moi_quan_he)
+                        VALUES (?, ?, ?)`, [hocSinhId, phuHuynhIds[i], moiQuanHes[i]]);
                     }
                 }
             }
+
             if (danhSachLoi.length > 0) {
                 await conn.rollback();
                 return { success: false, message: 'Đã xảy ra lỗi khi thêm học sinh', messageType: 'error', danhSachLoi };
             }
+
             await conn.commit();
             return { success: true, message: 'Thêm học sinh thành công', messageType: 'success' };
         }
@@ -505,18 +578,18 @@ class HocSinhModel {
             if (conn) conn.release();
         }
     }
-    static async xuatFileExcel(){
+    static async xuatFileExcel() {
         const conn = await pool.getConnection();
-        try{
+        try {
             const [rows] = await conn.query(`SELECT * FROM hoc_sinh WHERE daXoa=0`);
             return rows;
         }
-        catch(error){
+        catch (error) {
             console.log(error);
             return [];
         }
-        finally{
-            if(conn) conn.release();
+        finally {
+            if (conn) conn.release();
         }
     }
 }

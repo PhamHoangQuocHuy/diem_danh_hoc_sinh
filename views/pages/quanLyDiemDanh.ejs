@@ -1,145 +1,82 @@
-<!-- Content -->
 <section class="flex-1 overflow-auto p-4">
-      <!-- Tabs -->
-      <div class="border-b border-gray-200 mb-4">
-            <nav class="flex space-x-4 text-sm font-semibold select-none">
-                  <button aria-current="page" class="border-b-2 border-[#3ad597] text-[#3ad597] pb-2">
-                        Điểm danh buổi sáng
-                  </button>
-                  <button class="text-gray-400 pb-2" disabled="">
-                        Điểm danh buổi chiều
-                  </button>
-            </nav>
-      </div>
-      <!-- Filters and buttons -->
+      <!-- LỌC -->
       <div class="flex flex-wrap items-center gap-2 border border-[#3ad597] rounded px-3 py-1 mb-4 select-none max-w-full"
-            style="max-width: 570px;">
-            <select aria-label="Select class"
+            style="max-width: 395px;">
+            <!-- Dropdown chọn lớp -->
+            <select id="classSelect"
                   class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-[#3ad597]">
-                  <option>
-                        Năm học
-                  </option>
-            </select>
-            <select aria-label="Select class"
-                  class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-[#3ad597]">
-                  <option>
-                        Học kỳ
-                  </option>
+                  <option value="" selected disabled>Chọn lớp</option>
+                  <option value="">Lớp 1A1</option>
             </select>
 
-            <select aria-label="Select class"
-                  class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-[#3ad597]">
-                  <option>
-                        8A
-                  </option>
-            </select>
+            <!-- Month Picker -->
+            <input type="month" id="monthPicker"
+                  class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-[#3ad597]"
+                  value="<%= currentYear %>-<%= currentMonth.toString().padStart(2, '0') %>">
 
-            <button aria-label="Previous day" class="text-[#3ad597] hover:bg-[#d6f5e8] rounded px-2 py-1">
-                  <i class="fas fa-chevron-left">
-                  </i>
-            </button>
-            <span class="text-sm text-[#475569] font-normal select-text">
-                  Thứ 6, ngày 22/7/2022
-            </span>
-            <button aria-label="Next day" class="text-[#3ad597] hover:bg-[#d6f5e8] rounded px-2 py-1">
-                  <i class="fas fa-chevron-right">
-                  </i>
-            </button>
-            <button aria-label="Open calendar" class="text-[#3ad597] hover:bg-[#d6f5e8] rounded px-2 py-1">
-                  <i class="fas fa-calendar-alt">
-                  </i>
+            <!-- Nút xem -->
+            <button onclick="loadAttendance()" style="width: 80px;"
+                  class="bg-[#3ad597] hover:bg-[#2ebc7d] text-white rounded px-3 py-1 text-sm font-semibold">
+                  Xem
             </button>
       </div>
-      <!-- SỈ SÓ -->
-      <div class="flex flex-wrap gap-2 mb-4 max-w-full">
-            <button class="border border-[#3ad597] text-[#3ad597] rounded px-3 py-1 text-xs font-semibold select-none">
-                  Tất cả: 38
-            </button>
-            <button class="border border-gray-300 text-gray-400 rounded px-3 py-1 text-xs font-semibold select-none"
-                  disabled="">
-                  Có mặt: 38
-            </button>
-            <button class="border border-gray-300 text-gray-400 rounded px-3 py-1 text-xs font-semibold select-none"
-                  disabled="">
-                  Vắng: 0
-            </button>
-            <div style="margin-left: auto;">
-                  <form action="/diem-danh/xuat-excel" method="get">
-                        <button
-                              class="ml-auto bg-[#0f7a3f] hover:bg-[#0b5a2a] text-white rounded px-4 py-1 text-xs font-semibold select-none">
-                              Xuất file
-                        </button>
-                  </form>
-            </div>
-      </div>
-      <!-- Table -->
+
       <div class="overflow-x-auto scrollbar-thin">
-            <table class="min-w-full border border-gray-200 rounded-md text-xs text-left">
+            <table class="min-w-full border border-gray-200 rounded-md text-xs text-left" id="attendanceTable">
                   <thead class="bg-white border-b border-gray-200 text-gray-600 select-none">
                         <tr>
-                              <th class="w-10 px-3 py-2 border-r border-gray-200">
-                                    <input aria-label="Select all"
-                                          class="w-4 h-4 text-[#3ad597] border-gray-300 rounded focus:ring-[#3ad597]"
-                                          type="checkbox" />
+                              <th class="w-10 px-3 py-2 border-r border-gray-200 font-semibold">STT</th>
+                              <th class="min-w-[160px] px-3 py-2 border-r border-gray-200 font-semibold">Họ tên</th>
+                              <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">Ngày sinh</th>
+                              <th class="w-20 px-3 py-2 border-r border-gray-200 font-semibold text-center">Tổng có mặt
                               </th>
-                              <th class="w-10 px-3 py-2 border-r border-gray-200 font-semibold">
-                                    STT
+                              <th class="w-20 px-3 py-2 border-r border-gray-200 font-semibold text-center ">Tổng vắng
                               </th>
-                              <th class="min-w-[160px] px-3 py-2 border-r border-gray-200 font-semibold">
-                                    Họ tên
-                              </th>
-                              <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
-                                    Ngày sinh
-                              </th>
-                              <th class="w-20 px-3 py-2 border-r border-gray-200 font-semibold cursor-pointer">
-                                    Trạng thái
-                              </th>
-                              <th class="w-32 px-3 py-2 font-semibold cursor-pointer">
-                                    Ghi chú
-                              </th>
-                        </tr>
-                        <tr class="bg-white">
-                              <th>
-                              </th>
-                              <th>
-                              </th>
-                              <th class="px-3 py-1 border-r border-gray-200">
-                                    <input class="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-[#3ad597]"
-                                          placeholder="Nhập tên học sinh cần tìm" aria-label="Toggle" type="text" />
-                              </th>
-                              <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
-                              </th>
-                              <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
-                              </th>
-                              <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
-                              </th>
+
+                              <!-- Các cột ngày trong tháng -->
+                              <% for(let day=1; day <=daysInMonth; day++) { %>
+                                    <th class="w-8 px-1 py-2 border-r border-gray-200 font-semibold text-center">
+                                          <%= day %>
+                                    </th>
+                                    <% } %>
                         </tr>
                   </thead>
+
                   <tbody class="text-gray-600">
+
                         <tr class="bg-white border-b border-gray-100 hover:bg-[#f8fafc]">
-                              <td class="px-3 py-2 border-r border-gray-200">
-                                    <input class="w-4 h-4 text-[#3ad597] border-gray-300 rounded focus:ring-[#3ad597]"
-                                          aria-label="Toggle" type="checkbox" />
-                              </td>
-                              <td class="px-3 py-2 border-r border-gray-200">
+                              <td class="px-3 py-2 border-r border-gray-200 text-center">
                                     1
                               </td>
                               <td class="px-3 py-2 border-r border-gray-200">
-                                    Nguyễn Hoài An
+                                    A
                               </td>
-                              <td class="px-3 py-2 border-r border-gray-200">
-                                    13/09/2008
+                              <td class="px-3 py-2 border-r border-gray-200 text-center">
+                                    1/1/2020
                               </td>
-                              <td class="px-3 py-2 border-r border-gray-200 text-center text-[#3ad597]">
-                                    <span>
-                                          Có mặt
-                                    </span>
+                              <td class="px-3 py-2 border-r border-gray-200 text-center">
+                                    0
                               </td>
-                              <td class="px-3 py-2 text-xs text-[#f97316] cursor-pointer select-text">
-                                    Chưa thông báo
+                              <td class="px-3 py-2 border-r border-gray-200 text-center">
+                                    0
                               </td>
+
+                              <!-- Các ô điểm danh từng ngày -->
+                              <% for(let day=1; day <=daysInMonth; day++) { %>
+                                    <td class="px-1 py-2 border-r border-gray-200 text-center">
+                                          ?
+                                    </td>
+                                    <% } %>
                         </tr>
+
                   </tbody>
             </table>
       </div>
 </section>
+
+
+
+<!-- FORMAT DATE -->
+<% function formatDate(dateStr) { if (!dateStr) return '' ; const d=new Date(dateStr); const
+      day=String(d.getDate()).padStart(2, '0' ); const month=String(d.getMonth() + 1).padStart(2, '0' ); const
+      year=d.getFullYear(); return `${day}/${month}/${year}`; } %>

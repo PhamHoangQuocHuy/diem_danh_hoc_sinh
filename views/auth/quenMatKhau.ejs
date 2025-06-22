@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Đăng nhập</title>
+    <title>Quên Mật Khẩu</title>
     <style>
+        /* Your existing CSS remains unchanged */
         * {
             box-sizing: border-box;
         }
@@ -21,8 +22,8 @@
 
         body {
             margin: 0;
-            background: linear-gradient(rgba(120, 157, 183, 0.9), rgba(94, 101, 105, 0.9)), 
-                        url('https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+            background: linear-gradient(rgba(120, 157, 183, 0.9), rgba(94, 101, 105, 0.9)),
+                url('https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
             background-size: cover;
             font-family: 'Arial', sans-serif;
             display: flex;
@@ -33,7 +34,6 @@
             color: #2c3e50;
         }
 
-        /* Logo container */
         .logo-container {
             width: 100px;
             height: 100px;
@@ -47,7 +47,6 @@
             filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
         }
 
-        /* Login box */
         .login-wrapper {
             background: rgba(255, 255, 255, 0.95);
             max-width: 500px;
@@ -59,7 +58,6 @@
             position: relative;
         }
 
-        /* Decorative elements */
         .decor-circle {
             position: absolute;
             border-radius: 50%;
@@ -101,8 +99,7 @@
             display: inline-block;
         }
 
-        input[type="email"],
-        input[type="password"] {
+        input[type="email"] {
             width: 100%;
             padding: 14px 18px;
             border-radius: 20px;
@@ -115,14 +112,12 @@
             box-shadow: inset 1px 1px 6px #d6eaf8;
         }
 
-        input[type="email"]::placeholder,
-        input[type="password"]::placeholder {
+        input[type="email"]::placeholder {
             color: #7f8c8d;
             font-style: italic;
         }
 
-        input[type="email"]:focus,
-        input[type="password"]:focus {
+        input[type="email"]:focus {
             outline: none;
             border-color: #2980b9;
             box-shadow: 0 0 8px rgba(41, 128, 185, 0.5);
@@ -173,8 +168,7 @@
                 font-size: 1.8rem;
             }
 
-            input[type="email"],
-            input[type="password"] {
+            input[type="email"] {
                 font-size: 0.95rem;
                 padding: 12px 15px;
             }
@@ -186,28 +180,25 @@
     </style>
 </head>
 <body>
-    <main class="login-wrapper" role="main" aria-label="Đăng nhập">
+    <main class="login-wrapper" role="main" aria-label="Quên mật khẩu">
         <div class="logo-container">
         </div>
-        <div class="decor-circle one" aria-hidden="true">
-        </div>
+        <div class="decor-circle one" aria-hidden="true"></div>
         <div class="decor-circle two" aria-hidden="true"></div>
-        <h1>Đăng nhập</h1>
+        <h1>Quên Mật Khẩu</h1>
+        <p>Nhập email của bạn để nhận liên kết đặt lại mật khẩu.</p>
         <% if (message) { %>
             <p class="<%= messageType === 'error' ? 'message-error' : 'message-success' %>">
                 <%= message %>
             </p>
         <% } %>
-        <form action="/api/auth/login" method="POST">
+        <form action="quen-mat-khau/gui-yeu-cau" method="POST">
             <label for="email">Email người dùng</label>
-            <input type="email" name="email" placeholder="email@gmail.com" autocomplete="username" required />
-
-            <label for="password">Mật khẩu</label>
-            <input type="password" name="mat_khau" placeholder="Nhập mật khẩu" autocomplete="current-password" required />
-            <button type="submit" aria-label="Đăng nhập">Đăng nhập</button>
+            <input type="email" name="email" placeholder="Nhập email của bạn" autocomplete="username" required />
+            <button type="submit" aria-label="Gửi yêu cầu đặt lại mật khẩu">Gửi yêu cầu</button>
         </form>
         <nav class="help-links" aria-label="Liên kết hỗ trợ">
-            <a href="/quen-mat-khau" tabindex="0">Quên mật khẩu?</a>
+            <a href="/" tabindex="0">Quay lại đăng nhập</a>
         </nav>
     </main>
 </body>
