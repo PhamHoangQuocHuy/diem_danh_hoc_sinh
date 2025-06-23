@@ -6,52 +6,61 @@ const xlsx = require('xlsx');
 
 class HocSinhController {
     static async hienThiHocSinh(req, res) {
-        if (req.taiKhoan.ten_vai_tro === 'Admin') {
-            try {
-                const danhSachHocSinh = await HocSinhModel.layDanhSachHocSinh();
-                const danhSachPhuHuynh = await HocSinhModel.layDanhSachPhuHuynh();
-                req.files = []; // Lưu để Multer sử dụng
-                return res.render('admin_index', {
+        try {
+            const { ten_vai_tro, tai_khoan_id } = req.taiKhoan;
+            const page = parseInt(req.query.page) || 1;
+            const limit = 5;
+            const offset = (page - 1) * limit;
+
+            let danhSachHocSinh = [];
+            let totalHocSinh = 0;
+
+            if (ten_vai_tro === 'Admin') {
+                totalHocSinh = await HocSinhModel.layTongHocSinh();
+                danhSachHocSinh = await HocSinhModel.layDanhSachHocSinh(limit, offset);
+            } else if (ten_vai_tro === 'Giáo viên') {
+                totalHocSinh = await HocSinhModel.layTongHocSinh();
+                danhSachHocSinh = await HocSinhModel.layDanhSachHocSinh_GiaoVien(limit, offset, tai_khoan_id);
+            } else if (ten_vai_tro === 'Phụ huynh') {
+                totalHocSinh = await HocSinhModel.layTongHocSinh();
+                danhSachHocSinh = await HocSinhModel.layDanhSachHocSinh_PhuHuynh(limit, offset, tai_khoan_id);
+            } else {
+                totalHocSinh = await HocSinhModel.layTongHocSinh();
+                danhSachHocSinh = await HocSinhModel.layDanhSachHocSinh(limit, offset);
+            }
+
+            const totalPages = Math.ceil(totalHocSinh / limit);
+            const danhSachPhuHuynh = await HocSinhModel.layDanhSachPhuHuynh();
+
+            req.files = []; // Để tránh lỗi Multer nếu có upload
+
+            return res.render(
+                ten_vai_tro === 'Admin' ? 'admin_index' : 'user_index',
+                {
                     page: 'pages/quanLyHocSinh',
                     danhSachHocSinh,
                     danhSachPhuHuynh,
+                    currentPage: page,
+                    totalPages,
                     message: req.query.message || '',
                     messageType: req.query.messageType || ''
-                });
-            } catch (error) {
-                console.error(error);
-                return res.render('admin_index', {
+                }
+            );
+        } catch (error) {
+            console.error(error);
+            return res.render(
+                req.taiKhoan.ten_vai_tro === 'Admin' ? 'admin_index' : 'user_index',
+                {
                     page: 'pages/quanLyHocSinh',
                     danhSachHocSinh: [],
                     danhSachPhuHuynh: [],
                     message: 'Có lỗi khi lấy danh sách học sinh',
                     messageType: 'error'
-                })
-            }
-        } else {
-            try {
-                const danhSachHocSinh = await HocSinhModel.layDanhSachHocSinh();
-                const danhSachPhuHuynh = await HocSinhModel.layDanhSachPhuHuynh();
-                req.files = []; // Lưu để Multer sử dụng
-                return res.render('user_index', {
-                    page: 'pages/quanLyHocSinh',
-                    danhSachHocSinh,
-                    danhSachPhuHuynh,
-                    message: req.query.message || '',
-                    messageType: req.query.messageType || ''
-                });
-            } catch (error) {
-                console.error(error);
-                return res.render('user_index', {
-                    page: 'pages/quanLyHocSinh',
-                    danhSachHocSinh: [],
-                    danhSachPhuHuynh: [],
-                    message: 'Có lỗi khi lấy danh sách học sinh',
-                    messageType: 'error'
-                })
-            }
+                }
+            );
         }
     }
+
     static async themHocSinh(req, res) {
         const filesToDelete = [];
         try {
@@ -206,35 +215,90 @@ class HocSinhController {
         }
     }
     static async timKiemHocSinh(req, res) {
-        try {
-            const tim_kiem = req.query.tim_kiem;
-            if (!tim_kiem || tim_kiem.trim() === '') {
-                return res.redirect('/hoc-sinh?message=Vui lọc nhập tên học sinh&messageType=error');
+        if (req.taiKhoan.ten_vai_tro === "Admin") {
+            try {
+                const tim_kiem = req.query.tim_kiem;
+                if (!tim_kiem || tim_kiem.trim() === '') {
+                    return res.redirect('/hoc-sinh?message=Vui lọc nhập tên học sinh&messageType=error');
+                }
+                // Phân trang
+                const page = parseInt(req.query.page) || 1;
+                const limit = 5;
+                const offset = (page - 1) * limit;
+                const totalHocSinh = await HocSinhModel.layTongHocSinh();
+                const totalPages = Math.ceil(totalHocSinh / limit);
+
+                const result = await HocSinhModel.timThongTinHocSinh(tim_kiem);
+                const danhSachHocSinh = await HocSinhModel.layDanhSachHocSinh(limit, offset);
+                const danhSachPhuHuynh = await HocSinhModel.layDanhSachPhuHuynh();
+                if (result.length > 0) {
+                    res.render('admin_index', {
+                        page: 'pages/quanLyHocSinh',
+                        danhSachHocSinh: result,
+                        danhSachPhuHuynh,
+                        currentPage: page,
+                        totalPages,
+                        message: `Đã tìm học sinh với tên: ${tim_kiem}`,
+                        messageType: 'success'
+                    });
+                } else {
+                    res.render('admin_index', {
+                        page: 'pages/quanLyHocSinh',
+                        danhSachHocSinh: [],
+                        danhSachPhuHuynh: [],
+                        currentPage: page,
+                        totalPages,
+                        message: `Không tìm thấy học sinh với tên: ${tim_kiem}`,
+                        messageType: 'error'
+                    });
+                }
             }
-            const result = await HocSinhModel.timThongTinHocSinh(tim_kiem);
-            const danhSachHocSinh = await HocSinhModel.layDanhSachHocSinh();
-            const danhSachPhuHuynh = await HocSinhModel.layDanhSachPhuHuynh();
-            if (result.length > 0) {
-                res.render('admin_index', {
-                    page: 'pages/quanLyHocSinh',
-                    danhSachHocSinh: result,
-                    danhSachPhuHuynh,
-                    message: `Đã tìm học sinh với tên: ${tim_kiem}`,
-                    messageType: 'success'
-                });
-            } else {
-                res.render('admin_index', {
-                    page: 'pages/quanLyHocSinh',
-                    danhSachHocSinh: [],
-                    danhSachPhuHuynh: [],
-                    message: `Không tìm thấy học sinh với tên: ${tim_kiem}`,
-                    messageType: 'error'
-                });
+            catch (error) {
+                console.log(error);
+                return res.redirect(`/hoc-sinh?message=Đã xảy ra lỗi khi tìm học sinh&messageType=error`);
             }
-        }
-        catch (error) {
-            console.log(error);
-            return res.redirect(`/hoc-sinh?message=Đã xảy ra lỗi khi tìm học sinh&messageType=error`);
+        } else {
+            try {
+                const tim_kiem = req.query.tim_kiem;
+                if (!tim_kiem || tim_kiem.trim() === '') {
+                    return res.redirect('/hoc-sinh?message=Vui lọc nhập tên học sinh&messageType=error');
+                }
+                // Phân trang
+                const page = parseInt(req.query.page) || 1;
+                const limit = 5;
+                const offset = (page - 1) * limit;
+                const totalHocSinh = await HocSinhModel.layTongHocSinh();
+                const totalPages = Math.ceil(totalHocSinh / limit);
+
+                const result = await HocSinhModel.timThongTinHocSinh(tim_kiem);
+                const danhSachHocSinh = await HocSinhModel.layDanhSachHocSinh_GiaoVien(limit, offset, req.taiKhoan.tai_khoan_id);
+                const danhSachPhuHuynh = await HocSinhModel.layDanhSachPhuHuynh();
+                if (result.length > 0) {
+                    res.render('user_index', {
+                        page: 'pages/quanLyHocSinh',
+                        danhSachHocSinh: result,
+                        danhSachPhuHuynh,
+                        currentPage: page,
+                        totalPages,
+                        message: `Đã tìm học sinh với tên: ${tim_kiem}`,
+                        messageType: 'success'
+                    });
+                } else {
+                    res.render('user_index', {
+                        page: 'pages/quanLyHocSinh',
+                        danhSachHocSinh: [],
+                        danhSachPhuHuynh: [],
+                        currentPage: page,
+                        totalPages,
+                        message: `Không tìm thấy học sinh với tên: ${tim_kiem}`,
+                        messageType: 'error'
+                    });
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return res.redirect(`/hoc-sinh?message=Đã xảy ra lỗi khi tìm học sinh&messageType=error`);
+            }
         }
     }
     static async chiTietHocSinh(req, res) {
@@ -261,26 +325,68 @@ class HocSinhController {
         }
     }
     static async locHocSinh(req, res) {
-        try {
-            const { loai_hoc_sinh } = req.query;
-            let danhSach;
-            if (loai_hoc_sinh && loai_hoc_sinh !== '') {
-                danhSach = await HocSinhModel.locHocSinhTheoLoaiHocSinh(loai_hoc_sinh);
+        if (req.taiKhoan.ten_vai_tro === 'Admin') {
+            try {
+                const { loai_hoc_sinh } = req.query;
+                let danhSach;
+                // Phân trang
+                const page = parseInt(req.query.page) || 1;
+                const limit = 5;
+                const offset = (page - 1) * limit;
+                const totalHocSinh = await HocSinhModel.layTongHocSinh();
+                const totalPages = Math.ceil(totalHocSinh / limit);
+
+                if (loai_hoc_sinh && loai_hoc_sinh !== '') {
+                    danhSach = await HocSinhModel.locHocSinhTheoLoaiHocSinh(loai_hoc_sinh);
+                }
+                else {
+                    danhSach = await HocSinhModel.layDanhSachHocSinh(limit, offset);
+                }
+                return res.render('admin_index', {
+                    page: 'pages/quanLyHocSinh',
+                    danhSachHocSinh: danhSach.slice(offset, offset + limit),
+                    currentPage: page,
+                    totalPages,
+                    danhSachPhuHuynh: await HocSinhModel.layDanhSachPhuHuynh(),
+                    message: '',
+                    messageType: ''
+                })
             }
-            else {
-                danhSach = await HocSinhModel.layDanhSachHocSinh();
+            catch (error) {
+                console.log(error);
+                return res.redirect(`/hoc-sinh?message=Đã xảy ra lỗi khi tìm học sinh&messageType=error`);
             }
-            return res.render('admin_index', {
-                page: 'pages/quanLyHocSinh',
-                danhSachHocSinh: danhSach,
-                danhSachPhuHuynh: await HocSinhModel.layDanhSachPhuHuynh(),
-                message: '',
-                messageType: ''
-            })
-        }
-        catch (error) {
-            console.log(error);
-            return res.redirect(`/hoc-sinh?message=Đã xảy ra lỗi khi tìm học sinh&messageType=error`);
+        } else {
+            try {
+                const { loai_hoc_sinh } = req.query;
+                let danhSach;
+                // Phân trang
+                const page = parseInt(req.query.page) || 1;
+                const limit = 5;
+                const offset = (page - 1) * limit;
+                const totalHocSinh = await HocSinhModel.layTongHocSinh();
+                const totalPages = Math.ceil(totalHocSinh / limit);
+
+                if (loai_hoc_sinh && loai_hoc_sinh !== '') {
+                    danhSach = await HocSinhModel.locHocSinhTheoLoaiHocSinh(loai_hoc_sinh);
+                }
+                else {
+                    danhSach = await HocSinhModel.layDanhSachHocSinh(limit, offset);
+                }
+                return res.render('user_index', {
+                    page: 'pages/quanLyHocSinh',
+                    danhSachHocSinh: danhSach.slice(offset, offset + limit),
+                    currentPage: page,
+                    totalPages,
+                    danhSachPhuHuynh: await HocSinhModel.layDanhSachPhuHuynh(),
+                    message: '',
+                    messageType: ''
+                })
+            }
+            catch (error) {
+                console.log(error);
+                return res.redirect(`/hoc-sinh?message=Đã xảy ra lỗi khi tìm học sinh&messageType=error`);
+            }
         }
     }
     static async themHangLoat(req, res) {
@@ -339,6 +445,7 @@ class HocSinhController {
                 fs.unlinkSync(filePath); // Xóa file tạm
                 return res.status(200).json({
                     message: `Đã thêm ${danhSachHocSinh.length} học sinh thành công`,
+                    messageType: 'success',
                     soLuongThanhCong: danhSachHocSinh.length,
                     soLuongLoi: 0,
                     danhSachLoi: [],

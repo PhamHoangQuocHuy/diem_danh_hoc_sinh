@@ -38,7 +38,7 @@ class phuHuynhController {
                     messageType: 'error'
                 })
             }
-        }else{
+        } else {
             console.log('Bạn không có quyền truy cập');
             return res.redirect('/');
         }
@@ -67,5 +67,29 @@ class phuHuynhController {
         }
 
     }
+    static async timPhuHuynh(req, res) {
+        const { tim_kiem } = req.query;
+        const { ten_vai_tro } = req.taiKhoan;
+
+        try {
+            const result = await PhuHuynhModel.layThongTinPhuHuynh(tim_kiem);
+
+            const renderData = {
+                page: 'pages/quanLyPhuHuynh',
+                danhSachHocSinh: [],
+                danhSachPhuHuynh: result.data || [],
+                message: result.message,
+                messageType: result.success ? 'success' : 'error'
+            };
+
+            const template = ten_vai_tro === 'Admin' ? 'admin_index' : 'user_index';
+            return res.render(template, renderData);
+
+        } catch (error) {
+            console.error(error);
+            return res.redirect('/phu-huynh?message=Đã xảy ra lỗi khi tìm phụ huynh&messageType=error');
+        }
+    }
+
 }
 module.exports = phuHuynhController;

@@ -15,32 +15,28 @@
     </div>
     <!-- Filters and buttons -->
     <div class="flex flex-wrap items-center gap-2 border border-[#3ad597] rounded px-3 py-1 mb-4 select-none max-w-full"
-        style="max-width: 570px;">
+        style="max-width: 580px;">
 
         <select name="lop_hoc_id" class="border border-gray-300 rounded px-2 py-1 text-sm">
             <% danhSachLopHoc.forEach(lop=> { %>
-                <option value="<%= lop.lop_hoc_id %>">
-                    <%= lop.ten_lop %>
+                <option value="<%= lop.lop_hoc_id %>" <% if (hocKyHienTai && lop.ten_hoc_ky===hocKyHienTai.ten_hoc_ky&&lop.ten_nam_hoc===hocKyHienTai.ten_nam_hoc) { %> selected <% } %>>
+                        <%= lop.ten_lop %> - <%= lop.ten_hoc_ky %> - <%= lop.ten_nam_hoc %>
                 </option>
                 <% }) %>
         </select>
 
-        <button aria-label="Previous day" class="text-[#3ad597] hover:bg-[#d6f5e8] rounded px-2 py-1">
-            <i class="fas fa-chevron-left">
-            </i>
-        </button>
-        <span class="text-sm text-[#475569] font-normal select-text">
-            Thứ 6, ngày 22/7/2022
-        </span>
-        <button aria-label="Next day" class="text-[#3ad597] hover:bg-[#d6f5e8] rounded px-2 py-1">
-            <i class="fas fa-chevron-right">
-            </i>
-        </button>
-        <button aria-label="Open calendar" class="text-[#3ad597] hover:bg-[#d6f5e8] rounded px-2 py-1">
-            <i class="fas fa-calendar-alt">
-            </i>
-        </button>
+
+        <!-- Ngày -->
+        <label for="datePicker" style="margin-left: 25px;">Ngày điểm danh</label>
+        <input 
+        type="date" 
+        id="datePicker" 
+        name="ngay_diem_danh"
+        class="text-sm text-[#475569] border border-gray-300 rounded px-2 py-1 cursor-pointer hover:bg-[#f0fdf4] transition-all duration-150"
+        />
+
     </div>
+
 
     <!-- SỈ SÓ -->
     <div class="flex flex-wrap gap-2 mb-4 max-w-full">
@@ -185,6 +181,13 @@
         }
     }
 </script>
+<!-- LỊCH -->
+<script>
+    const datePicker = document.getElementById('datePicker');
+    const today = new Date().toISOString().split('T')[0];
+    datePicker.value = today;
+</script>
+
 <!-- FORMAT DATE -->
 <% function formatDate(dateStr) { if (!dateStr) return '' ; const d=new Date(dateStr); const
     day=String(d.getDate()).padStart(2, '0' ); const month=String(d.getMonth() + 1).padStart(2, '0' ); const

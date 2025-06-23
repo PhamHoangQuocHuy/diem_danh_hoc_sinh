@@ -2,14 +2,14 @@ const path = require('path');
 const fs = require('fs');
 const pool = require('../config/connect_database');
 class HocSinhModel {
-    static async layDanhSachHocSinh() {
+    static async layDanhSachHocSinh(limit, offset) {
         const conn = await pool.getConnection();
-        try {
+        if (limit === undefined || offset === undefined) {
             // Lấy thông tin học sinh cơ bản
             const [hocSinhRows] = await conn.query(`
             SELECT * FROM hoc_sinh 
             WHERE daXoa = 0
-        `);
+            `);
 
             // Lấy thông tin hình ảnh và phụ huynh cho từng học sinh
             const result = await Promise.all(hocSinhRows.map(async (hs) => {
@@ -34,10 +34,185 @@ class HocSinhModel {
             }));
 
             return result;
-        } catch (error) {
+        }
+        try {
+            // Lấy thông tin học sinh cơ bản
+            const [hocSinhRows] = await conn.query(`
+            SELECT * FROM hoc_sinh 
+            WHERE daXoa = 0 
+            LIMIT ? OFFSET ?
+            `, [limit, offset]);
+
+            // Lấy thông tin hình ảnh và phụ huynh cho từng học sinh
+            const result = await Promise.all(hocSinhRows.map(async (hs) => {
+                const [hinhAnh] = await conn.query(`
+                SELECT duong_dan_anh FROM hinh_anh_hoc_sinh 
+                WHERE hoc_sinh_id = ?
+            `, [hs.hoc_sinh_id]);
+
+                const [phuHuynh] = await conn.query(`
+                SELECT p.phu_huynh_id, t.ho_ten, t.email, phs.moi_quan_he 
+                FROM phu_huynh_hoc_sinh phs
+                JOIN phu_huynh p ON phs.phu_huynh_id = p.phu_huynh_id
+                JOIN tai_khoan t ON p.tai_khoan_id = t.tai_khoan_id
+                WHERE phs.hoc_sinh_id = ?
+            `, [hs.hoc_sinh_id]);
+
+                return {
+                    ...hs,
+                    duong_dan_anh: hinhAnh.map(img => img.duong_dan_anh),
+                    phu_huynh: phuHuynh
+                };
+            }));
+
+            return result;
+        }
+        catch (error) {
             console.log(error);
             return [];
         } finally {
+            conn.release();
+        }
+    }
+    static async layDanhSachHocSinh_GiaoVien(limit, offset, tai_khoan_id) {
+        const conn = await pool.getConnection();
+        try {
+            // Lấy giao_vien_id từ tài_khoan_id
+            const [gvRows] = await conn.query(`
+            SELECT giao_vien_id FROM giao_vien WHERE tai_khoan_id = ?
+        `, [tai_khoan_id]);
+
+            if (gvRows.length === 0) return [];
+
+            const giaoVienId = gvRows[0].giao_vien_id;
+
+            // Lấy tất cả lớp học của giáo viên (bao gồm cả 2 học kỳ)
+            const [lopRows] = await conn.query(`
+            SELECT lh.lop_hoc_id, lh.ten_lop, hk.nam_hoc_id
+            FROM lop_hoc lh
+            JOIN hoc_ky hk ON lh.hoc_ky_id = hk.hoc_ky_id
+            WHERE lh.giao_vien_id = ?
+        `, [giaoVienId]);
+
+            if (lopRows.length === 0) return [];
+
+            // Nhóm theo ten_lop + nam_hoc_id để lấy đầy đủ cả 2 học kỳ của cùng lớp
+            const tenLopNamHocMap = new Map();
+            for (const row of lopRows) {
+                const key = `${row.ten_lop}_${row.nam_hoc_id}`;
+                if (!tenLopNamHocMap.has(key)) {
+                    tenLopNamHocMap.set(key, []);
+                }
+                tenLopNamHocMap.get(key).push(row.lop_hoc_id);
+            }
+
+            const allLopHocIds = [...tenLopNamHocMap.values()].flat();
+
+            // Lấy học sinh từ các lớp học này
+            const [hocSinhRows] = await conn.query(`
+            SELECT DISTINCT hs.*
+            FROM hoc_sinh_lop_hoc hslh
+            JOIN hoc_sinh hs ON hslh.hoc_sinh_id = hs.hoc_sinh_id
+            WHERE hslh.lop_hoc_id IN (?) AND hs.daXoa = 0
+            ${limit !== undefined && offset !== undefined ? 'LIMIT ? OFFSET ?' : ''}
+        `, limit !== undefined && offset !== undefined
+                ? [allLopHocIds, limit, offset]
+                : [allLopHocIds]);
+
+            // Lấy ảnh & phụ huynh cho từng học sinh
+            const result = await Promise.all(hocSinhRows.map(async (hs) => {
+                const [hinhAnh] = await conn.query(`
+                SELECT duong_dan_anh FROM hinh_anh_hoc_sinh WHERE hoc_sinh_id = ?
+            `, [hs.hoc_sinh_id]);
+
+                const [phuHuynh] = await conn.query(`
+                SELECT p.phu_huynh_id, t.ho_ten, t.email, phs.moi_quan_he 
+                FROM phu_huynh_hoc_sinh phs
+                JOIN phu_huynh p ON phs.phu_huynh_id = p.phu_huynh_id
+                JOIN tai_khoan t ON p.tai_khoan_id = t.tai_khoan_id
+                WHERE phs.hoc_sinh_id = ?
+            `, [hs.hoc_sinh_id]);
+
+                return {
+                    ...hs,
+                    duong_dan_anh: hinhAnh.map(img => img.duong_dan_anh),
+                    phu_huynh: phuHuynh
+                };
+            }));
+
+            return result;
+        } catch (error) {
+            console.error(error);
+            return [];
+        } finally {
+            conn.release();
+        }
+    }
+    static async layDanhSachHocSinh_PhuHuynh(limit, offset, tai_khoan_id) {
+        const conn = await pool.getConnection();
+        try {
+            // Lấy phu_huynh_id từ tài khoản
+            const [phRows] = await conn.query(`
+            SELECT phu_huynh_id FROM phu_huynh 
+            WHERE tai_khoan_id = ?
+        `, [tai_khoan_id]);
+
+            if (phRows.length === 0) return [];
+
+            const phu_huynh_id = phRows[0].phu_huynh_id;
+
+            // Lấy danh sách học sinh của phụ huynh này
+            const [hocSinhRows] = await conn.query(`
+            SELECT hs.*
+            FROM phu_huynh_hoc_sinh phs
+            JOIN hoc_sinh hs ON phs.hoc_sinh_id = hs.hoc_sinh_id
+            WHERE phs.phu_huynh_id = ? AND hs.daXoa = 0
+            ${limit !== undefined && offset !== undefined ? 'LIMIT ? OFFSET ?' : ''}
+        `, limit !== undefined && offset !== undefined
+                ? [phu_huynh_id, limit, offset]
+                : [phu_huynh_id]);
+
+            const result = await Promise.all(hocSinhRows.map(async (hs) => {
+                // Lấy hình ảnh học sinh
+                const [hinhAnh] = await conn.query(`
+                SELECT duong_dan_anh FROM hinh_anh_hoc_sinh 
+                WHERE hoc_sinh_id = ?
+            `, [hs.hoc_sinh_id]);
+
+                // Lấy danh sách lớp học học sinh đang theo học
+                const [lopHocRows] = await conn.query(`
+                SELECT lh.ten_lop 
+                FROM hoc_sinh_lop_hoc hslh
+                JOIN lop_hoc lh ON hslh.lop_hoc_id = lh.lop_hoc_id
+                WHERE hslh.hoc_sinh_id = ?
+            `, [hs.hoc_sinh_id]);
+
+                return {
+                    ...hs,
+                    duong_dan_anh: hinhAnh.map(img => img.duong_dan_anh),
+                    lop_hoc: lopHocRows.map(lh => lh.ten_lop) // Mảng tên lớp
+                };
+            }));
+
+            return result;
+        } catch (error) {
+            console.error(error);
+            return [];
+        } finally {
+            conn.release();
+        }
+    }
+    static async layTongHocSinh() {
+        const conn = await pool.getConnection();
+        try {
+            const [rows] = await conn.query(`SELECT COUNT(*) AS total FROM hoc_sinh WHERE daXoa=0`);
+            return rows[0].total;
+        }
+        catch (error) {
+            console.log(error);
+            return 0;
+        }
+        finally {
             conn.release();
         }
     }
@@ -375,6 +550,14 @@ class HocSinhModel {
                 JOIN tai_khoan t ON p.tai_khoan_id = t.tai_khoan_id
                 WHERE phs.hoc_sinh_id = ? AND t.daXoa = 0
             `, [id]);
+            // Lấy lớp học mà học sinh đó đang học
+            const [lopHoc] = await conn.query(`
+                SELECT DISTINCT lh.ten_lop
+                FROM hoc_sinh_lop_hoc hslh
+                JOIN lop_hoc lh ON hslh.lop_hoc_id = lh.lop_hoc_id
+                WHERE hslh.hoc_sinh_id = ?
+            `, [id]);
+
             return {
                 success: true,
                 message: 'Lấy thông tin thành công',
@@ -382,7 +565,8 @@ class HocSinhModel {
                 data: {
                     ...hocSinh[0],
                     duong_dan_anh: hinhAnh.map(img => img.duong_dan_anh),
-                    phu_huynh: phuHuynh
+                    phu_huynh: phuHuynh,
+                    lop_hoc: lopHoc
                 }
             }
         }

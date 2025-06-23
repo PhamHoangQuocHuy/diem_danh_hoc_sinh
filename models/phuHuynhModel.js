@@ -34,10 +34,12 @@ class PhuHuynhModel {
 
             // Lấy học sinh liên kết với phụ huynh này
             const [hocSinh] = await conn.query(`
-            SELECT hs.*, GROUP_CONCAT(ha.duong_dan_anh) AS anh
+            SELECT hs.*, GROUP_CONCAT(DISTINCT ha.duong_dan_anh) AS anh, lh.ten_lop
             FROM phu_huynh_hoc_sinh phs
             JOIN hoc_sinh hs ON phs.hoc_sinh_id = hs.hoc_sinh_id
             LEFT JOIN hinh_anh_hoc_sinh ha ON hs.hoc_sinh_id = ha.hoc_sinh_id
+            LEFT JOIN hoc_sinh_lop_hoc hslh ON hs.hoc_sinh_id = hslh.hoc_sinh_id
+            LEFT JOIN lop_hoc lh ON hslh.lop_hoc_id = lh.lop_hoc_id
             WHERE phs.phu_huynh_id = ? AND hs.daXoa = 0
             GROUP BY hs.hoc_sinh_id
         `, [phuHuynhId]);
@@ -45,7 +47,8 @@ class PhuHuynhModel {
             // Xử lý ảnh thành mảng
             const hocSinhWithImage = hocSinh.map(hs => ({
                 ...hs,
-                duong_dan_anh: hs.anh ? hs.anh.split(',') : []
+                duong_dan_anh: hs.anh ? hs.anh.split(',') : [],
+                ten_lop: hs.ten_lop || ''
             }));
 
             return {
@@ -60,6 +63,32 @@ class PhuHuynhModel {
             return { success: false, message: 'Lỗi truy vấn cơ sở dữ liệu' };
         } finally {
             conn.release();
+        }
+    }
+    static async layThongTinPhuHuynh(tim_kiem) {
+        const conn = await pool.getConnection();
+        try {
+            if (!tim_kiem || tim_kiem.trim() === '') {
+                return { success: false, data: [], message: 'Vui lòng nhập từ khóa tìm kiếm' };
+            }
+
+            const [rows] = await conn.query(`
+            SELECT * FROM phu_huynh
+            JOIN tai_khoan ON phu_huynh.tai_khoan_id = tai_khoan.tai_khoan_id
+            WHERE tai_khoan.daXoa = 0
+            AND tai_khoan.ten_vai_tro = 'Phụ huynh'
+            AND tai_khoan.ho_ten LIKE ?`, [`%${tim_kiem}%`]);
+
+            if (rows.length === 0) {
+                return { success: false, data: [], message: `Không tìm thấy phụ huynh: ${tim_kiem}` };
+            }
+
+            return { success: true, data: rows, message: `Đã tìm thấy phụ huynh: ${tim_kiem}`, messageType: 'success' };
+        } catch (error) {
+            console.error(error);
+            return { success: false, data: [], message: 'Lỗi truy vấn dữ liệu' };
+        } finally {
+            if (conn) conn.release();
         }
     }
 

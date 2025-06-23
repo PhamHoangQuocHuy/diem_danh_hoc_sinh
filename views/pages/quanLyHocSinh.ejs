@@ -1,144 +1,98 @@
 <style>
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        margin-top: 30px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .pagination-button {
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .pagination-prev {
+        background-color: #f3f4f6;
+        color: #4b5563;
+        border: 1px solid #e5e7eb;
+    }
+
+    .pagination-next {
+        background-color: #3b82f6;
+        color: white;
+        border: 1px solid #3b82f6;
+    }
+
+    .pagination-prev:hover {
+        background-color: #e5e7eb;
+        transform: translateY(-1px);
+    }
+
+    .pagination-next:hover {
+        background-color: #2563eb;
+        transform: translateY(-1px);
+    }
+
+    .pagination-info {
+        color: #6b7280;
+        font-size: 14px;
+        padding: 6px 12px;
+        background-color: #f9fafb;
+        border-radius: 6px;
+    }
+
     .message-box {
         padding: 10px;
-        margin: 10px 0;
+        margin-bottom: 15px;
         border-radius: 5px;
-        text-align: center;
+        font-size: 25px;
+        border: 1px solid transparent;
     }
 
     .message-success {
         background-color: #d4edda;
         color: #155724;
+        border-color: #c3e6cb;
     }
 
     .message-error {
         background-color: #f8d7da;
         color: #721c24;
+        border-color: #f5c6cb;
     }
 
-    .tab-buttons {
+    .tag-container {
         display: flex;
-        gap: 8px;
-        margin-bottom: 16px;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
     }
 
-    .tab-button {
-        padding: 8px 16px;
-        background-color: #e5e7eb;
-        /* Tailwind gray-200 */
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background-color 0.2s;
-        font-weight: 500;
-    }
-
-    .tab-button.active {
-        background-color: #3b82f6;
-        /* Tailwind blue-500 */
-        color: white;
-    }
-
-    .tab-pane {
-        display: none;
-    }
-
-    .tab-pane.active {
-        display: block;
-    }
-
-    #studentDetails div {
-        padding: 8px 0;
-        border-bottom: 1px solid #e5e7eb;
-        /* Tailwind gray-200 */
-    }
-
-    #studentDetails div:last-child {
-        border-bottom: none;
-        /* Remove border for the last item */
-    }
-
-    #parentDetails div {
-        padding: 8px 0;
-        border-bottom: 1px solid #e5e7eb;
-        /* Tailwind gray-200 */
-    }
-
-    #parentDetails div:last-child {
-        border-bottom: none;
-        /* Remove border for the last item */
-    }
-
-    .tab-buttons {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 16px;
-    }
-
-    .tab-button {
-        padding: 8px 16px;
-        background-color: #e5e7eb;
-        /* Tailwind gray-200 */
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
-
-    .tab-button.active {
-        background-color: #3b82f6;
-        /* Tailwind blue-500 */
-        color: white;
-    }
-
-    .tab-pane {
-        display: none;
-    }
-
-    .tab-pane.active {
-        display: block;
-    }
-
-    #parentSuggestions {
-        max-height: 192px;
-        /* max-h-48 */
-        overflow-y: auto;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    #parentSuggestions div {
-        cursor: pointer;
-        padding: 8px 16px;
-    }
-
-    #parentSuggestions div:hover {
-        background-color: #f3f4f6;
-        /* Tailwind gray-100 */
-    }
-
-    .image-placeholder {
-        width: 100px;
-        height: 100px;
-        border: 2px dashed #cbd5e0;
-        /* Tailwind gray-300 */
-        border-radius: 0.375rem;
-        /* rounded-md */
-        background-color: #f9fafb;
-        /* Tailwind gray-50 */
+    .tag {
+        background-color: #e2e8f0;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
         display: flex;
         align-items: center;
-        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .tag-remove {
         cursor: pointer;
-        overflow: hidden;
-        position: relative;
+        color: #718096;
     }
 
-    .image-placeholder img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: cover;
-        display: block;
+    .tag-remove:hover {
+        color: #e53e3e;
     }
 
-    .image-placeholder input[type="file"] {
+    .modal-hidden {
         display: none;
     }
 </style>
@@ -167,357 +121,390 @@
             </select>
             <button type="submit" class="ml-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Lọc</button>
         </form>
-        <button onclick="toggleAddModal()"
-            class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors shadow-md focus:outline-none focus:ring focus:ring-blue-400 flex items-center gap-2">
-            <i class="fas fa-plus"></i> Thêm học sinh
-        </button>
-    </div>
-    <!-- THÊM HÀNG LOẠT -->
-    <div style="float: right;" class="inline-flex">
-        <!-- Thêm input file và nút upload -->
-        <form id="uploadExcelForm" style="display: flex;">
-            <div class="mb-4 col-span-2">
-                <label for="excelFile" class="block text-sm font-medium mb-2">Tải lên file Excel</label>
-                <input type="file" id="excelFile" name="excelFile" accept=".xlsx, .xls"
-                    style="margin-right: 40px; width: 480px;"
-                    class="border border-gray-300 rounded-md px-4 py-2 w-200px focus:outline-none focus:ring focus:ring-blue-500" />
-            </div>
-            <button type="button" onclick="uploadExcel()"
-                style="padding-left:35px;padding-right: 20px; height: 50px; margin-top: 20px;"
-                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-green-400 mt-4">
-                Thêm hàng loạt
+        <% if( taiKhoan.ten_vai_tro==="Admin" ) { %>
+            <button onclick="toggleAddModal()"
+                class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors shadow-md focus:outline-none focus:ring focus:ring-blue-400 flex items-center gap-2">
+                <i class="fas fa-plus"></i> Thêm học sinh
             </button>
-        </form>
-    </div>
-    <!-- Xuất danh sách -->
-    <div style="float: left;" class="inline-flex">
-        <form action="/hoc-sinh/xuat-excel" method="GET">
-            <button type="submit" style="padding-left:20px; padding-right: 20px; height: 50px; margin-top: 20px;"
-                class="bg-green-800 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-green-400 mt-4">
-                Xuất Excel
-            </button>
-        </form>
+            <% } %>
     </div>
 
+    <% if( taiKhoan.ten_vai_tro==="Admin" ) { %>
+        <!-- THÊM HÀNG LOẠT -->
+        <div style="float: right;" class="inline-flex">
+            <!-- Thêm input file và nút upload -->
+            <form id="uploadExcelForm" style="display: flex;">
+                <div class="mb-4 col-span-2">
+                    <label for="excelFile" class="block text-sm font-medium mb-2">Tải lên file Excel</label>
+                    <input type="file" id="excelFile" name="excelFile" accept=".xlsx, .xls"
+                        style="margin-right: 40px; width: 480px;"
+                        class="border border-gray-300 rounded-md px-4 py-2 w-200px focus:outline-none focus:ring focus:ring-blue-500" />
+                </div>
+                <button type="button" onclick="uploadExcel()"
+                    style="padding-left:35px;padding-right: 20px; height: 50px; margin-top: 20px;"
+                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-green-400 mt-4">
+                    Thêm hàng loạt
+                </button>
+            </form>
+        </div>
+        <!-- Xuất danh sách -->
+        <div style="float: left;" class="inline-flex">
+            <form action="/hoc-sinh/xuat-excel" method="GET">
+                <button type="submit" style="padding-left:20px; padding-right: 20px; height: 50px; margin-top: 20px;"
+                    class="bg-green-800 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-green-400 mt-4">
+                    Xuất Excel
+                </button>
+            </form>
+        </div>
 
+        <% } %>
 
-    <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
-        <thead>
-            <tr class="bg-gray-200">
-                <th class="py-2 px-4 border-b text-center">ID</th>
-                <th class="py-2 px-4 border-b text-center">Họ tên</th>
-                <th class="py-2 px-4 border-b text-center">Hình học sinh</th>
-                <th class="py-2 px-4 border-b text-center">Ngày sinh</th>
-                <th class="py-2 px-4 border-b text-center">Loại học sinh</th>
-                <th class="py-2 px-4 border-b text-center">Hành động</th>
-            </tr>
-        </thead>
-        <tbody id="studentTableBody">
-            <% if(danhSachHocSinh && danhSachHocSinh.length> 0) { %>
-                <% danhSachHocSinh.forEach((hocSinh, index)=> { %>
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="py-2 px-4 border-b text-center">
-                            <%= index + 1 %>
-                        </td>
-                        <td class="py-2 px-4 border-b text-center">
-                            <%= hocSinh.ho_ten %>
-                        </td>
-                        <td class="py-2 px-4 border-b text-center">
-                            <% if (hocSinh.duong_dan_anh && hocSinh.duong_dan_anh.length> 0) { %>
-                                <img src="/<%= hocSinh.duong_dan_anh[0] %>"
-                                    class="w-16 h-16 rounded-md object-cover mx-auto" alt="Ảnh học sinh">
-                                <% } else { %>
-                                    <div
-                                        class="w-16 h-16 rounded-md bg-gray-200 mx-auto flex items-center justify-center">
-                                        <span class="text-gray-500 text-xs">No image</span>
-                                    </div>
-                                    <% } %>
-                        </td>
-                        <td class="py-2 px-4 border-b text-center">
-                            <%= formatDate(hocSinh.ngay_sinh) %>
-                        </td>
-                        <td class="py-2 px-4 border-b text-center">
-                            <%= hocSinh.loai_hoc_sinh %>
-                        </td>
-                        <td class="py-2 px-4 border-b text-center">
-                            <!-- XEM CHI TIẾT -->
-                            <button data-id="<%= hocSinh.hoc_sinh_id %>"
-                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                                aria-label="Xem chi tiết học sinh <%= hocSinh.hoc_sinh_id %>"
-                                onclick="viewDetails('<%= hocSinh.hoc_sinh_id %>')">
-                                <i class="fas fa-eye mr-1"></i> Xem chi tiết
-                            </button>
-                            <!-- SỬA -->
-                            <button
-                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                                aria-label="Sửa học sinh 1" data-id="<%= hocSinh.hoc_sinh_id %>"
-                                data-ho_ten="<%= hocSinh.ho_ten %>"
-                                data-ngay_sinh="<%= formatDate(hocSinh.ngay_sinh) %>"
-                                data-gioi_tinh="<%= hocSinh.gioi_tinh %>" data-dia_chi="<%= hocSinh.dia_chi %>"
-                                data-loai_hoc_sinh="<%= hocSinh.loai_hoc_sinh %>"
-                                data-duong_dan_anh='<%- JSON.stringify(hocSinh.duong_dan_anh || []) %>'
-                                data-phu_huynh='<%= JSON.stringify(hocSinh.phu_huynh || []) %>'
-                                onclick="editStudent(this)">
-                                <i class="fas fa-edit mr-1"></i> Sửa
-                            </button>
-                            <!-- XÓA -->
-                            <form action="/hoc-sinh/xoa/<%= hocSinh.hoc_sinh_id %>" method="post"
-                                class="inline-flex items-center"
-                                onsubmit="return confirm('Bạn có chắc chắn muốn xóa học sinh này?');">
-                                <button
-                                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300 transition-colors"
-                                    aria-label="Xóa học sinh 1">
-                                    <i class="fas fa-trash-alt mr-1"></i> Xóa
-                                </button>
-                            </form>
-                        </td>
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="py-2 px-4 border-b text-center">ID</th>
+                        <th class="py-2 px-4 border-b text-center">Họ tên</th>
+                        <th class="py-2 px-4 border-b text-center">Hình học sinh</th>
+                        <th class="py-2 px-4 border-b text-center">Ngày sinh</th>
+                        <th class="py-2 px-4 border-b text-center">Loại học sinh</th>
+                        <th class="py-2 px-4 border-b text-center">Hành động</th>
                     </tr>
-                    <% }); %>
-                        <% } else { %>
-                            <tr>
-                                <td colspan="7" class="py-2 px-4 border-b text-center">Không có học sinh</td>
+                </thead>
+                <tbody id="studentTableBody">
+                    <% if(danhSachHocSinh && danhSachHocSinh.length> 0) { %>
+                        <% danhSachHocSinh.forEach((hocSinh, index)=> { %>
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="py-2 px-4 border-b text-center">
+                                    <%= index + 1 %>
+                                </td>
+                                <td class="py-2 px-4 border-b text-center">
+                                    <%= hocSinh.ho_ten %>
+                                </td>
+                                <td class="py-2 px-4 border-b text-center">
+                                    <% if (hocSinh.duong_dan_anh && hocSinh.duong_dan_anh.length> 0) { %>
+                                        <img src="/<%= hocSinh.duong_dan_anh[0] %>"
+                                            class="w-16 h-16 rounded-md object-cover mx-auto" alt="Ảnh học sinh">
+                                        <% } else { %>
+                                            <div
+                                                class="w-16 h-16 rounded-md bg-gray-200 mx-auto flex items-center justify-center">
+                                                <span class="text-gray-500 text-xs">No image</span>
+                                            </div>
+                                            <% } %>
+                                </td>
+                                <td class="py-2 px-4 border-b text-center">
+                                    <%= formatDate(hocSinh.ngay_sinh) %>
+                                </td>
+                                <td class="py-2 px-4 border-b text-center">
+                                    <%= hocSinh.loai_hoc_sinh %>
+                                </td>
+                                <td class="py-2 px-4 border-b text-center">
+                                    <!-- XEM CHI TIẾT -->
+                                    <button data-id="<%= hocSinh.hoc_sinh_id %>"
+                                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
+                                        aria-label="Xem chi tiết học sinh <%= hocSinh.hoc_sinh_id %>"
+                                        onclick="viewDetails('<%= hocSinh.hoc_sinh_id %>')">
+                                        <i class="fas fa-eye mr-1"></i> Xem chi tiết
+                                    </button>
+                                    <% if(taiKhoan.ten_vai_tro==="Admin" ) { %>
+                                        <!-- SỬA -->
+                                        <button
+                                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
+                                            aria-label="Sửa học sinh 1" data-id="<%= hocSinh.hoc_sinh_id %>"
+                                            data-ho_ten="<%= hocSinh.ho_ten %>"
+                                            data-ngay_sinh="<%= formatDate(hocSinh.ngay_sinh) %>"
+                                            data-gioi_tinh="<%= hocSinh.gioi_tinh %>"
+                                            data-dia_chi="<%= hocSinh.dia_chi %>"
+                                            data-loai_hoc_sinh="<%= hocSinh.loai_hoc_sinh %>"
+                                            data-duong_dan_anh='<%- JSON.stringify(hocSinh.duong_dan_anh || []) %>'
+                                            data-phu_huynh='<%= JSON.stringify(hocSinh.phu_huynh || []) %>'
+                                            onclick="editStudent(this)">
+                                            <i class="fas fa-edit mr-1"></i> Sửa
+                                        </button>
+                                        <!-- XÓA -->
+                                        <form action="/hoc-sinh/xoa/<%= hocSinh.hoc_sinh_id %>" method="post"
+                                            class="inline-flex items-center"
+                                            onsubmit="return confirm('Bạn có chắc chắn muốn xóa học sinh này?');">
+                                            <button
+                                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300 transition-colors"
+                                                aria-label="Xóa học sinh 1">
+                                                <i class="fas fa-trash-alt mr-1"></i> Xóa
+                                            </button>
+                                        </form>
+
+                                        <% } %>
+                                </td>
                             </tr>
+                            <% }); %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="7" class="py-2 px-4 border-b text-center">Không có học sinh</td>
+                                    </tr>
+                                    <% } %>
+                </tbody>
+            </table>
+
+            <!-- Modal thêm học sinh -->
+            <div id="addModal"
+                class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-60 hidden p-2">
+                <div class="bg-white rounded-xl p-5 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-auto font-sans">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Thêm học sinh</h2>
+                    <form id="addStudentForm" method="post" action="/hoc-sinh/them" enctype="multipart/form-data">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="col-span-2">
+                                <label for="fullName" class="block text-sm font-medium text-gray-700">Họ tên</label>
+                                <input type="text" id="fullName" name="ho_ten" pattern="^[a-zA-ZÀ-ỹ\s]+$"
+                                    title="Họ tên chỉ được chứa chữ cái và khoảng trắng"
+                                    class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50" />
+                            </div>
+                            <div>
+                                <label for="dob" class="block text-sm font-medium text-gray-700">Ngày sinh</label>
+                                <input type="date" id="dob" name="ngay_sinh"
+                                    class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50" />
+                            </div>
+                            <div>
+                                <label for="gender" class="block text-sm font-medium text-gray-700">Giới tính</label>
+                                <select id="gender" name="gioi_tinh"
+                                    class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50">
+                                    <option value="" disabled selected>Chọn</option>
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="studentType" class="block text-sm font-medium text-gray-700">Loại học
+                                    sinh</label>
+                                <select id="studentType" name="loai_hoc_sinh"
+                                    class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50">
+                                    <option value="" disabled selected>Chọn</option>
+                                    <option value="Bán trú">Bán trú</option>
+                                    <option value="Không bán trú">Không bán trú</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2">
+                                <label for="address" class="block text-sm font-medium text-gray-700">Địa chỉ</label>
+                                <input type="text" id="address" name="dia_chi"
+                                    class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50" />
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Chọn phụ huynh và mối quan
+                                    hệ (ít
+                                    nhất 1 phụ huynh)</label>
+                                <div id="phuHuynhContainer"
+                                    class="grid grid-cols-1 gap-2 max-h-60 overflow-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+                                    <% danhSachPhuHuynh.forEach(function(p) { %>
+                                        <div class="flex items-center gap-3">
+                                            <input type="checkbox"
+                                                class="ph-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-400"
+                                                value="<%= p.phu_huynh_id %>" />
+                                            <span>
+                                                <%= p.ho_ten %> - <%= p.email %>
+                                            </span>
+                                            <select disabled
+                                                class="ml-auto ph-select border border-gray-200 rounded px-2 py-1 text-sm bg-white text-gray-700">
+                                                <option value="" selected disabled>-- Mối quan hệ --</option>
+                                                <option value="Cha">Cha</option>
+                                                <option value="Mẹ">Mẹ</option>
+                                                <option value="Người giám hộ">Người giám hộ</option>
+                                            </select>
+                                        </div>
+                                        <% }) %>
+                                </div>
+                            </div>
+                            <!-- HÌNH ẢNH -->
+                            <div class="col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Ảnh học sinh (chọn đúng 3 ảnh)
+                                </label>
+                                <div class="relative w-fit mb-2">
+                                    <input type="file" id="duong_dan_anh" name="duong_dan_anh[]" multiple
+                                        accept="image/jpeg,image/png,image/jpg"
+                                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                        onchange="previewMultipleImages(this, document.getElementById('previewContainer'))" />
+                                    <div
+                                        class="image-placeholder w-48 h-20 flex flex-col items-center justify-center border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors text-center relative z-0">
+                                        <span class="text-xs text-gray-500">Chọn tối đa 3 ảnh</span>
+                                    </div>
+                                </div>
+                                <!-- Vùng hiển thị preview ảnh -->
+                                <div id="previewContainer" class="flex gap-4 flex-wrap mt-2"></div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end mt-4 gap-2">
+                            <button type="button" onclick="toggleAddModal()"
+                                class="bg-gray-200 text-gray-700 px-4 py-1.5 rounded-lg hover:bg-gray-300 transition-colors duration-200">Hủy</button>
+                            <button type="submit"
+                                class="bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-4 py-1.5 rounded-lg hover:from-indigo-600 hover:to-blue-600 transition-colors duration-200">Thêm</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal Sửa thông tin học sinh -->
+            <div id="editModal"
+                class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-60 hidden p-2">
+                <div class="bg-white rounded-xl p-5 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-auto font-sans">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Sửa thông tin học sinh</h2>
+                    <form id="editStudentForm" method="post" action="/hoc-sinh/sua/" enctype="multipart/form-data">
+                        <input type="hidden" id="studentId_edit" name="hoc_sinh_id" />
+                        <input type="hidden" id="removed_images" name="removed_images">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="col-span-2">
+                                <label for="fullName_edit" class="block text-sm font-medium text-gray-700">Họ
+                                    tên</label>
+                                <input type="text" id="fullName_edit" name="ho_ten" pattern="^[a-zA-ZÀ-ỹ\s]+$"
+                                    title="Họ tên chỉ được chứa chữ cái và khoảng trắng"
+                                    class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50" />
+                            </div>
+                            <div>
+                                <label for="dob_edit" class="block text-sm font-medium text-gray-700">Ngày sinh</label>
+                                <input type="date" id="dob_edit" name="ngay_sinh"
+                                    class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50" />
+                            </div>
+                            <div>
+                                <label for="gender_edit" class="block text-sm font-medium text-gray-700">Giới
+                                    tính</label>
+                                <select id="gender_edit" name="gioi_tinh"
+                                    class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50">
+                                    <option value="" disabled>Chọn</option>
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="studentType_edit" class="block text-sm font-medium text-gray-700">Loại học
+                                    sinh</label>
+                                <select id="studentType_edit" name="loai_hoc_sinh"
+                                    class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50">
+                                    <option value="" disabled>Chọn</option>
+                                    <option value="Bán trú">Bán trú</option>
+                                    <option value="Không bán trú">Không bán trú</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2">
+                                <label for="address_edit" class="block text-sm font-medium text-gray-700">Địa
+                                    chỉ</label>
+                                <input type="text" id="address_edit" name="dia_chi"
+                                    class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50" />
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Chọn phụ huynh và mối quan
+                                    hệ (ít
+                                    nhất 1 phụ huynh)</label>
+                                <div id="phuHuynhContainer"
+                                    class="grid grid-cols-1 gap-2 max-h-60 overflow-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+                                    <% danhSachPhuHuynh.forEach(function(p) { %>
+                                        <div class="flex items-center gap-3">
+                                            <input type="checkbox"
+                                                class="ph-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-400"
+                                                value="<%= p.phu_huynh_id %>" />
+                                            <span>
+                                                <%= p.ho_ten %> - <%= p.email %>
+                                            </span>
+                                            <select disabled
+                                                class="ml-auto ph-select border border-gray-200 rounded px-2 py-1 text-sm bg-white text-gray-700">
+                                                <option value="" selected disabled>-- Mối quan hệ --</option>
+                                                <option value="Cha">Cha</option>
+                                                <option value="Mẹ">Mẹ</option>
+                                                <option value="Người giám hộ">Người giám hộ</option>
+                                            </select>
+                                        </div>
+                                        <% }) %>
+                                </div>
+                            </div>
+                            <!-- HÌNH ẢNH -->
+                            <div class="col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Ảnh học sinh (chọn đúng 3 ảnh)
+                                </label>
+                                <div class="relative w-fit mb-2">
+                                    <input type="file" id="duong_dan_anh_edit" name="duong_dan_anh[]" multiple
+                                        accept="image/jpeg,image/png,image/jpg"
+                                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                        onchange="previewMultipleImages(this, document.getElementById('previewContainerEdit'))" />
+                                    <div
+                                        class="image-placeholder w-48 h-20 flex flex-col items-center justify-center border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors text-center relative z-0">
+                                        <span class="text-xs text-gray-500">Chọn tối đa 3 ảnh</span>
+                                    </div>
+                                </div>
+                                <!-- Vùng hiển thị preview ảnh -->
+                                <div id="previewContainerEdit" class="flex gap-4 flex-wrap mt-2"></div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end mt-4 gap-2">
+                            <button type="button" onclick="toggleEditModal()"
+                                class="bg-gray-200 text-gray-700 px-4 py-1.5 rounded-lg hover:bg-gray-300 transition-colors duration-200">Hủy</button>
+                            <button type="submit"
+                                class="bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-4 py-1.5 rounded-lg hover:from-indigo-600 hover:to-blue-600 transition-colors duration-200">Lưu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal Xem chi tiết học sinh -->
+            <div id="detailModal"
+                class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-60 hidden p-2">
+                <div class="bg-white rounded-xl p-5 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-auto font-sans">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Chi tiết học sinh</h2>
+
+                    <!-- Tab buttons -->
+                    <div class="tab-buttons mb-4">
+                        <button class="tab-button active" onclick="showTab('studentInfo')">Thông tin học sinh</button>
+                        <button class="tab-button" onclick="showTab('parentInfo')">Thông tin phụ huynh</button>
+                    </div>
+
+                    <!-- Tab panes -->
+                    <div id="studentInfo" class="tab-pane active">
+                        <div id="studentDetails" class="space-y-4">
+                            <div class="flex justify-between">
+                                <strong>Họ tên:</strong> <span id="studentFullName" class="text-gray-600"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <strong>Ngày sinh:</strong> <span id="studentDOB" class="text-gray-600"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <strong>Giới tính:</strong> <span id="studentGender" class="text-gray-600"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <strong>Địa chỉ:</strong> <span id="studentAddress" class="text-gray-600"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <strong>Lớp học:</strong> <span id="studentClassList" class="text-gray-600"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <strong>Loại học sinh:</strong> <span id="studentType_view"
+                                    class="text-gray-600"></span>
+                            </div>
+                            <div class="flex flex-col">
+                                <strong>Ảnh học sinh:</strong>
+                                <div id="studentImages" class="flex gap-2 flex-wrap mt-2"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="parentInfo" class="tab-pane">
+                        <div id="parentDetails" class="space-y-4"></div>
+                    </div>
+
+                    <div class="flex justify-end mt-4">
+                        <button type="button" onclick="toggleDetailModal()"
+                            class="bg-gray-200 text-gray-700 px-4 py-1.5 rounded-lg hover:bg-gray-300 transition-colors duration-200">Đóng</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phân trang -->
+            <div class="pagination-container">
+                <% if (currentPage> 1) { %>
+                    <a href="?page=<%= currentPage - 1 %>" class="pagination-button pagination-prev">Trang trước</a>
+                    <% } %>
+
+                        <span class="pagination-info">Trang <%= currentPage %>/<%= totalPages %></span>
+
+                        <% if (currentPage < totalPages) { %>
+                            <a href="?page=<%= currentPage + 1 %>" class="pagination-button pagination-next">Trang
+                                sau</a>
                             <% } %>
-        </tbody>
-    </table>
-
-    <!-- Modal thêm học sinh -->
-    <div id="addModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-60 hidden p-2">
-        <div class="bg-white rounded-xl p-5 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-auto font-sans">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Thêm học sinh</h2>
-            <form id="addStudentForm" method="post" action="/hoc-sinh/them" enctype="multipart/form-data">
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="col-span-2">
-                        <label for="fullName" class="block text-sm font-medium text-gray-700">Họ tên</label>
-                        <input type="text" id="fullName" name="ho_ten" pattern="^[a-zA-ZÀ-ỹ\s]+$"
-                            title="Họ tên chỉ được chứa chữ cái và khoảng trắng"
-                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50" />
-                    </div>
-                    <div>
-                        <label for="dob" class="block text-sm font-medium text-gray-700">Ngày sinh</label>
-                        <input type="date" id="dob" name="ngay_sinh"
-                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50" />
-                    </div>
-                    <div>
-                        <label for="gender" class="block text-sm font-medium text-gray-700">Giới tính</label>
-                        <select id="gender" name="gioi_tinh"
-                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50">
-                            <option value="" disabled selected>Chọn</option>
-                            <option value="Nam">Nam</option>
-                            <option value="Nữ">Nữ</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="studentType" class="block text-sm font-medium text-gray-700">Loại học sinh</label>
-                        <select id="studentType" name="loai_hoc_sinh"
-                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50">
-                            <option value="" disabled selected>Chọn</option>
-                            <option value="Bán trú">Bán trú</option>
-                            <option value="Không bán trú">Không bán trú</option>
-                        </select>
-                    </div>
-                    <div class="col-span-2">
-                        <label for="address" class="block text-sm font-medium text-gray-700">Địa chỉ</label>
-                        <input type="text" id="address" name="dia_chi"
-                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50" />
-                    </div>
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Chọn phụ huynh và mối quan hệ (ít
-                            nhất 1 phụ huynh)</label>
-                        <div id="phuHuynhContainer"
-                            class="grid grid-cols-1 gap-2 max-h-60 overflow-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
-                            <% danhSachPhuHuynh.forEach(function(p) { %>
-                                <div class="flex items-center gap-3">
-                                    <input type="checkbox"
-                                        class="ph-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-400"
-                                        value="<%= p.phu_huynh_id %>" />
-                                    <span>
-                                        <%= p.ho_ten %> - <%= p.email %>
-                                    </span>
-                                    <select disabled
-                                        class="ml-auto ph-select border border-gray-200 rounded px-2 py-1 text-sm bg-white text-gray-700">
-                                        <option value="" selected disabled>-- Mối quan hệ --</option>
-                                        <option value="Cha">Cha</option>
-                                        <option value="Mẹ">Mẹ</option>
-                                        <option value="Người giám hộ">Người giám hộ</option>
-                                    </select>
-                                </div>
-                                <% }) %>
-                        </div>
-                    </div>
-                    <!-- HÌNH ẢNH -->
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Ảnh học sinh (chọn đúng 3 ảnh)
-                        </label>
-                        <div class="relative w-fit mb-2">
-                            <input type="file" id="duong_dan_anh" name="duong_dan_anh[]" multiple
-                                accept="image/jpeg,image/png,image/jpg"
-                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                onchange="previewMultipleImages(this)" />
-                            <div
-                                class="image-placeholder w-48 h-20 flex flex-col items-center justify-center border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors text-center relative z-0">
-                                <span class="text-xs text-gray-500">Chọn tối đa 3 ảnh</span>
-                            </div>
-                        </div>
-                        <!-- Vùng hiển thị preview ảnh -->
-                        <div id="previewContainer" class="flex gap-4 flex-wrap mt-2"></div>
-                    </div>
-                </div>
-                <div class="flex justify-end mt-4 gap-2">
-                    <button type="button" onclick="toggleAddModal()"
-                        class="bg-gray-200 text-gray-700 px-4 py-1.5 rounded-lg hover:bg-gray-300 transition-colors duration-200">Hủy</button>
-                    <button type="submit"
-                        class="bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-4 py-1.5 rounded-lg hover:from-indigo-600 hover:to-blue-600 transition-colors duration-200">Thêm</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Sửa thông tin học sinh -->
-    <div id="editModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-60 hidden p-2">
-        <div class="bg-white rounded-xl p-5 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-auto font-sans">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Sửa thông tin học sinh</h2>
-            <form id="editStudentForm" method="post" action="/hoc-sinh/sua/" enctype="multipart/form-data">
-                <input type="hidden" id="studentId_edit" name="hoc_sinh_id" />
-                <input type="hidden" id="removed_images" name="removed_images">
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="col-span-2">
-                        <label for="fullName_edit" class="block text-sm font-medium text-gray-700">Họ tên</label>
-                        <input type="text" id="fullName_edit" name="ho_ten" pattern="^[a-zA-ZÀ-ỹ\s]+$"
-                            title="Họ tên chỉ được chứa chữ cái và khoảng trắng"
-                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50" />
-                    </div>
-                    <div>
-                        <label for="dob_edit" class="block text-sm font-medium text-gray-700">Ngày sinh</label>
-                        <input type="date" id="dob_edit" name="ngay_sinh"
-                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50" />
-                    </div>
-                    <div>
-                        <label for="gender_edit" class="block text-sm font-medium text-gray-700">Giới tính</label>
-                        <select id="gender_edit" name="gioi_tinh"
-                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50">
-                            <option value="" disabled>Chọn</option>
-                            <option value="Nam">Nam</option>
-                            <option value="Nữ">Nữ</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="studentType_edit" class="block text-sm font-medium text-gray-700">Loại học
-                            sinh</label>
-                        <select id="studentType_edit" name="loai_hoc_sinh"
-                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50">
-                            <option value="" disabled>Chọn</option>
-                            <option value="Bán trú">Bán trú</option>
-                            <option value="Không bán trú">Không bán trú</option>
-                        </select>
-                    </div>
-                    <div class="col-span-2">
-                        <label for="address_edit" class="block text-sm font-medium text-gray-700">Địa chỉ</label>
-                        <input type="text" id="address_edit" name="dia_chi"
-                            class="border border-gray-200 rounded-lg px-3 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors bg-gray-50" />
-                    </div>
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Chọn phụ huynh và mối quan hệ (ít
-                            nhất 1 phụ huynh)</label>
-                        <div id="phuHuynhContainer"
-                            class="grid grid-cols-1 gap-2 max-h-60 overflow-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
-                            <% danhSachPhuHuynh.forEach(function(p) { %>
-                                <div class="flex items-center gap-3">
-                                    <input type="checkbox"
-                                        class="ph-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-400"
-                                        value="<%= p.phu_huynh_id %>" />
-                                    <span>
-                                        <%= p.ho_ten %> - <%= p.email %>
-                                    </span>
-                                    <select disabled
-                                        class="ml-auto ph-select border border-gray-200 rounded px-2 py-1 text-sm bg-white text-gray-700">
-                                        <option value="" selected disabled>-- Mối quan hệ --</option>
-                                        <option value="Cha">Cha</option>
-                                        <option value="Mẹ">Mẹ</option>
-                                        <option value="Người giám hộ">Người giám hộ</option>
-                                    </select>
-                                </div>
-                                <% }) %>
-                        </div>
-                    </div>
-                    <!-- HÌNH ẢNH -->
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Ảnh học sinh (chọn đúng 3 ảnh)
-                        </label>
-                        <div class="relative w-fit mb-2">
-                            <input type="file" id="duong_dan_anh_edit" name="duong_dan_anh[]" multiple
-                                accept="image/jpeg,image/png,image/jpg"
-                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                onchange="previewMultipleImages(this, document.getElementById('previewContainerEdit'))" />
-                            <div
-                                class="image-placeholder w-48 h-20 flex flex-col items-center justify-center border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors text-center relative z-0">
-                                <span class="text-xs text-gray-500">Chọn tối đa 3 ảnh</span>
-                            </div>
-                        </div>
-                        <!-- Vùng hiển thị preview ảnh -->
-                        <div id="previewContainerEdit" class="flex gap-4 flex-wrap mt-2"></div>
-                    </div>
-                </div>
-                <div class="flex justify-end mt-4 gap-2">
-                    <button type="button" onclick="toggleEditModal()"
-                        class="bg-gray-200 text-gray-700 px-4 py-1.5 rounded-lg hover:bg-gray-300 transition-colors duration-200">Hủy</button>
-                    <button type="submit"
-                        class="bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-4 py-1.5 rounded-lg hover:from-indigo-600 hover:to-blue-600 transition-colors duration-200">Lưu</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Xem chi tiết học sinh -->
-    <div id="detailModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-60 hidden p-2">
-        <div class="bg-white rounded-xl p-5 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-auto font-sans">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Chi tiết học sinh</h2>
-
-            <!-- Tab buttons -->
-            <div class="tab-buttons mb-4">
-                <button class="tab-button active" onclick="showTab('studentInfo')">Thông tin học sinh</button>
-                <button class="tab-button" onclick="showTab('parentInfo')">Thông tin phụ huynh</button>
             </div>
-
-            <!-- Tab panes -->
-            <div id="studentInfo" class="tab-pane active">
-                <div id="studentDetails" class="space-y-4">
-                    <div class="flex justify-between">
-                        <strong>Họ tên:</strong> <span id="studentFullName" class="text-gray-600"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <strong>Ngày sinh:</strong> <span id="studentDOB" class="text-gray-600"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <strong>Giới tính:</strong> <span id="studentGender" class="text-gray-600"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <strong>Địa chỉ:</strong> <span id="studentAddress" class="text-gray-600"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <strong>Loại học sinh:</strong> <span id="studentType_view" class="text-gray-600"></span>
-                    </div>
-                    <div class="flex flex-col">
-                        <strong>Ảnh học sinh:</strong>
-                        <div id="studentImages" class="flex gap-2 flex-wrap mt-2"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="parentInfo" class="tab-pane">
-                <div id="parentDetails" class="space-y-4"></div>
-            </div>
-
-            <div class="flex justify-end mt-4">
-                <button type="button" onclick="toggleDetailModal()"
-                    class="bg-gray-200 text-gray-700 px-4 py-1.5 rounded-lg hover:bg-gray-300 transition-colors duration-200">Đóng</button>
-            </div>
-        </div>
-    </div>
-
-
 
 
 
@@ -533,33 +520,7 @@
     },
         <% }) %>
     ];
-        function previewMultipleImages(input) {
-        const previewContainer = document.getElementById('previewContainer');
-        previewContainer.innerHTML = ''; // Xóa các ảnh cũ
-
-        const files = input.files;
-        if (!files || files.length === 0) return;
-
-        if (files.length > 3) {
-            alert("Chỉ được chọn tối đa 3 ảnh!");
-            input.value = ''; // Reset input nếu vượt quá
-            return;
-        }
-
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const reader = new FileReader();
-
-            reader.onload = function (e) {
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                img.className = "w-32 h-32 object-cover rounded border";
-                previewContainer.appendChild(img);
-            };
-
-            reader.readAsDataURL(file);
-        }
-    }
+        
     
     function toggleAddModal() {
         const modal = document.getElementById('addModal');
@@ -611,51 +572,6 @@
         });
     }
 
-    // Hàm xem trước ảnh mới + nút xóa
-    function previewMultipleImages(input, previewContainer) {
-        previewContainer.innerHTML = ''; // Xóa các ảnh cũ
-
-        const files = input.files;
-        if (!files || files.length === 0) return;
-
-        if (files.length > 3) {
-            alert("Chỉ được chọn tối đa 3 ảnh!");
-            input.value = ''; // Reset input nếu vượt quá
-            return;
-        }
-
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const reader = new FileReader();
-
-            reader.onload = function (e) {
-                const imgDiv = document.createElement('div');
-                imgDiv.className = 'relative';
-                imgDiv.innerHTML = `
-                    <img src="${e.target.result}" class="w-20 h-20 object-cover rounded-lg" alt="Ảnh mới" />
-                    <button type="button" class="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs" onclick="removeImage(this)">×</button>
-                `;
-                previewContainer.appendChild(imgDiv);
-            };
-
-            reader.readAsDataURL(file);
-        }
-    }
-
-    // Hàm xóa ảnh
-    function removeImage(button) {
-        const imgDiv = button.parentElement;
-        const imgSrc = imgDiv.querySelector('img').src;
-        const removedImagesInput = document.getElementById('removed_images');
-        let removedImages = removedImagesInput.value ? JSON.parse(removedImagesInput.value) : [];
-
-        // Extract the image path
-        const relativeSrc = imgSrc.replace(window.location.origin, '');
-        removedImages.push(relativeSrc);
-        removedImagesInput.value = JSON.stringify(removedImages);
-
-        imgDiv.remove();
-    }
 
     // Bật/tắt modal sửa
     function toggleEditModal() {
@@ -845,6 +761,21 @@
                         parentDetails.innerHTML += parentHTML;
                     });
 
+                    // Hiển thị lớp học
+                    const classList = document.getElementById('studentClassList');
+                    classList.innerHTML = '';
+
+                    if (Array.isArray(hocSinh.lop_hoc) && hocSinh.lop_hoc.length > 0) {
+                        hocSinh.lop_hoc.forEach(lh => {
+                            const span = document.createElement('span');
+                            span.textContent = lh.ten_lop;
+                            classList.appendChild(span);
+                        });
+                    } else {
+                        classList.textContent = 'Chưa có thông tin lớp học';
+                    }
+
+
                     toggleDetailModal();
                 } else {
                     alert(data.message);
@@ -940,6 +871,55 @@
             console.error('Lỗi khi tải lên:', error);
         }
     }
+</script>
+<!-- XEM TRƯỚC ẢNH -->
+<script>
+    // Hàm xem trước ảnh mới + nút xóa
+    function previewMultipleImages(input, previewContainer) {
+        previewContainer.innerHTML = ''; // Xóa các ảnh cũ
+
+        const files = input.files;
+        if (!files || files.length === 0) return;
+
+        if (files.length > 3) {
+            alert("Chỉ được chọn tối đa 3 ảnh!");
+            input.value = ''; // Reset input nếu vượt quá
+            return;
+        }
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const imgDiv = document.createElement('div');
+                imgDiv.className = 'relative';
+                imgDiv.innerHTML = `
+                    <img src="${e.target.result}" class="w-20 h-20 object-cover rounded-lg" alt="Ảnh mới" />
+                    <button type="button" class="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs" onclick="removeImage(this)">×</button>
+                `;
+                previewContainer.appendChild(imgDiv);
+            };
+
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Hàm xóa ảnh
+    function removeImage(button) {
+        const imgDiv = button.parentElement;
+        const imgSrc = imgDiv.querySelector('img').src;
+        const removedImagesInput = document.getElementById('removed_images');
+        let removedImages = removedImagesInput.value ? JSON.parse(removedImagesInput.value) : [];
+
+        // Extract the image path
+        const relativeSrc = imgSrc.replace(window.location.origin, '');
+        removedImages.push(relativeSrc);
+        removedImagesInput.value = JSON.stringify(removedImages);
+
+        imgDiv.remove();
+    }
+
 </script>
 <!-- FORMAT DATE -->
 <% function formatDate(dateStr) { if (!dateStr) return '' ; const d=new Date(dateStr); const

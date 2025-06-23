@@ -12,11 +12,13 @@
                 </button>
             </form>
         </div>
-        <!-- THÊM -->
-        <button onclick="toggleAddModal()"
-            class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors shadow-md focus:outline-none focus:ring focus:ring-blue-400 flex items-center gap-2">
-            <i class="fas fa-plus"></i> Thêm lớp học
-        </button>
+        <% if(taiKhoan.ten_vai_tro=="Admin" ) { %>
+            <!-- THÊM -->
+            <button onclick="toggleAddModal()"
+                class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors shadow-md focus:outline-none focus:ring focus:ring-blue-400 flex items-center gap-2">
+                <i class="fas fa-plus"></i> Thêm lớp học
+            </button>
+            <% } %>
     </div>
 
     <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
@@ -54,29 +56,31 @@
                             <%= lopHoc.ten_nam_hoc %>
                         </td>
                         <td class="py-2 px-4 border-b text-center">
-                            <!-- THÊM HỌC SINH VÀO LỚP -->
-                            <button data-id="<%= lopHoc.lop_hoc_id %>" onclick="moModalThemHocSinh(this)"
-                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 focus:outline-none focus:ring focus:ring-green-300 mr-2 transition-colors"
-                                aria-label="Thêm học sinh vào lớp <%= lopHoc.ten_lop %>">
-                                <i class="fas fa-user-plus mr-1"></i> Thêm học sinh
-                            </button>
-                            <!-- SỬA -->
-                            <button data-id="<%= lopHoc.lop_hoc_id %>" data-ten_lop="<%= lopHoc.ten_lop %>"
-                                data-giao_vien_id="<%= lopHoc.giao_vien_id %>" data-hoc_ky_id="<%= lopHoc.hoc_ky_id %>"
-                                onclick="toggleEditModal(this)"
-                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
-                                aria-label="Sửa lớp học <%= lopHoc.lop_hoc_id %>">
-                                <i class="fas fa-edit mr-1"></i> Sửa
-                            </button>
-                            <!-- XÓA -->
-                            <form action="/lop-hoc/xoa/<%= lopHoc.lop_hoc_id %>" method="post" class="inline-flex"
-                                onsubmit="return confirm('Bạn có chắc chắn muốn xóa lớp học này không?')">
-                                <button
-                                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300 transition-colors"
-                                    aria-label="Xóa lớp học 1">
-                                    <i class="fas fa-trash-alt mr-1"></i> Xóa
+                            <% if(taiKhoan.ten_vai_tro=="Admin" ) { %>
+                                <!-- THÊM HỌC SINH VÀO LỚP -->
+                                <button data-id="<%= lopHoc.lop_hoc_id %>" onclick="moModalThemHocSinh(this)"
+                                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 focus:outline-none focus:ring focus:ring-green-300 mr-2 transition-colors"
+                                    aria-label="Thêm học sinh vào lớp <%= lopHoc.ten_lop %>">
+                                    <i class="fas fa-user-plus mr-1"></i> Thêm học sinh
                                 </button>
-                            </form>
+                                <!-- SỬA -->
+                                <button data-id="<%= lopHoc.lop_hoc_id %>" data-ten_lop="<%= lopHoc.ten_lop %>"
+                                    data-giao_vien_id="<%= lopHoc.giao_vien_id %>"
+                                    data-hoc_ky_id="<%= lopHoc.hoc_ky_id %>" onclick="toggleEditModal(this)"
+                                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring focus:ring-blue-300 mr-2 transition-colors"
+                                    aria-label="Sửa lớp học <%= lopHoc.lop_hoc_id %>">
+                                    <i class="fas fa-edit mr-1"></i> Sửa
+                                </button>
+                                <!-- XÓA -->
+                                <form action="/lop-hoc/xoa/<%= lopHoc.lop_hoc_id %>" method="post" class="inline-flex"
+                                    onsubmit="return confirm('Bạn có chắc chắn muốn xóa lớp học này không?')">
+                                    <button
+                                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring focus:ring-red-300 transition-colors"
+                                        aria-label="Xóa lớp học 1">
+                                        <i class="fas fa-trash-alt mr-1"></i> Xóa
+                                    </button>
+                                </form>
+                            <% } %>
                         </td>
                     </tr>
                     <% }); %>

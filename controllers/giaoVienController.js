@@ -19,7 +19,7 @@ class GiaoVienController {
                     messageType: 'error'
                 })
             }
-        }else if(req.taiKhoan.ten_vai_tro === 'Phụ huynh' || req.taiKhoan.ten_vai_tro === 'Hiệu trưởng'){
+        } else if (req.taiKhoan.ten_vai_tro === 'Phụ huynh' || req.taiKhoan.ten_vai_tro === 'Hiệu trưởng') {
             try {
                 const danhSachGiaoVien = await giaoVienModel.layDanhSachGiaoVien();
                 return res.render('user_index', {
@@ -37,13 +37,14 @@ class GiaoVienController {
                     messageType: 'error'
                 })
             }
-        }else{
+        } else {
             console.log('Không có quyền truy cập');
             return res.redirect('/');
         }
     }
     static async chiTietGiaoVien(req, res) {
         const { id } = req.params;
+        const tenVaiTroNguoiXem = req.taiKhoan?.ten_vai_tro || '';
         try {
             const giaoVien = await giaoVienModel.thongTinChiTietGiaoVien(id);
             if (!giaoVien) {
@@ -51,6 +52,16 @@ class GiaoVienController {
             }
             const anhDaiDien = giaoVien.anh_dai_dien || 'default_avatar.jpg';
             giaoVien.anh_dai_dien = `/images/${anhDaiDien}`;
+
+            // Nếu người xem không phải Admin thì làm mờ số CMND
+            if (tenVaiTroNguoiXem !== 'Admin') {
+                if (giaoVien.so_cmnd) {
+                    giaoVien.so_cmnd = '*'.repeat(giaoVien.so_cmnd.length);
+                } else {
+                    giaoVien.so_cmnd = '';
+                }
+            }
+
             res.json(giaoVien);
         } catch (error) {
             console.error(error);

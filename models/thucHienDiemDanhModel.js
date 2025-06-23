@@ -45,22 +45,39 @@ class thucHienDiemDanhModel {
         const [rows] = await pool.query(query);
         return rows;
     }
-    static async layDanhSachLopHoc(){
-        const conn = await pool.getConnection();
-        try{
-            const [rows] = await conn.query(`SELECT DISTINCT ten_lop
-            FROM lop_hoc 
-            JOIN giao_vien ON lop_hoc.giao_vien_id = giao_vien.giao_vien_id
-            WHERE daXoa = 0`);
-            return rows;
-        }
-        catch(error){
-            console.log(error);
-        }
-        finally{
-            if(conn) conn.release();
+    static async layDanhSachLopHoc(tai_khoan_id) {
+        try {
+            // Lấy giao_vien_id từ tài_khoan_id
+            const [gvRows] = await pool.query(
+                'SELECT giao_vien_id FROM giao_vien WHERE tai_khoan_id = ?',
+                [tai_khoan_id]
+            );
+
+            if (gvRows.length === 0) return [];
+
+            const giao_vien_id = gvRows[0].giao_vien_id;
+
+            // Lấy danh sách lớp giáo viên chủ nhiệm trong học kỳ hiện tại
+            const [lopRows] = await pool.query(
+                `SELECT lop_hoc_id, ten_lop, ten_hoc_ky, ten_nam_hoc 
+             FROM lop_hoc 
+             JOIN hoc_ky ON lop_hoc.hoc_ky_id = hoc_ky.hoc_ky_id
+             JOIN nam_hoc ON hoc_ky.nam_hoc_id = nam_hoc.nam_hoc_id
+             WHERE lop_hoc.daXoa = 0 
+               AND giao_vien_id = ?
+               AND hoc_ky.ngay_bat_dau <= CURDATE()
+               AND hoc_ky.ngay_ket_thuc >= CURDATE()`,
+                [giao_vien_id]
+            );
+
+            return lopRows;
+        } catch (error) {
+            console.error('Lỗi lấy danh sách lớp học:', error);
+            return [];
         }
     }
+
+
     static async diemDanhThuCong() {
         const conn = await pool.getConnection();
         try {
