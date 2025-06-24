@@ -1,18 +1,6 @@
 const pool = require('../config/connect_database');
 
 class thucHienDiemDanhModel {
-    static async layDanhSachHocSinh(buoi) {
-        let query = 'SELECT * FROM hoc_sinh JOIN diem_danh ON hoc_sinh.hoc_sinh_id = diem_danh.hoc_sinh_id';
-
-        // Nếu là buổi chiều thì chỉ lấy học sinh không bán trú
-        if (buoi === 'afternoon') {
-            query += ' WHERE loai_hoc_sinh = "Không bán trú" AND daXoa = 0';
-        }
-
-        const [rows] = await pool.query(query);
-        return rows;
-    }
-
     static async layTongLopHoc(buoi) {
         let query = 'SELECT COUNT(*) as tong FROM hoc_sinh';
 
@@ -23,7 +11,6 @@ class thucHienDiemDanhModel {
         const [rows] = await pool.query(query);
         return rows;
     }
-
     static async layTongCoMat(buoi) {
         let query = 'SELECT COUNT(*) as tong FROM diem_danh WHERE trang_thai = "Có mặt"';
 
@@ -34,7 +21,6 @@ class thucHienDiemDanhModel {
         const [rows] = await pool.query(query);
         return rows;
     }
-
     static async layTongVang(buoi) {
         let query = 'SELECT COUNT(*) as tong FROM diem_danh WHERE trang_thai = "Vắng"';
 
@@ -58,17 +44,15 @@ class thucHienDiemDanhModel {
             const giao_vien_id = gvRows[0].giao_vien_id;
 
             // Lấy danh sách lớp giáo viên chủ nhiệm trong học kỳ hiện tại
-            const [lopRows] = await pool.query(
-                `SELECT lop_hoc_id, ten_lop, ten_hoc_ky, ten_nam_hoc 
-             FROM lop_hoc 
-             JOIN hoc_ky ON lop_hoc.hoc_ky_id = hoc_ky.hoc_ky_id
-             JOIN nam_hoc ON hoc_ky.nam_hoc_id = nam_hoc.nam_hoc_id
-             WHERE lop_hoc.daXoa = 0 
-               AND giao_vien_id = ?
-               AND hoc_ky.ngay_bat_dau <= CURDATE()
-               AND hoc_ky.ngay_ket_thuc >= CURDATE()`,
-                [giao_vien_id]
-            );
+            const [lopRows] = await pool.query(`
+                SELECT lop_hoc_id, ten_lop, ten_hoc_ky, ten_nam_hoc, hoc_ky.ngay_bat_dau, hoc_ky.ngay_ket_thuc
+                FROM lop_hoc 
+                JOIN hoc_ky ON lop_hoc.hoc_ky_id = hoc_ky.hoc_ky_id
+                JOIN nam_hoc ON hoc_ky.nam_hoc_id = nam_hoc.nam_hoc_id
+                WHERE lop_hoc.daXoa = 0 
+                AND giao_vien_id = ?
+                ORDER BY hoc_ky.ngay_bat_dau DESC, ten_lop ASC
+            `, [giao_vien_id]);
 
             return lopRows;
         } catch (error) {
@@ -76,23 +60,53 @@ class thucHienDiemDanhModel {
             return [];
         }
     }
-
-
-    static async diemDanhThuCong() {
+    static async layDanhSachDiemDanh(lop_hoc_id, ngay_diem_danh, buoi) {
         const conn = await pool.getConnection();
         try {
-            await conn.beginTransaction();
-            // Kiểm tra học sinh thuộc bán trú & không bán trú -> đang điểm danh buổi sáng (nếu tồn tại điểm danh rồi thì update chưa thì insert)
-            // Kiểm tra học sinh bán trú và điểm danh buổi chiều (Không được điểm danh)
-            // Kiểm tra chỉ học sinh không bán trú -> điểm danh buổi chiều (nếu tồn tại điểm danh rồi thì update chưa thì insert)
-        }
-        catch (error) {
-            console.log(error);
-        }
-        finally {
+            let query = `
+            SELECT 
+                hs.hoc_sinh_id,
+                hs.*,
+                ha.duong_dan_anh,
+                dd.trang_thai,
+                dd.ghi_chu,
+                dd.ngay_diem_danh
+            FROM hoc_sinh_lop_hoc hslh
+            JOIN hoc_sinh hs ON hslh.hoc_sinh_id = hs.hoc_sinh_id
+            LEFT JOIN (
+                SELECT hoc_sinh_id, duong_dan_anh
+                FROM hinh_anh_hoc_sinh
+                WHERE hinh_anh_hoc_sinh_id IN (
+                    SELECT MIN(hinh_anh_hoc_sinh_id) FROM hinh_anh_hoc_sinh GROUP BY hoc_sinh_id
+                )
+                ) ha ON hs.hoc_sinh_id = ha.hoc_sinh_id
+            LEFT JOIN diem_danh dd 
+                ON dd.hoc_sinh_id = hs.hoc_sinh_id 
+                AND dd.lop_hoc_id = ? 
+                AND dd.ngay_diem_danh = ?
+            WHERE hslh.lop_hoc_id = ?
+              AND hs.daXoa = 0
+        `;
+
+            const params = [lop_hoc_id, ngay_diem_danh, lop_hoc_id];
+
+            // Nếu là buổi chiều => lọc học sinh không bán trú
+            if (buoi === 'afternoon') {
+                query += ` AND hs.loai_hoc_sinh = 'Không bán trú'`;
+            }
+
+            query += ` ORDER BY hs.hoc_sinh_id ASC`;
+
+            const [rows] = await conn.query(query, params);
+            return rows;
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách điểm danh:', error);
+            return [];
+        } finally {
             if (conn) conn.release();
         }
     }
+
 }
 
 module.exports = thucHienDiemDanhModel;

@@ -1,42 +1,92 @@
-<!-- Content -->
+<style>
+    .custom-radio {
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #ccc;
+        outline: none;
+        cursor: pointer;
+        position: relative;
+        transition: border-color 0.3s;
+    }
+
+    .custom-radio:checked {
+        border-width: 6px;
+    }
+
+    .custom-radio.custom-radio-green {
+        border-color: #3ad597;
+    }
+
+    .custom-radio.custom-radio-green:checked {
+        border-color: #3ad597;
+        background-color: #3ad597;
+    }
+
+    .custom-radio.custom-radio-red {
+        border-color: #ff0000;
+    }
+
+    .custom-radio.custom-radio-red:checked {
+        border-color: #ff0000;
+        background-color: #ff0000;
+    }
+
+    .custom-radio:checked::after {
+        content: "✔";
+        color: white;
+        font-size: 12px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+</style>
 <section class="flex-1 overflow-auto p-4">
     <!-- Tabs -->
     <div class="border-b border-gray-200 mb-4">
         <nav class="flex space-x-4 text-sm font-semibold select-none">
-            <a href="?tab=morning"
+            <a href="?tab=morning&lop_hoc_id=<%= lop_hoc_id %>&ngay_diem_danh=<%= ngay_diem_danh %>"
                 class="<% if(activeTab !== 'afternoon') { %>border-b-2 border-[#3ad597] text-[#3ad597]<% } else { %>text-gray-400<% } %> pb-2">
                 Điểm danh buổi sáng
             </a>
-            <a href="?tab=afternoon"
+            <a href="?tab=afternoon&lop_hoc_id=<%= lop_hoc_id %>&ngay_diem_danh=<%= ngay_diem_danh %>"
                 class="<% if(activeTab === 'afternoon') { %>border-b-2 border-[#3ad597] text-[#3ad597]<% } else { %>text-gray-400<% } %> pb-2">
                 Điểm danh buổi chiều
             </a>
+
         </nav>
     </div>
-    <!-- Filters and buttons -->
-    <div class="flex flex-wrap items-center gap-2 border border-[#3ad597] rounded px-3 py-1 mb-4 select-none max-w-full"
-        style="max-width: 580px;">
+    <!-- LỌC -->
+    <form action="/thuc-hien-diem-danh" method="get">
+        <input type="hidden" name="tab" value="<%= activeTab %>">
+        <div class="flex flex-wrap items-center gap-2 border border-[#3ad597] rounded px-3 py-1 mb-4 select-none max-w-full"
+            style="max-width: 680px;">
 
-        <select name="lop_hoc_id" class="border border-gray-300 rounded px-2 py-1 text-sm">
-            <% danhSachLopHoc.forEach(lop=> { %>
-                <option value="<%= lop.lop_hoc_id %>" <% if (hocKyHienTai && lop.ten_hoc_ky===hocKyHienTai.ten_hoc_ky&&lop.ten_nam_hoc===hocKyHienTai.ten_nam_hoc) { %> selected <% } %>>
+            <select name="lop_hoc_id" id="lop_hoc_select" class="border border-gray-300 rounded px-2 py-1 text-sm">
+                <% danhSachLopHoc.forEach(lop=> { %>
+                    <option value="<%= lop.lop_hoc_id %>"
+                        data-bat-dau="<%= lop.ngay_bat_dau.toISOString().slice(0,10) %>"
+                        data-ket-thuc="<%= lop.ngay_ket_thuc.toISOString().slice(0,10) %>"
+                        <%=(lop.lop_hoc_id==lop_hoc_id) ? 'selected' : '' %>
+                        >
                         <%= lop.ten_lop %> - <%= lop.ten_hoc_ky %> - <%= lop.ten_nam_hoc %>
-                </option>
-                <% }) %>
-        </select>
+                    </option>
 
+                    <% }) %>
+            </select>
 
-        <!-- Ngày -->
-        <label for="datePicker" style="margin-left: 25px;">Ngày điểm danh</label>
-        <input 
-        type="date" 
-        id="datePicker" 
-        name="ngay_diem_danh"
-        class="text-sm text-[#475569] border border-gray-300 rounded px-2 py-1 cursor-pointer hover:bg-[#f0fdf4] transition-all duration-150"
-        />
+            <label for="datePicker" style="margin-left: 25px;">Ngày điểm danh</label>
+            <input type="date" id="datePicker" name="ngay_diem_danh" value="<%= ngay_diem_danh %>"
+                class="text-sm text-[#475569] border border-gray-300 rounded px-2 py-1 cursor-pointer hover:bg-[#f0fdf4] transition-all duration-150" />
 
-    </div>
-
+            <button type="submit" style="margin-left:15px ;"
+                class="bg-[#3ad597] text-white rounded px-4 py-1 text-sm hover:bg-[#32b57e] transition-colors duration-200">
+                Xem
+            </button>
+        </div>
+    </form>
 
     <!-- SỈ SÓ -->
     <div class="flex flex-wrap gap-2 mb-4 max-w-full">
@@ -74,19 +124,25 @@
         <table class="min-w-full border border-gray-200 rounded-md text-xs text-left" id="studentTable">
             <thead class="bg-white border-b border-gray-200 text-gray-600 select-none">
                 <tr>
-                    <th class="w-10 px-3 py-2 border-r border-gray-200 font-semibold">
+                    <th class="w-10 px-3 py-2 border-r border-gray-200 font-semibold text-center">
                         STT
                     </th>
                     <th class="min-w-[160px] px-3 py-2 border-r border-gray-200 font-semibold" style="width: 20cm;">
                         Họ tên
                     </th>
-                    <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
+                    <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold text-center">
                         Ngày sinh
                     </th>
-                    <th class="w-20 px-3 py-2 border-r border-gray-200 font-semibold cursor-pointer">
-                        Trạng thái
+                    <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold text-center">
+                        Ảnh học sinh
                     </th>
-                    <th class="w-32 px-3 py-2 font-semibold cursor-pointer">
+                    <th class="w-20 px-3 py-2 border-r border-gray-200 font-semibold cursor-pointer text-center">
+                        Có mặt
+                    </th>
+                    <th class="w-20 px-3 py-2 border-r border-gray-200 font-semibold cursor-pointer text-center">
+                        Vắng
+                    </th>
+                    <th class="w-32 px-3 py-2 font-semibold cursor-pointer text-center">
                         Ghi chú
                     </th>
                 </tr>
@@ -105,56 +161,65 @@
                     </th>
                     <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
                     </th>
+                    <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
+                    </th>
+                    <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
+                    </th>
                 </tr>
             </thead>
 
             <!-- HIỂN THỊ -->
             <tbody class="text-gray-600">
-                <% if(danhSachHocSinh && danhSachHocSinh.length> 0){ %>
-                    <% danhSachHocSinh.forEach((hocSinh, index)=> { %>
+                <% if(danhSachDiemDanh && danhSachDiemDanh.length> 0) { %>
+                    <% danhSachDiemDanh.forEach((diemdanh, index)=> { %>
                         <tr class="bg-white border-b border-gray-100 hover:bg-[#f8fafc]">
-                            <td class="px-3 py-2 border-r border-gray-200">
+                            <td class="px-3 py-2 border-r border-gray-200 text-center">
                                 <%= index + 1 %>
                             </td>
-                            <td class="px-3 py-2 border-r border-gray-200">
-                                <%= hocSinh.ho_ten %>
+                            <td class="px-3 py-2 border-r border-gray-200" name="ho_ten">
+                                <%= diemdanh.ho_ten %>
                             </td>
-                            <td class="px-3 py-2 border-r border-gray-200">
-                                <%= formatDate(hocSinh.ngay_sinh) %>
+                            <td class="px-3 py-2 border-r border-gray-200 text-center" name="ngay_sinh">
+                                <%= formatDate(diemdanh.ngay_sinh) %>
                             </td>
-                            <td class="px-3 py-2 border-r border-gray-200 text-center">
-                                <select class="border rounded px-2 py-1 text-sm 
-                                    <% if(hocSinh.trang_thai == 'Có mặt') { %> 
-                                    bg-green-100 text-green-800 
-                                    <% } else if(hocSinh.trang_thai == 'Vắng') { %> 
-                                    bg-red-100 text-red-800 
-                                    <% } else { %> 
-                                    bg-gray-100 text-gray-800 
-                                    <% } %>" name="trang_thai[<%= hocSinh.hoc_sinh_id %>]">
-                                    <option value="" selected disabled>-- Chọn trạng thái --</option>
-                                    <option value="Có mặt" <%=hocSinh.trang_thai=='Có mặt' ? 'selected' : '' %>>Có mặt
-                                    </option>
-                                    <option value="Vắng" <%=hocSinh.trang_thai=='Vắng' ? 'selected' : '' %>>Vắng
-                                    </option>
-                                </select>
+                            <td class="px-3 py-2 border-r border-gray-200 text-center" name="duong_dan_anh">
+                                <img src="/<%= diemdanh.duong_dan_anh %>" class="w-20 h-20 object-cover rounded-lg"
+                                    alt="">
                             </td>
 
+                            <td class="px-3 py-2 border-r border-gray-200 text-center">
+                                <input type="radio" name="trang_thai_<%= diemdanh.hoc_sinh_id %>" value="present"
+                                    class="custom-radio custom-radio-green" <%=(diemdanh.trang_thai==='Có mặt' ||
+                                    (!diemdanh.trang_thai && ngay_diem_danh===new Date().toISOString().slice(0,10)))
+                                    ? 'checked' : '' %> >
+
+                            </td>
+                            <td class="px-3 py-2 border-r border-gray-200 text-center">
+                                <input type="radio" name="trang_thai_<%= diemdanh.hoc_sinh_id %>" value="absent"
+                                    class="custom-radio custom-radio-red" <%=diemdanh.trang_thai==='Vắng' ? 'checked'
+                                    : '' %> >
+                            </td>
                             <td class="px-3 py-2">
-                                <input type="text" class="border rounded px-2 py-1 text-sm w-full"
-                                    name="ghi_chu[<%= hocSinh.hoc_sinh_id %>]" value="<%= hocSinh.ghi_chu || '' %>"
-                                    placeholder="Nhập ghi chú...">
+                                <input type="text" name="ghi_chu_<%= diemdanh.hoc_sinh_id %>" style="font-size: 15px;"
+                                    placeholder="Nhập ghi chú" value="<%= diemdanh.ghi_chu || '' %>">
                             </td>
                         </tr>
                         <% }) %>
                             <% } else { %>
                                 <tr>
-                                    <td colspan="6" class="px-3 py-2 border-r border-gray-200 text-center">
-                                        Không có dữ liệu
+                                    <td colspan="6" class="text-center py-4">
+                                        Không tìm thấy dữ liệu
                                     </td>
                                 </tr>
                                 <% } %>
             </tbody>
+
+
         </table>
+        <button style="float: right; margin-right: 30px; margin-top: 50px;"
+            class="bg-[#0f7a3f] hover:bg-[#0b5a2a] text-white rounded px-4 py-1 text-xs font-semibold select-none">
+            Lưu
+        </button>
     </div>
 </section>
 
@@ -181,11 +246,41 @@
         }
     }
 </script>
-<!-- LỊCH -->
+<!-- ĐỒNG BỘ HIỂN THỊ -->
 <script>
+    const selectLop = document.getElementById('lop_hoc_select');
     const datePicker = document.getElementById('datePicker');
-    const today = new Date().toISOString().split('T')[0];
-    datePicker.value = today;
+
+    if (selectLop && datePicker) {
+        selectLop.addEventListener('change', function () {
+            const selectedOption = this.options[this.selectedIndex];
+            const ngayBatDau = selectedOption.getAttribute('data-bat-dau');
+            if (ngayBatDau) {
+                datePicker.value = ngayBatDau;
+            }
+        });
+
+        datePicker.addEventListener('change', function () {
+            const selectedDate = new Date(this.value);
+            let matched = false;
+
+            for (let option of selectLop.options) {
+                const batDau = new Date(option.getAttribute('data-bat-dau'));
+                const ketThuc = new Date(option.getAttribute('data-ket-thuc'));
+
+                if (selectedDate >= batDau && selectedDate <= ketThuc) {
+                    selectLop.value = option.value;
+                    matched = true;
+                    break;
+                }
+            }
+
+            if (!matched) {
+                alert('Không có lớp học nào tương ứng với ngày bạn chọn!');
+                selectLop.value = ''; // reset chọn lớp
+            }
+        });
+    }
 </script>
 
 <!-- FORMAT DATE -->

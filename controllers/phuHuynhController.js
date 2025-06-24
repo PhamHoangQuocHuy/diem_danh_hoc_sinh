@@ -22,7 +22,8 @@ class phuHuynhController {
         }
         else if (req.taiKhoan.ten_vai_tro === 'Giáo viên' || req.taiKhoan.ten_vai_tro === 'Hiệu trưởng') {
             try {
-                const danhSachPhuHuynh = await PhuHuynhModel.layDanhSachPhuHuynh();
+                const danhSachPhuHuynh = await PhuHuynhModel.layThongTinPhuHuynh_GiaoVien(req.taiKhoan.tai_khoan_id);
+                //console.log('Danh sách phụ huynh:', danhSachPhuHuynh);
                 return res.render('user_index', {
                     page: 'pages/quanLyPhuHuynh',
                     danhSachPhuHuynh,

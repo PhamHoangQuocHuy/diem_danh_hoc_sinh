@@ -91,7 +91,58 @@ class PhuHuynhModel {
             if (conn) conn.release();
         }
     }
+    static async layThongTinPhuHuynh_GiaoVien(tai_khoan_id) {
+        const conn = await pool.getConnection();
+        try {
+            // 1. Lấy tất cả lớp học của giáo viên
+            const [lopHocResults] = await conn.query(`
+            SELECT lop_hoc_id FROM lop_hoc
+            JOIN giao_vien ON lop_hoc.giao_vien_id = giao_vien.giao_vien_id
+            WHERE lop_hoc.daXoa = 0 AND giao_vien.tai_khoan_id = ?
+        `, [tai_khoan_id]);
 
+            if (lopHocResults.length === 0) {
+                return [];
+            }
+
+            let allPhuHuynh = [];
+
+            // 2. Duyệt qua từng lớp học
+            for (const lop of lopHocResults) {
+                // Lấy học sinh trong lớp
+                const [hocSinhResults] = await conn.query(`
+                SELECT hoc_sinh_id FROM hoc_sinh_lop_hoc
+                WHERE lop_hoc_id = ?
+            `, [lop.lop_hoc_id]);
+
+                // 3. Duyệt qua từng học sinh
+                for (const hs of hocSinhResults) {
+                    // Lấy phụ huynh của học sinh
+                    const [phuHuynhResults] = await conn.query(`
+                    SELECT phu_huynh.*, tai_khoan.*, phu_huynh_hoc_sinh.moi_quan_he
+                    FROM phu_huynh
+                    JOIN tai_khoan ON phu_huynh.tai_khoan_id = tai_khoan.tai_khoan_id
+                    JOIN phu_huynh_hoc_sinh ON phu_huynh.phu_huynh_id = phu_huynh_hoc_sinh.phu_huynh_id
+                    WHERE phu_huynh_hoc_sinh.hoc_sinh_id = ? AND tai_khoan.daXoa = 0
+                `, [hs.hoc_sinh_id]);
+
+                    // Thêm vào mảng kết quả nếu chưa có
+                    phuHuynhResults.forEach(ph => {
+                        if (!allPhuHuynh.some(p => p.phu_huynh_id === ph.phu_huynh_id)) {
+                            allPhuHuynh.push(ph);
+                        }
+                    });
+                }
+            }
+
+            return allPhuHuynh;
+        } catch (error) {
+            console.error('Lỗi khi lấy thông tin phụ huynh:', error);
+            return [];
+        } finally {
+            conn.release();
+        }
+    }
 }
 
 module.exports = PhuHuynhModel;
