@@ -1,16 +1,29 @@
 const baoCaoModel = require('../models/baoCaoModel');
 class BaoCaoController {
     static async hienThiBaoCao(req, res) {
-        const {ten_vai_tro} = req.taiKhoan;
+        const { ten_vai_tro } = req.taiKhoan;
         try {
-            if(ten_vai_tro === 'Admin') {
-                res.status(200).render('admin_index', { page: 'pages/quanLyBaoCao' });
-            }else{
-                res.status(200).render('user_index', { page: 'pages/quanLyBaoCao' });
+            const namHocId = await baoCaoModel.layNamHocHienTai();
+
+            if (!namHocId) {
+                return res.redirect('/bao-cao?message="Không tìm thấy năm học hiện tại"&messageType="error"');
+            }
+
+            const danhSach = await baoCaoModel.layHocSinhVangNhieu(namHocId);
+
+            const renderData = {
+                page: 'pages/quanLyBaoCao',
+                danhSachHocSinhVangNhieu: danhSach
+            };
+
+            if (ten_vai_tro === 'Admin') {
+                res.render('admin_index', renderData);
+            } else {
+                res.render('user_index', renderData);
             }
         } catch (error) {
             console.error(error);
-            res.status(500).render('error', { message: 'Đã xảy ra lỗi khi lấy thông tin .' });
+            return res.redirect('/bao-cao?message="Lỗi server"&messageType="error"');
         }
     }
 }

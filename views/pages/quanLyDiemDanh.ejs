@@ -1,82 +1,288 @@
 <section class="flex-1 overflow-auto p-4">
-      <!-- LỌC -->
-      <div class="flex flex-wrap items-center gap-2 border border-[#3ad597] rounded px-3 py-1 mb-4 select-none max-w-full"
-            style="max-width: 395px;">
-            <!-- Dropdown chọn lớp -->
-            <select id="classSelect"
-                  class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-[#3ad597]">
-                  <option value="" selected disabled>Chọn lớp</option>
-                  <option value="">Lớp 1A1</option>
-            </select>
+      <section class="flex-1 overflow-auto p-4">
+            <div class="mb-4">
+                  <div class="flex flex-wrap justify-between items-start gap-4 mb-4">
+                        <!-- FORM LỌC -->
+                        <form action="/diem-danh" method="get"
+                              class="flex flex-wrap items-center gap-2 border border-[#3ad597] rounded px-3 py-2 select-none max-w-full"
+                              style="max-width: 680px;">
+                              <select name="lop_hoc_id" id="lop_hoc_select"
+                                    class="border border-gray-300 rounded px-2 py-1 text-sm">
+                                    <% danhSachLopHoc.forEach(lop=> { %>
+                                          <option value="<%= lop.lop_hoc_id %>"
+                                                <%=String(lop.lop_hoc_id)===String(lop_hoc_id) ? 'selected' : '' %>>
+                                                <%= lop.ten_lop %> - <%= lop.ten_hoc_ky %> - <%= lop.ten_nam_hoc %>
+                                          </option>
+                                          <% }) %>
+                              </select>
 
-            <!-- Month Picker -->
-            <input type="month" id="monthPicker"
-                  class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-[#3ad597]"
-                  value="<%= currentYear %>-<%= currentMonth.toString().padStart(2, '0') %>">
+                              <label for="datePicker" style="margin-left: 10px;">Tháng điểm danh</label>
+                              <input type="month" id="datePicker" name="ngay_diem_danh" value="<%= ngay_diem_danh %>"
+                                    class="text-sm border border-gray-300 rounded px-2 py-1 cursor-pointer hover:bg-[#f0fdf4] transition-all duration-150" />
 
-            <!-- Nút xem -->
-            <button onclick="loadAttendance()" style="width: 80px;"
-                  class="bg-[#3ad597] hover:bg-[#2ebc7d] text-white rounded px-3 py-1 text-sm font-semibold">
-                  Xem
-            </button>
-      </div>
+                              <button type="submit"
+                                    class="bg-[#3ad597] text-white rounded px-4 py-1 text-sm hover:bg-[#32b57e] transition-colors duration-200 ml-2">
+                                    Xem
+                              </button>
+                        </form>
 
-      <div class="overflow-x-auto scrollbar-thin">
-            <table class="min-w-full border border-gray-200 rounded-md text-xs text-left" id="attendanceTable">
-                  <thead class="bg-white border-b border-gray-200 text-gray-600 select-none">
-                        <tr>
-                              <th class="w-10 px-3 py-2 border-r border-gray-200 font-semibold">STT</th>
-                              <th class="min-w-[160px] px-3 py-2 border-r border-gray-200 font-semibold">Họ tên</th>
-                              <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">Ngày sinh</th>
-                              <th class="w-20 px-3 py-2 border-r border-gray-200 font-semibold text-center">Tổng có mặt
-                              </th>
-                              <th class="w-20 px-3 py-2 border-r border-gray-200 font-semibold text-center ">Tổng vắng
-                              </th>
+                        <!-- FORM XUẤT EXCEL -->
+                        <form action="/diem-danh/xuat-excel" method="GET">
+                              <input type="hidden" name="lop_hoc_id" value="<%= lop_hoc_id %>">
+                              <input type="hidden" name="ngay_diem_danh" value="<%= ngay_diem_danh %>">
+                              <button type="submit"
+                                    class="bg-green-800 hover:bg-green-700 text-white px-5 py-2 rounded-md transition-colors focus:outline-none focus:ring focus:ring-green-400">
+                                    Xuất Excel
+                              </button>
+                        </form>
 
-                              <!-- Các cột ngày trong tháng -->
-                              <% for(let day=1; day <=daysInMonth; day++) { %>
-                                    <th class="w-8 px-1 py-2 border-r border-gray-200 font-semibold text-center">
-                                          <%= day %>
-                                    </th>
-                                    <% } %>
-                        </tr>
-                  </thead>
-
-                  <tbody class="text-gray-600">
-
-                        <tr class="bg-white border-b border-gray-100 hover:bg-[#f8fafc]">
-                              <td class="px-3 py-2 border-r border-gray-200 text-center">
-                                    1
-                              </td>
-                              <td class="px-3 py-2 border-r border-gray-200">
-                                    A
-                              </td>
-                              <td class="px-3 py-2 border-r border-gray-200 text-center">
-                                    1/1/2020
-                              </td>
-                              <td class="px-3 py-2 border-r border-gray-200 text-center">
-                                    0
-                              </td>
-                              <td class="px-3 py-2 border-r border-gray-200 text-center">
-                                    0
-                              </td>
-
-                              <!-- Các ô điểm danh từng ngày -->
-                              <% for(let day=1; day <=daysInMonth; day++) { %>
-                                    <td class="px-1 py-2 border-r border-gray-200 text-center">
-                                          ?
-                                    </td>
-                                    <% } %>
-                        </tr>
-
-                  </tbody>
-            </table>
-      </div>
-</section>
+                  </div>
 
 
+                  <div class="overflow-x-auto scrollbar-thin">
+                        <table class="min-w-full border border-gray-200 rounded-md text-xs text-left"
+                              id="attendanceTable">
+                              <thead class="bg-white border-b border-gray-200 text-gray-600 select-none">
+                                    <tr>
+                                          <th class="w-10 px-3 py-2 border-r border-gray-200 font-semibold">STT</th>
+                                          <th class="min-w-[160px] px-3 py-2 border-r border-gray-200 font-semibold">Họ
+                                                tên</th>
+                                          <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold text-center">
+                                                Ngày sinh
+                                          </th>
+                                          <th class="w-20 px-3 py-2 border-r border-gray-200 font-semibold text-center">
+                                                Tổng có mặt
+                                          </th>
+                                          <th
+                                                class="w-20 px-3 py-2 border-r border-gray-200 font-semibold text-center ">
+                                                Tổng vắng
+                                          </th>
+                                          <th
+                                                class="w-20 px-3 py-2 border-r border-gray-200 font-semibold text-center ">
+                                                Tổng học
+                                                sáng
+                                          </th>
+                                          <th
+                                                class="w-20 px-3 py-2 border-r border-gray-200 font-semibold text-center ">
+                                                Tổng học
+                                                chiều
+                                          </th>
+                                          <!-- Các cột ngày trong tháng -->
+                                          <% for(let day=1; day <=daysInMonth; day++) { %>
+                                                <th
+                                                      class="w-8 px-1 py-2 border-r border-gray-200 font-semibold text-center">
+                                                      <%= day %>
+                                                </th>
+                                                <% } %>
+                                    </tr>
+                              </thead>
+                              <!-- HIỂN THỊ -->
+                              <tbody class="text-gray-600">
+                                    <% if (danhSachDiemDanh && danhSachDiemDanh.length> 0) { %>
+                                          <% danhSachDiemDanh.forEach((hs, index)=> { %>
+                                                <tr class="bg-white border-b border-gray-100 hover:bg-[#f8fafc]">
+                                                      <td class="px-3 py-2 border-r border-gray-200 text-center">
+                                                            <%= index + 1 %>
+                                                      </td>
+                                                      <td class="px-3 py-2 border-r border-gray-200">
+                                                            <%= hs.ho_ten %>
+                                                      </td>
+                                                      <td class="px-3 py-2 border-r border-gray-200 text-center">
+                                                            <%= formatDate(hs.ngay_sinh) %>
+                                                      </td>
+                                                      <td class="px-3 py-2 border-r border-gray-200 text-center">
+                                                            <%= hs.tong_co_mat %>
+                                                      </td>
+                                                      <td class="px-3 py-2 border-r border-gray-200 text-center">
+                                                            <%= hs.tong_vang %>
+                                                      </td>
+                                                      <td class="px-3 py-2 border-r border-gray-200 text-center">
+                                                            <%= hs.tong_hoc_sang %>
+                                                      </td>
+                                                      <td class="px-3 py-2 border-r border-gray-200 text-center">
+                                                            <%= hs.tong_hoc_chieu %>
+                                                      </td>
+                                                      <% for (let day=1; day <=daysInMonth; day++) { %>
+                                                            <td class="px-1 py-2 border-r border-gray-200 text-center">
+                                                                  <!-- XEM CHI TIẾT -->
+                                                                  <button onclick="moChiTietDiemDanh(this)"
+                                                                        class="focus:outline-none"
+                                                                        data-ho-ten="<%= hs.ho_ten %>"
+                                                                        data-ngay-sinh="<%= formatDate(hs.ngay_sinh) %>"
+                                                                        data-ten-lop="<%= hs.ten_lop || '' %>"
+                                                                        data-ngay-diem-danh="<%= `${ngay_diem_danh.split('-')[0]}-${ngay_diem_danh.split('-')[1]}-${String(day).padStart(2, '0')}` %>"
+                                                                        data-thoi-gian="<%= hs.thoi_gian?.[day] ? hs.thoi_gian[day].toTimeString().split(' ')[0] : '' %>"
+                                                                        data-anh-ghi-nhan="<%= hs.anh_ghi_nhan?.[day] || '' %>"
+                                                                        data-trang-thai="<%= hs.diem_danh?.[day] || '-' %>"
+                                                                        data-ghi-chu="<%= hs.ghi_chu?.[day] || '' %>">
+                                                                        <% if (hs.diem_danh[day]==='Có mặt' ) { %>
+                                                                              <i
+                                                                                    class="fas fa-check text-green-600"></i>
+                                                                              <% } else if (hs.diem_danh[day]==='Vắng' )
+                                                                                    { %>
+                                                                                    <i
+                                                                                          class="fas fa-times text-red-500"></i>
+                                                                                    <% } else if
+                                                                                          (hs.diem_danh[day]==='Học sáng'
+                                                                                          ) { %>
+                                                                                          <i
+                                                                                                class="fas fa-sun text-yellow-500"></i>
+                                                                                          <% } else if
+                                                                                                (hs.diem_danh[day]==='Học chiều'
+                                                                                                ) { %>
+                                                                                                <i
+                                                                                                      class="fas fa-cloud-sun text-orange-500"></i>
+                                                                                                <% } else { %>
+                                                                                                      <i
+                                                                                                            class="fas fa-minus text-gray-500"></i>
+                                                                                                      <% } %>
+                                                                  </button>
+                                                            </td>
+                                                            <% } %>
 
-<!-- FORMAT DATE -->
-<% function formatDate(dateStr) { if (!dateStr) return '' ; const d=new Date(dateStr); const
-      day=String(d.getDate()).padStart(2, '0' ); const month=String(d.getMonth() + 1).padStart(2, '0' ); const
-      year=d.getFullYear(); return `${day}/${month}/${year}`; } %>
+
+                                                </tr>
+                                                <% }) %>
+                                                      <% } else { %>
+                                                            <tr>
+                                                                  <td colspan="<%= 5 + daysInMonth %>"
+                                                                        class="text-center py-4 text-gray-400">
+                                                                        Vui lòng chọn lớp và tháng để xem kết quả điểm
+                                                                        danh.
+                                                                  </td>
+                                                            </tr>
+                                                            <% } %>
+                              </tbody>
+
+                        </table>
+
+                        <!-- CHÚ THÍCH -->
+                        <div class="p-4 bg-white rounded-lg shadow-sm max-w-xs" style="margin-top: 20px; width: 220px;">
+                              <div class="flex items-center space-x-3 mb-3">
+                                    <i class="fas fa-info-circle text-blue-500"></i>
+                                    <span class="font-medium text-gray-700">Chú thích điểm danh</span>
+                              </div>
+
+                              <div class="space-y-2">
+                                    <div class="flex items-center">
+                                          <div
+                                                class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-2">
+                                                <i class="fas fa-check text-green-600 text-xs"></i>
+                                          </div>
+                                          <span class="text-sm text-gray-600">Có mặt</span>
+                                    </div>
+
+                                    <div class="flex items-center">
+                                          <div
+                                                class="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center mr-2">
+                                                <i class="fas fa-times text-red-600 text-xs"></i>
+                                          </div>
+                                          <span class="text-sm text-gray-600">Vắng mặt</span>
+                                    </div>
+
+                                    <div class="flex items-center">
+                                          <div
+                                                class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center mr-2">
+                                                <i class="fas fa-sun text-yellow-600 text-xs"></i>
+                                          </div>
+                                          <span class="text-sm text-gray-600">Học sáng</span>
+                                    </div>
+
+                                    <div class="flex items-center">
+                                          <div
+                                                class="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center mr-2">
+                                                <i class="fas fa-cloud-sun text-orange-600 text-xs"></i>
+                                          </div>
+                                          <span class="text-sm text-gray-600">Học chiều</span>
+                                    </div>
+
+                                    <div class="flex items-center">
+                                          <div
+                                                class="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center mr-2">
+                                                <i class="fas fa-minus text-gray-600 text-xs"></i>
+                                          </div>
+                                          <span class="text-sm text-gray-600">Chưa điểm danh</span>
+                                    </div>
+                              </div>
+                        </div>
+
+                        <!-- Modal xem chi tiết điểm danh -->
+                        <div id="modalChiTietDiemDanh"
+                              class="fixed inset-0 bg-black bg-opacity-40 hidden justify-center items-center z-50">
+                              <div class="bg-white rounded-lg w-full max-w-xl p-6 relative shadow-xl">
+                                    <h2 class="text-xl font-semibold mb-4 border-b pb-2">Chi tiết điểm danh</h2>
+                                    <div class="grid grid-cols-2 gap-4 text-sm">
+                                          <div><strong>Họ tên:</strong> <span id="ctdd_ho_ten"></span></div>
+                                          <div><strong>Ngày sinh:</strong> <span id="ctdd_ngay_sinh"></span></div>
+                                          <div><strong>Tên lớp:</strong> <span id="ctdd_ten_lop"></span></div>
+                                          <div><strong>Ngày điểm danh:</strong> <span id="ctdd_ngay_diem_danh"></span>
+                                          </div>
+                                          <div><strong>Thời gian:</strong> <span id="ctdd_thoi_gian"></span></div>
+                                          <div><strong>Trạng thái:</strong> <span id="ctdd_trang_thai"></span></div>
+                                          <div class="col-span-2"><strong>Ghi chú:</strong> <span
+                                                      id="ctdd_ghi_chu"></span></div>
+                                          <div class="col-span-2">
+                                                <strong>Ảnh ghi nhận:</strong><br />
+                                                <img id="ctdd_anh_ghi_nhan" src="" alt="Ảnh ghi nhận"
+                                                      class="w-40 h-40 mt-2 rounded border border-gray-300 object-cover" />
+                                          </div>
+                                    </div>
+                                    <button onclick="dongChiTietDiemDanh()"
+                                          class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-xl">&times;</button>
+                              </div>
+                        </div>
+
+                  </div>
+      </section>
+
+      <!-- ĐỒNG BỘ HIỂN THỊ -->
+      <script>
+            const selectLop = document.getElementById('lop_hoc_select');
+            const datePicker = document.getElementById('datePicker');
+      </script>
+      <!-- XEM CHI TIẾT -->
+      <script>
+            function moChiTietDiemDanh(btn) {
+                  document.getElementById('ctdd_ho_ten').innerText = btn.dataset.hoTen;
+                  document.getElementById('ctdd_ngay_sinh').innerText = btn.dataset.ngaySinh;
+                  document.getElementById('ctdd_ten_lop').innerText = btn.dataset.tenLop;
+                  document.getElementById('ctdd_ngay_diem_danh').innerText = btn.dataset.ngayDiemDanh;
+                  document.getElementById('ctdd_trang_thai').innerText = btn.dataset.trangThai;
+                  document.getElementById('ctdd_ghi_chu').innerText =
+                        btn.dataset.ghiChu && btn.dataset.ghiChu.trim() !== ''
+                              ? btn.dataset.ghiChu
+                              : 'Không có ghi chú';
+
+                  // Hiển thị giờ nếu có
+                  const thoiGian = btn.dataset.thoiGian;
+                  document.getElementById('ctdd_thoi_gian').innerText = thoiGian && thoiGian.includes(':')
+                        ? thoiGian
+                        : '-';
+
+
+
+
+                  // Ảnh ghi nhận
+                  const anh = btn.dataset.anhGhiNhan;
+                  const anhElement = document.getElementById('ctdd_anh_ghi_nhan');
+                  anhElement.src = anh && anh.trim() !== '' ? anh : '/images/null.jpg'; // Đường dẫn ảnh mặc định
+                  anhElement.alt = 'Ảnh ghi nhận';
+
+                  // Mở modal
+                  document.getElementById('modalChiTietDiemDanh').classList.remove('hidden');
+                  document.getElementById('modalChiTietDiemDanh').classList.add('flex');
+            }
+
+            function dongChiTietDiemDanh() {
+                  const modal = document.getElementById('modalChiTietDiemDanh');
+                  modal.classList.add('hidden');
+                  modal.classList.remove('flex');
+            }
+      </script>
+
+
+
+      <!-- FORMAT DATE -->
+      <% function formatDate(dateStr) { if (!dateStr) return '' ; const d=new Date(dateStr); const
+            day=String(d.getDate()).padStart(2, '0' ); const month=String(d.getMonth() + 1).padStart(2, '0' ); const
+            year=d.getFullYear(); return `${day}/${month}/${year}`; } %>

@@ -41,7 +41,7 @@ app.get('/admin-dashboard', AuthMiddleware.kiemTraToken, (req, res) => {
 app.get('/user-dashboard', AuthMiddleware.kiemTraToken, (req, res) => {
     res.render('user_index');
 });
-// ADMIN
+// Routes
 app.use('/dashboard', AuthMiddleware.kiemTraToken, dashboardRoutes);
 app.use('/truong-hoc', AuthMiddleware.kiemTraToken, truongHocRoutes);
 app.use('/tai-khoan', AuthMiddleware.kiemTraToken, taiKhoanRoutes);

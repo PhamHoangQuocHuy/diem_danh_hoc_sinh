@@ -12,47 +12,54 @@ class thucHienDiemDanhModel {
         const [rows] = await pool.query(query);
         return rows;
     }
-    static async layTongCoMat(buoi) {
-        let query = 'SELECT COUNT(*) as tong FROM diem_danh WHERE trang_thai = "Có mặt"';
+    static async layTongCoMat(ngay_diem_danh, buoi) {
+        let query = 'SELECT COUNT(*) as tong FROM diem_danh WHERE trang_thai = "Có mặt" AND ngay_diem_danh = ?';
+        const params = [ngay_diem_danh];
 
         if (buoi === 'afternoon') {
             query += ' AND hoc_sinh_id IN (SELECT hoc_sinh_id FROM hoc_sinh WHERE loai_hoc_sinh = "Không bán trú")';
         }
 
-        const [rows] = await pool.query(query);
+        const [rows] = await pool.query(query, params);
         return rows;
     }
-    static async layTongVang(buoi) {
-        let query = 'SELECT COUNT(*) as tong FROM diem_danh WHERE trang_thai = "Vắng"';
+
+    static async layTongVang(ngay_diem_danh, buoi) {
+        let query = 'SELECT COUNT(*) as tong FROM diem_danh WHERE trang_thai = "Vắng" AND ngay_diem_danh = ?';
+        const params = [ngay_diem_danh];
 
         if (buoi === 'afternoon') {
             query += ' AND hoc_sinh_id IN (SELECT hoc_sinh_id FROM hoc_sinh WHERE loai_hoc_sinh = "Không bán trú")';
         }
 
-        const [rows] = await pool.query(query);
+        const [rows] = await pool.query(query, params);
         return rows;
     }
-    static async layTongHocSang(buoi) {
-        let query = 'SELECT COUNT(*) as tong FROM diem_danh WHERE trang_thai = "Học sáng"';
+
+    static async layTongHocSang(ngay_diem_danh, buoi) {
+        let query = 'SELECT COUNT(*) as tong FROM diem_danh WHERE trang_thai = "Học sáng" AND ngay_diem_danh = ?';
+        const params = [ngay_diem_danh];
 
         if (buoi === 'afternoon') {
             query += ' AND hoc_sinh_id IN (SELECT hoc_sinh_id FROM hoc_sinh WHERE loai_hoc_sinh = "Không bán trú")';
         }
 
-        const [rows] = await pool.query(query);
+        const [rows] = await pool.query(query, params);
         return rows;
-
     }
-    static async layTongHocChieu(buoi) {
-        let query = 'SELECT COUNT(*) as tong FROM diem_danh WHERE trang_thai = "Học chiều"';
+
+    static async layTongHocChieu(ngay_diem_danh, buoi) {
+        let query = 'SELECT COUNT(*) as tong FROM diem_danh WHERE trang_thai = "Học chiều" AND ngay_diem_danh = ?';
+        const params = [ngay_diem_danh];
 
         if (buoi === 'afternoon') {
             query += ' AND hoc_sinh_id IN (SELECT hoc_sinh_id FROM hoc_sinh WHERE loai_hoc_sinh = "Không bán trú")';
         }
 
-        const [rows] = await pool.query(query);
+        const [rows] = await pool.query(query, params);
         return rows;
     }
+
     static async layDanhSachLopHoc(tai_khoan_id) {
         try {
             // Lấy giao_vien_id từ tài_khoan_id

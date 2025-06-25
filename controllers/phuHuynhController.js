@@ -20,7 +20,7 @@ class phuHuynhController {
                 })
             }
         }
-        else if (req.taiKhoan.ten_vai_tro === 'Giáo viên' || req.taiKhoan.ten_vai_tro === 'Hiệu trưởng') {
+        else if (req.taiKhoan.ten_vai_tro === 'Giáo viên') {
             try {
                 const danhSachPhuHuynh = await PhuHuynhModel.layThongTinPhuHuynh_GiaoVien(req.taiKhoan.tai_khoan_id);
                 //console.log('Danh sách phụ huynh:', danhSachPhuHuynh);
@@ -39,7 +39,28 @@ class phuHuynhController {
                     messageType: 'error'
                 })
             }
-        } else {
+        } else if (req.taiKhoan.ten_vai_tro === 'Hiệu trưởng') {
+            try {
+                const danhSachPhuHuynh = await PhuHuynhModel.layDanhSachPhuHuynh();
+                //console.log('Danh sách phụ huynh:', danhSachPhuHuynh);
+                return res.render('user_index', {
+                    page: 'pages/quanLyPhuHuynh',
+                    danhSachPhuHuynh,
+                    message: req.query.message || '',
+                    messageType: req.query.messageType || ''
+                })
+            } catch (error) {
+                console.error(error);
+                return res.render('user_index', {
+                    page: 'pages/quanLyPhuHuynh',
+                    danhSachPhuHuynh: [],
+                    message: 'Đã xảy ra lỗi khi lấy danh sách phụ huynh',
+                    messageType: 'error'
+                })
+            }
+
+        }
+        else {
             console.log('Bạn không có quyền truy cập');
             return res.redirect('/');
         }

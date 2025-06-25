@@ -143,6 +143,7 @@ class PhuHuynhModel {
             conn.release();
         }
     }
+    
 }
 
 module.exports = PhuHuynhModel;

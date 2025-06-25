@@ -85,11 +85,12 @@ class thucHienDiemDanhController {
                 : [];
 
             // Thống kê sĩ số
+            const ngayHienTai = new Date().toISOString().slice(0, 10);
             const tongLopHoc = await thucHienDiemDanhModel.layTongLopHoc(activeTab);
-            const tongCoMat = await thucHienDiemDanhModel.layTongCoMat(activeTab);
-            const tongVang = await thucHienDiemDanhModel.layTongVang(activeTab);
-            const tongHocSang = await thucHienDiemDanhModel.layTongHocSang(activeTab);
-            const tongHocChieu = await thucHienDiemDanhModel.layTongHocChieu(activeTab);
+            const tongCoMat = await thucHienDiemDanhModel.layTongCoMat(ngayHienTai, activeTab);
+            const tongVang = await thucHienDiemDanhModel.layTongVang(ngayHienTai, activeTab);
+            const tongHocSang = await thucHienDiemDanhModel.layTongHocSang(ngayHienTai, activeTab);
+            const tongHocChieu = await thucHienDiemDanhModel.layTongHocChieu(ngayHienTai, activeTab);
 
             return res.render('user_index', {
                 page: 'pages/thucHienDiemDanh',
@@ -220,5 +221,4 @@ class thucHienDiemDanhController {
         }
     }
 }
-
 module.exports = thucHienDiemDanhController;
