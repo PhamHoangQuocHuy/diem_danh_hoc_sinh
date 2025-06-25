@@ -33,6 +33,24 @@
         background-color: #ff0000;
     }
 
+    .custom-radio.custom-radio-yellow {
+        border-color: rgb(208, 208, 19);
+    }
+
+    .custom-radio.custom-radio-yellow:checked {
+        border-color: rgb(208, 208, 19);
+        background-color: rgb(208, 208, 19);
+    }
+
+    .custom-radio.custom-radio-orange {
+        border-color: orange;
+    }
+
+    .custom-radio.custom-radio-orange:checked {
+        border-color: orange;
+        background-color: orange;
+    }
+
     .custom-radio:checked::after {
         content: "✔";
         color: white;
@@ -43,6 +61,9 @@
         transform: translate(-50%, -50%);
     }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+
 <section class="flex-1 overflow-auto p-4">
     <!-- Tabs -->
     <div class="border-b border-gray-200 mb-4">
@@ -101,8 +122,18 @@
             disabled="">
             Vắng: <%= tongVang[0].tong %>
         </button>
-        <div style="margin-left: 30cm;">
+        <button class="border border-gray-300 text-gray-400 rounded px-3 py-1 text-xs font-semibold select-none"
+            disabled="">
+            Học sáng: <%= tongHocSang[0].tong %>
+        </button>
+        <button class="border border-gray-300 text-gray-400 rounded px-3 py-1 text-xs font-semibold select-none"
+            disabled="">
+            Học chiều: <%= tongHocChieu[0].tong %>
+        </button>
+        <div style="margin-left: 35cm;">
             <form action="/thuc-hien-diem-danh/xuat-excel" method="get">
+                <input type="hidden" name="lop_hoc_id" value="<%= lop_hoc_id %>">
+                <input type="hidden" name="ngay_diem_danh" value="<%= ngay_diem_danh %>">
                 <button
                     class="ml-auto bg-[#0f7a3f] hover:bg-[#0b5a2a] text-white rounded px-4 py-1 text-xs font-semibold select-none">
                     Xuất file
@@ -121,105 +152,131 @@
 
     <!-- Table -->
     <div class="overflow-x-auto scrollbar-thin">
-        <table class="min-w-full border border-gray-200 rounded-md text-xs text-left" id="studentTable">
-            <thead class="bg-white border-b border-gray-200 text-gray-600 select-none">
-                <tr>
-                    <th class="w-10 px-3 py-2 border-r border-gray-200 font-semibold text-center">
-                        STT
-                    </th>
-                    <th class="min-w-[160px] px-3 py-2 border-r border-gray-200 font-semibold" style="width: 20cm;">
-                        Họ tên
-                    </th>
-                    <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold text-center">
-                        Ngày sinh
-                    </th>
-                    <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold text-center">
-                        Ảnh học sinh
-                    </th>
-                    <th class="w-20 px-3 py-2 border-r border-gray-200 font-semibold cursor-pointer text-center">
-                        Có mặt
-                    </th>
-                    <th class="w-20 px-3 py-2 border-r border-gray-200 font-semibold cursor-pointer text-center">
-                        Vắng
-                    </th>
-                    <th class="w-32 px-3 py-2 font-semibold cursor-pointer text-center">
-                        Ghi chú
-                    </th>
-                </tr>
-                <tr class="bg-white">
-                    <th>
-                    </th>
+        <form action="/thuc-hien-diem-danh/them" method="post" id="formDiemDanh">
+            <input type="hidden" name="lop_hoc_id" value="<%= lop_hoc_id %>">
+            <input type="hidden" name="ngay_diem_danh" value="<%= ngay_diem_danh %>">
+            <input type="hidden" name="tab" value="<%= activeTab %>">
+            <table class="min-w-full border border-gray-200 rounded-md text-xs text-left" id="studentTable">
+                <thead class="bg-white border-b border-gray-200 text-gray-600 select-none">
+                    <tr>
+                        <th class="w-10 px-3 py-2 border-r border-gray-200 font-semibold text-center">
+                            STT
+                        </th>
+                        <th class="min-w-[160px] px-3 py-2 border-r border-gray-200 font-semibold" style="width: 20cm;">
+                            Họ tên
+                        </th>
+                        <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold text-center">
+                            Ngày sinh
+                        </th>
+                        <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold text-center">
+                            Ảnh học sinh
+                        </th>
+                        <th class="w-20 px-3 py-2 border-r border-gray-200 font-semibold cursor-pointer text-center">
+                            Có mặt
+                        </th>
+                        <th class="w-20 px-3 py-2 border-r border-gray-200 font-semibold cursor-pointer text-center">
+                            Vắng
+                        </th>
+                        <th class="w-20 px-3 py-2 border-r border-gray-200 font-semibold cursor-pointer text-center">
+                            Học sáng
+                        </th>
+                        <th class="w-20 px-3 py-2 border-r border-gray-200 font-semibold cursor-pointer text-center">
+                            Học chiều
+                        </th>
+                        <th class="w-32 px-3 py-2 font-semibold cursor-pointer text-center">
+                            Ghi chú
+                        </th>
+                    </tr>
+                    <tr class="bg-white">
+                        <th>
+                        </th>
 
-                    <th class="px-3 py-1 border-r border-gray-200">
-                        <input id="searchStudentInput"
-                            class="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-[#3ad597]"
-                            placeholder="Nhập tên học sinh cần tìm" type="text" oninput="filterStudents()" />
-                    </th>
-                    <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
-                    </th>
-                    <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
-                    </th>
-                    <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
-                    </th>
-                    <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
-                    </th>
-                    <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
-                    </th>
-                </tr>
-            </thead>
+                        <th class="px-3 py-1 border-r border-gray-200">
+                            <input id="searchStudentInput"
+                                class="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-[#3ad597]"
+                                placeholder="Nhập tên học sinh cần tìm" type="text" oninput="filterStudents()" />
+                        </th>
+                        <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
+                        </th>
+                        <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
+                        </th>
+                        <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
+                        </th>
+                        <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
+                        </th>
+                        <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
+                        </th>
+                        <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
+                        </th>
+                        <th class="w-28 px-3 py-2 border-r border-gray-200 font-semibold">
+                        </th>
+                    </tr>
+                </thead>
 
-            <!-- HIỂN THỊ -->
-            <tbody class="text-gray-600">
-                <% if(danhSachDiemDanh && danhSachDiemDanh.length> 0) { %>
-                    <% danhSachDiemDanh.forEach((diemdanh, index)=> { %>
-                        <tr class="bg-white border-b border-gray-100 hover:bg-[#f8fafc]">
-                            <td class="px-3 py-2 border-r border-gray-200 text-center">
-                                <%= index + 1 %>
-                            </td>
-                            <td class="px-3 py-2 border-r border-gray-200" name="ho_ten">
-                                <%= diemdanh.ho_ten %>
-                            </td>
-                            <td class="px-3 py-2 border-r border-gray-200 text-center" name="ngay_sinh">
-                                <%= formatDate(diemdanh.ngay_sinh) %>
-                            </td>
-                            <td class="px-3 py-2 border-r border-gray-200 text-center" name="duong_dan_anh">
-                                <img src="/<%= diemdanh.duong_dan_anh %>" class="w-20 h-20 object-cover rounded-lg"
-                                    alt="">
-                            </td>
+                <!-- HIỂN THỊ -->
+                <tbody class="text-gray-600">
+                    <% if(danhSachDiemDanh && danhSachDiemDanh.length> 0) { %>
+                        <% danhSachDiemDanh.forEach((diemdanh, index)=> { %>
+                            <tr class="bg-white border-b border-gray-100 hover:bg-[#f8fafc]">
+                                <td class="px-3 py-2 border-r border-gray-200 text-center">
+                                    <%= index + 1 %>
+                                </td>
+                                <td class="px-3 py-2 border-r border-gray-200" name="ho_ten" style="font-size: 15px;">
+                                    <%= diemdanh.ho_ten %>
+                                </td>
+                                <td class="px-3 py-2 border-r border-gray-200 text-center" name="ngay_sinh">
+                                    <%= formatDate(diemdanh.ngay_sinh) %>
+                                </td>
+                                <td class="px-3 py-2 border-r border-gray-200 text-center" name="duong_dan_anh">
+                                    <img src="/<%= diemdanh.duong_dan_anh %>" class="w-20 h-20 object-cover rounded-lg"
+                                        alt="">
+                                </td>
 
-                            <td class="px-3 py-2 border-r border-gray-200 text-center">
-                                <input type="radio" name="trang_thai_<%= diemdanh.hoc_sinh_id %>" value="present"
-                                    class="custom-radio custom-radio-green" <%=(diemdanh.trang_thai==='Có mặt' ||
-                                    (!diemdanh.trang_thai && ngay_diem_danh===new Date().toISOString().slice(0,10)))
-                                    ? 'checked' : '' %> >
+                                <td class="px-3 py-2 border-r border-gray-200 text-center">
+                                    <input type="radio" name="trang_thai_<%= diemdanh.hoc_sinh_id %>" value="present"
+                                        class="custom-radio custom-radio-green" <%=(diemdanh.trang_thai==='Có mặt' ||
+                                        (!diemdanh.trang_thai && ngay_diem_danh===new Date().toISOString().slice(0,10)))
+                                        ? 'checked' : '' %> >
 
-                            </td>
-                            <td class="px-3 py-2 border-r border-gray-200 text-center">
-                                <input type="radio" name="trang_thai_<%= diemdanh.hoc_sinh_id %>" value="absent"
-                                    class="custom-radio custom-radio-red" <%=diemdanh.trang_thai==='Vắng' ? 'checked'
-                                    : '' %> >
-                            </td>
-                            <td class="px-3 py-2">
-                                <input type="text" name="ghi_chu_<%= diemdanh.hoc_sinh_id %>" style="font-size: 15px;"
-                                    placeholder="Nhập ghi chú" value="<%= diemdanh.ghi_chu || '' %>">
-                            </td>
-                        </tr>
-                        <% }) %>
-                            <% } else { %>
-                                <tr>
-                                    <td colspan="6" class="text-center py-4">
-                                        Không tìm thấy dữ liệu
-                                    </td>
-                                </tr>
-                                <% } %>
-            </tbody>
+                                </td>
+                                <td class="px-3 py-2 border-r border-gray-200 text-center">
+                                    <input type="radio" name="trang_thai_<%= diemdanh.hoc_sinh_id %>" value="absent"
+                                        class="custom-radio custom-radio-red" <%=diemdanh.trang_thai==='Vắng'
+                                        ? 'checked' : '' %> >
+                                </td>
+                                <td class="px-3 py-2 border-r border-gray-200 text-center">
+                                    <input type="radio" name="trang_thai_<%= diemdanh.hoc_sinh_id %>" value="Học sáng"
+                                        class="custom-radio custom-radio-yellow" <%=diemdanh.trang_thai==='Học sáng'
+                                        ? 'checked' : '' %> >
+                                </td>
+                                <td class="px-3 py-2 border-r border-gray-200 text-center">
+                                    <input type="radio" name="trang_thai_<%= diemdanh.hoc_sinh_id %>" value="Học chiều"
+                                        class="custom-radio custom-radio-orange" <%=diemdanh.trang_thai==='Học chiều'
+                                        ? 'checked' : '' %> >
+                                </td>
+                                <td class="px-3 py-2">
+                                    <input type="text" name="ghi_chu_<%= diemdanh.hoc_sinh_id %>"
+                                        style="font-size: 15px;" placeholder="Nhập ghi chú"
+                                        value="<%= diemdanh.ghi_chu || '' %>">
+                                </td>
+                            </tr>
+                            <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            Không tìm thấy dữ liệu
+                                        </td>
+                                    </tr>
+                                    <% } %>
+                </tbody>
 
 
-        </table>
-        <button style="float: right; margin-right: 30px; margin-top: 50px;"
-            class="bg-[#0f7a3f] hover:bg-[#0b5a2a] text-white rounded px-4 py-1 text-xs font-semibold select-none">
-            Lưu
-        </button>
+            </table>
+            <button style="float: right; margin-right: 30px; margin-top: 50px;" type="submit"
+                class="bg-[#0f7a3f] hover:bg-[#0b5a2a] text-white rounded px-4 py-1 text-xs font-semibold select-none">
+                Lưu
+            </button>
+        </form>
     </div>
 </section>
 
