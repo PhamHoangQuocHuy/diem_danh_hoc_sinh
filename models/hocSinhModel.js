@@ -395,7 +395,6 @@ class HocSinhModel {
                 phu_huynh_ids = [],
                 moi_quan_he = [],
                 duong_dan_anh = [],
-                remove_images = [],
             } = hocSinh;
             await conn.beginTransaction();
             // 1. Kiểm tra học sinh có tồn tại không
@@ -437,30 +436,111 @@ class HocSinhModel {
                 SET ho_ten = ?, ngay_sinh = ?, gioi_tinh = ?, dia_chi = ?, loai_hoc_sinh = ?
                 WHERE hoc_sinh_id = ?
             `, [ho_ten, ngay_sinh, gioi_tinh, dia_chi, loai_hoc_sinh, id]);
-            // 6. Cập nhật ảnh học sinh
-            const [currentImages] = await conn.query(`SELECT duong_dan_anh FROM hinh_anh_hoc_sinh WHERE hoc_sinh_id = ?`, [id]);
-            const currentImageCount = currentImages.length;
-            if (currentImageCount < 3 || (duong_dan_anh.length > 0 && duong_dan_anh.length !== 3)) {
+            // 6. Xử lý ảnh học sinh
+            const [currentImages] = await conn.query(`SELECT hinh_anh_hoc_sinh_id, duong_dan_anh 
+                FROM hinh_anh_hoc_sinh WHERE hoc_sinh_id = ? ORDER BY hinh_anh_hoc_sinh_id ASC`, [id]);
+
+            let finalDuongDanAnh = duong_dan_anh;
+
+            // Nếu không có ảnh mới upload → dùng lại ảnh cũ trong DB
+            if (!duong_dan_anh || duong_dan_anh.length !== 3) {
+                finalDuongDanAnh = currentImages.map(img => img.duong_dan_anh);
+            }
+
+            if (currentImages.length !== 3 || finalDuongDanAnh.length !== 3) {
                 return { success: false, message: 'Học sinh phải có đúng 3 ảnh!', messageType: 'error' };
             }
-            const currentImagePaths = currentImages.map(img => img.duong_dan_anh);
-            // Kiểm tra và xử lý ảnh 
-            if (duong_dan_anh && duong_dan_anh.length > 0) {
-                if (!Array.isArray(duong_dan_anh) || duong_dan_anh.length !== 3) {
-                    return { success: false, message: 'Phải tải lên đúng 3 ảnh học sinh!', messageType: 'error' };
-                }
-                await conn.query(`DELETE FROM hinh_anh_hoc_sinh WHERE hoc_sinh_id = ?`, [id]);
-                for (let i = 0; i < duong_dan_anh.length; i++) {
-                    await conn.execute(`
-                        INSERT INTO hinh_anh_hoc_sinh (hoc_sinh_id, duong_dan_anh) 
-                        VALUES (?, ?)
-                    `, [id, duong_dan_anh[i]]);
-                }
-            } else {
-                if (currentImagePaths.length !== 3) {
-                    return { success: false, message: 'Học sinh phải có đúng 3 ảnh!', messageType: 'error' };
+
+
+            const [checkThuocLop] = await conn.query(`SELECT COUNT(*) AS total FROM hoc_sinh_lop_hoc WHERE hoc_sinh_id = ?`, [id]);
+            let folderPath = 'images/temp/'; // Nếu chưa thuộc lớp thì update temp thôi
+            if (checkThuocLop[0].total > 0) {
+                const [namHocRows] = await conn.query(`
+                    SELECT nh.ten_nam_hoc
+                    FROM hoc_sinh_lop_hoc hslh
+                    JOIN lop_hoc lh ON lh.lop_hoc_id = hslh.lop_hoc_id
+                    JOIN hoc_ky hk ON lh.hoc_ky_id = hk.hoc_ky_id
+                    JOIN nam_hoc nh ON nh.nam_hoc_id = hk.nam_hoc_id
+                    WHERE hslh.hoc_sinh_id = ?
+                    ORDER BY nh.nam_hoc_id DESC
+                    LIMIT 1
+                    `, [id]);
+                if (namHocRows.length > 0) {
+                    folderPath = `images/${namHocRows[0].ten_nam_hoc}/`;
                 }
             }
+            const safeHoTen = ho_ten
+                .normalize('NFD')
+                .replace(/[̀-ͯ]/g, '')
+                .replace(/đ/g, 'd')
+                .replace(/Đ/g, 'D')
+                .replace(/[^a-zA-Z0-9]/g, '');
+
+            const pathPublic = path.join('public');
+            const tempDir = path.join(pathPublic, 'images', 'temp');
+            // Xóa toàn bộ ảnh temp cũ của học sinh (bắt đầu bằng `${id}_`)
+            const tempFiles = fs.readdirSync(tempDir);
+            for (const file of tempFiles) {
+                if (file.startsWith(`${id}_`)) {
+                    const filePath = path.join(tempDir, file);
+                    if (fs.existsSync(filePath)) {
+                        fs.unlinkSync(filePath);
+                    }
+                }
+            }
+            for (let i = 0; i < 3; i++) {
+                const oldImage = currentImages[i]; // trong DB
+                const newUploadedImage = finalDuongDanAnh[i]; // ảnh mới (nếu có)
+                const oldPath = oldImage.duong_dan_anh;
+
+                const newFileName = `${id}_${safeHoTen}_${i + 1}.jpg`;
+                const newRelativePath = `${folderPath}${newFileName}`;
+                const fullOldPath = path.join(pathPublic, oldPath);
+                const fullNewPath = path.join(pathPublic, newRelativePath);
+
+                // Ảnh mới được upload (hình path khác với ảnh cũ)
+                const isNewImageUploaded = newUploadedImage && newUploadedImage !== oldPath;
+
+                const uploadedPath = path.join(pathPublic, newUploadedImage);
+                const tempPath = path.join(pathPublic, 'images', 'temp', newFileName);
+
+                // Trường hợp có ảnh mới được upload
+                if (isNewImageUploaded) {
+                    if (fs.existsSync(fullOldPath)) fs.unlinkSync(fullOldPath);
+                    if (fs.existsSync(uploadedPath)) {
+                        fs.renameSync(uploadedPath, fullNewPath);
+                    }
+
+                    await conn.execute(
+                        `UPDATE hinh_anh_hoc_sinh SET duong_dan_anh = ? WHERE hinh_anh_hoc_sinh_id = ?`,
+                        [newRelativePath, oldImage.hinh_anh_hoc_sinh_id]
+                    );
+                } else {
+                    // Không đổi ảnh nhưng đổi tên học sinh
+                    if (oldPath !== newRelativePath && fs.existsSync(fullOldPath)) {
+                        fs.renameSync(fullOldPath, fullNewPath);
+
+                        await conn.execute(
+                            `UPDATE hinh_anh_hoc_sinh SET duong_dan_anh = ? WHERE hinh_anh_hoc_sinh_id = ?`,
+                            [newRelativePath, oldImage.hinh_anh_hoc_sinh_id]
+                        );
+                    }
+                }
+                // Chỉ copy sang temp nếu học sinh thuộc lớp
+                if (checkThuocLop[0].total > 0 && fs.existsSync(fullNewPath)) {
+                    // Tạo folder nếu chưa có (chỉ tạo 1 lần)
+                    if (!fs.existsSync(tempDir)) {
+                        fs.mkdirSync(tempDir, { recursive: true });
+                    }
+                    // Xóa ảnh temp cũ nếu đã tồn tại
+                    if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+                    // Copy sang temp
+                    fs.copyFileSync(fullNewPath, tempPath);
+                }
+
+            }
+
+
             // 7. Cập nhật mối quan hệ phụ huynh
             await conn.query(`DELETE FROM phu_huynh_hoc_sinh WHERE hoc_sinh_id = ?`, [id]);
             for (let i = 0; i < phu_huynh_ids.length; i++) {
@@ -475,6 +555,7 @@ class HocSinhModel {
             return { success: true, message: 'Sửa thông tin học sinh thành công!', messageType: 'success' };
         }
         catch (error) {
+            await conn.rollback();
             console.log('Lỗi khi sửa thông tin học sinh: ', error);
             return { success: false, message: 'Sửa thông tin học sinh thất bại', messageType: 'error' };
         }

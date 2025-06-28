@@ -14,7 +14,7 @@ class DiemDanhController {
 
             let danhSachDiemDanh = [];
             let daysInMonth = 0;
-
+            // Kiểm tra lớp học và ngày diem danh
             if (lop_hoc_id && ngay_diem_danh) {
                 const lop = danhSachLopHoc.find(l => l.lop_hoc_id == lop_hoc_id);
                 if (!lop) {
@@ -32,14 +32,11 @@ class DiemDanhController {
 
                 const [year, month] = ngay_diem_danh.split('-').map(Number);
                 const ngayChon = new Date(year, month - 1); // ngày đầu tháng đó
-
                 const hocKyBatDau = new Date(lop.hoc_ky_bat_dau);
                 const hocKyKetThuc = new Date(lop.hoc_ky_ket_thuc);
-
                 // Chỉ so sánh tháng và năm
                 const firstOfHocKy = new Date(hocKyBatDau.getFullYear(), hocKyBatDau.getMonth());
                 const lastOfHocKy = new Date(hocKyKetThuc.getFullYear(), hocKyKetThuc.getMonth());
-
                 if (ngayChon < firstOfHocKy || ngayChon > lastOfHocKy) {
                     return res.render(layout, {
                         page: 'pages/quanLyDiemDanh',

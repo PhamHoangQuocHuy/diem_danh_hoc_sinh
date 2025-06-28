@@ -62,7 +62,8 @@
     }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
+<script defer src="/models/face-api.min.js"></script>
+<script defer src="/js/script.js"></script>
 
 <section class="flex-1 overflow-auto p-4">
     <!-- Tabs -->
@@ -130,6 +131,7 @@
             disabled="">
             Học chiều: <%= tongHocChieu[0].tong %>
         </button>
+        <!-- XUẤT EXCEL -->
         <div style="margin-left: 35cm;">
             <form action="/thuc-hien-diem-danh/xuat-excel" method="get">
                 <input type="hidden" name="lop_hoc_id" value="<%= lop_hoc_id %>">
@@ -140,14 +142,19 @@
                 </button>
             </form>
         </div>
-        <div style="margin-left: auto;">
-            <form action="/thuc-hien-diem-danh/diem-danh-khuon-mat" method="get">
-                <button
+
+        <!-- ĐIỂM DANH KHUÔN MẶT -->
+        <% if(ngay_diem_danh===new Date().toISOString().slice(0,10)) { %>
+            <div style="margin-left: auto;">
+                <input type="hidden" name="lop_hoc_id" value="<%= lop_hoc_id %>">
+                <input type="hidden" name="ngay_diem_danh" value="<%= ngay_diem_danh %>">
+                <button type="button" onclick="openFaceModal()"
                     class="ml-auto bg-[#0f7a3f] hover:bg-[#0b5a2a] text-white rounded px-4 py-1 text-xs font-semibold select-none">
                     Điểm danh khuôn mặt
                 </button>
-            </form>
-        </div>
+            </div>
+            <% } %>
+
     </div>
 
     <!-- Table -->
@@ -278,6 +285,27 @@
             </button>
         </form>
     </div>
+
+    <!-- Modal quét khuôn mặt -->
+    <div id="faceModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-4 w-full max-w-3xl shadow-lg relative">
+            <button onclick="closeFaceModal()"
+                class="absolute top-2 right-3 text-gray-600 text-xl hover:text-black">✕</button>
+            <h2 class="text-lg font-bold mb-2">Điểm danh khuôn mặt</h2>
+            <div class="relative w-[640px] h-[480px]">
+                <video id="video" autoplay muted class="rounded border w-full h-full"></video>
+                <canvas id="canvas" width="640" height="480" class="absolute top-0 left-0 hidden z-10"></canvas>
+            </div>
+            <div class="text-right mt-3">
+                <button onclick="closeFaceModal()"
+                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold px-4 py-1 rounded">
+                    Đóng
+                </button>
+            </div>
+
+        </div>
+    </div>
+
 </section>
 
 
@@ -337,6 +365,32 @@
                 selectLop.value = ''; // reset chọn lớp
             }
         });
+    }
+</script>
+<!-- QUÉT KHUÔN MẶT -->
+<script>
+    function openFaceModal() {
+        document.getElementById('faceModal').classList.remove('hidden');
+        document.getElementById('canvas').classList.remove('hidden');
+        startFaceRecognition();
+    }
+
+    function closeFaceModal() {
+        document.getElementById('faceModal').classList.add('hidden');
+        stopCamera();
+        location.reload();
+    }
+    function stopCamera() {
+        const video = document.getElementById('video');
+        const stream = video.srcObject;
+
+        if (stream) {
+            const tracks = stream.getTracks();
+            tracks.forEach(track => track.stop());
+        }
+
+        video.srcObject = null;
+        console.log('Đã tắt camera');
     }
 </script>
 

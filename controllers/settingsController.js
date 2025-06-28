@@ -26,113 +26,81 @@ class SettingsController {
     }
 
     static async capNhatCaiDatCaNhan(req, res) {
-        let conn;
-        let tempFilePath = null;
+        const layout = req.taiKhoan.ten_vai_tro === 'Admin' ? 'admin_index' : 'user_index';
+        const taiKhoanId = req.params.id;
+        const { sdt, dia_chi, mat_khau_cu, mat_khau_moi, mat_khau_xac_nhan } = req.body;
+        const anhDaiDienFile = req.file;
+        let conn, tempFilePath = null;
+
+        const renderError = (message, taiKhoan, type = 'error') => {
+            return res.render(layout, { taiKhoan, message, messageType: type });
+        };
+
         try {
-            const taiKhoanId = req.params.id;
-            const { sdt, dia_chi, mat_khau_cu, mat_khau_moi, mat_khau_xac_nhan } = req.body;
-            const anhDaiDienFile = req.file;
             conn = await pool.getConnection();
+
+            // Lấy tài khoản hiện tại
             const [taiKhoanRows] = await conn.query('SELECT * FROM tai_khoan WHERE tai_khoan_id = ?', [taiKhoanId]);
-            if (taiKhoanRows.length === 0) {
-                return res.status(404).json({ message: 'Tài khoản không tồn tại' });
-            }
+            if (taiKhoanRows.length === 0) return res.status(404).json({ message: 'Tài khoản không tồn tại' });
             const taiKhoan = taiKhoanRows[0];
             const oldAvatar = taiKhoan.anh_dai_dien || 'default_avatar.jpg';
             const updateData = {};
 
+            // Validate SDT
             if (sdt) {
-                if (!sdt.trim()) {
-                    return res.render('admin_index', {
-                        taiKhoan,
-                        message: 'Số điện thoại không được rỗng',
-                        messageType: 'error'
-                    });
-                }
-                const [existingRows] = await conn.query('SELECT * FROM tai_khoan WHERE sdt = ? AND tai_khoan_id != ?', [sdt, taiKhoanId]);
-                if (existingRows.length > 0) {
-                    return res.render('admin_index', {
-                        taiKhoan,
-                        message: 'Số điện thoại đã tồn tại',
-                        messageType: 'error'
-                    });
-                }
+                if (!sdt.trim()) return renderError('Số điện thoại không được rỗng', taiKhoan);
+                const [exist] = await conn.query('SELECT * FROM tai_khoan WHERE sdt = ? AND tai_khoan_id != ?', [sdt, taiKhoanId]);
+                if (exist.length > 0) return renderError('Số điện thoại đã tồn tại', taiKhoan);
                 updateData.sdt = sdt;
-            } else {
-                updateData.sdt = taiKhoan.sdt;
-            }
+            } else updateData.sdt = taiKhoan.sdt;
 
+            // Validate Địa chỉ
             if (dia_chi) {
-                if (!dia_chi.trim()) {
-                    return res.render('admin_index', {
-                        taiKhoan,
-                        message: 'Địa chỉ không được rỗng',
-                        messageType: 'error'
-                    });
-                }
+                if (!dia_chi.trim()) return renderError('Địa chỉ không được rỗng', taiKhoan);
                 updateData.dia_chi = dia_chi;
-            } else {
-                updateData.dia_chi = taiKhoan.dia_chi;
-            }
+            } else updateData.dia_chi = taiKhoan.dia_chi;
 
-            let newAvatar = oldAvatar;
+            // Xử lý ảnh đại diện
             if (anhDaiDienFile) {
                 tempFilePath = path.join(__dirname, '../images', anhDaiDienFile.filename);
                 const extension = path.extname(anhDaiDienFile.originalname).toLowerCase();
                 const cleanName = toAlias(taiKhoan.ho_ten);
+
+                let newAvatar = oldAvatar;
                 if (oldAvatar === 'default_avatar.jpg') {
                     newAvatar = `${taiKhoanId}_${cleanName}${extension}`;
                 } else {
-                    const oldImagePath = path.join(__dirname, '../images', oldAvatar);
-                    if (fs.existsSync(oldImagePath)) {
-                        fs.unlinkSync(oldImagePath);
-                    }
-                    newAvatar = oldAvatar;
+                    const oldPath = path.join(__dirname, '../images', oldAvatar);
+                    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
                 }
+
                 const finalPath = path.join(__dirname, '../images', newAvatar);
                 fs.renameSync(tempFilePath, finalPath);
                 updateData.anh_dai_dien = newAvatar;
             }
 
+            // Đổi mật khẩu nếu có
             if (mat_khau_cu || mat_khau_moi || mat_khau_xac_nhan) {
-                if (!mat_khau_cu || !mat_khau_moi || !mat_khau_xac_nhan) {
-                    return res.render('admin_index', {
-                        taiKhoan,
-                        message: 'Phải điền mật khẩu cũ, mật khẩu mới và mật khẩu xác nhận',
-                        messageType: 'error'
-                    });
-                }
-                if (mat_khau_moi !== mat_khau_xac_nhan) {
-                    return res.render('admin_index', {
-                        taiKhoan,
-                        message: 'Mật khẩu không trùng khớp',
-                        messageType: 'error'
-                    });
-                }
+                if (!mat_khau_cu || !mat_khau_moi || !mat_khau_xac_nhan)
+                    return renderError('Phải điền mật khẩu cũ, mới và xác nhận', taiKhoan);
+                if (mat_khau_moi !== mat_khau_xac_nhan)
+                    return renderError('Mật khẩu không trùng khớp', taiKhoan);
+
                 const isMatch = await bcrypt.compare(mat_khau_cu, taiKhoan.mat_khau);
-                if (!isMatch) {
-                    return res.render('admin_index', {
-                        taiKhoan,
-                        message: 'Mật khẩu cũ không đúng',
-                        messageType: 'error'
-                    });
-                }
+                if (!isMatch) return renderError('Mật khẩu cũ không đúng', taiKhoan);
 
-                const hashedPassword = await bcrypt.hash(mat_khau_moi, saltRounds);
-                updateData.mat_khau = hashedPassword;
-
+                updateData.mat_khau = await bcrypt.hash(mat_khau_moi, saltRounds);
             }
 
             if (Object.keys(updateData).length > 0) {
                 await conn.query('UPDATE tai_khoan SET ? WHERE tai_khoan_id = ?', [updateData, taiKhoanId]);
-                return res.render('admin_index', {
-                    taiKhoan: { ...taiKhoan, ...updateData }, // cập nhật dữ liệu mới để view dùng
+                return res.render(layout, {
+                    taiKhoan: { ...taiKhoan, ...updateData },
                     message: 'Cập nhật thành công!',
                     messageType: 'success'
                 });
-
             } else {
-                return res.render('admin_index', {
+                return res.render(layout, {
                     taiKhoan,
                     message: 'Không có thay đổi nào được cập nhật',
                     messageType: 'info'
@@ -140,14 +108,13 @@ class SettingsController {
             }
         } catch (error) {
             console.error('Lỗi cập nhật cài đặt:', error);
-            if (tempFilePath && fs.existsSync(tempFilePath)) {
-                fs.unlinkSync(tempFilePath);
-            }
+            if (tempFilePath && fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
             res.status(500).send('Lỗi cập nhật thông tin');
         } finally {
-            if (conn && typeof conn.release === 'function') conn.release();
+            if (conn) conn.release();
         }
     }
+
 }
 
 module.exports = SettingsController;

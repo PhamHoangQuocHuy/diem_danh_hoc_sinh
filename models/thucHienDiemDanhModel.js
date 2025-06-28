@@ -139,118 +139,74 @@ class thucHienDiemDanhModel {
         const conn = await pool.getConnection();
         try {
             await conn.beginTransaction();
-            // Kiểm tra ngày điểm danh
+
+            // Chỉ cho điểm danh trong ngày hôm nay
             const today = new Date().toISOString().slice(0, 10);
-            if (ngay_diem_danh < today) {
+            if (ngay_diem_danh !== today) {
                 await conn.rollback();
                 return {
                     success: false,
-                    message: 'Không thể điểm danh cho ngày đã qua',
-                    messageType: 'error'
-                };
-            }
-            if (ngay_diem_danh > today) {
-                await conn.rollback();
-                return {
-                    success: false,
-                    message: 'Không thể điểm danh cho ngày trong tương lai',
+                    message: 'Chỉ được phép điểm danh cho ngày hôm nay',
                     messageType: 'error'
                 };
             }
 
             for (const diemDanh of danhSachDiemDanh) {
                 const { hoc_sinh_id, trang_thai, ghi_chu } = diemDanh;
-                // Lấy loại học sinh (bán trú / không bán trú)
+
+                // Lấy thông tin học sinh
                 const [hsRows] = await conn.query(
-                    'SELECT * FROM hoc_sinh WHERE hoc_sinh_id = ?',
+                    'SELECT ho_ten FROM hoc_sinh WHERE hoc_sinh_id = ?',
                     [hoc_sinh_id]
                 );
                 if (hsRows.length === 0) {
-                    throw new Error('Không tìm thấy học sinh');
+                    console.log(`Không tìm thấy học sinh với ID ${hoc_sinh_id}`);
+                    continue;
                 }
-                const loai_hoc_sinh = hsRows[0].loai_hoc_sinh;
-                const ten_hoc_sinh = hsRows[0].ho_ten;
 
-                // Lấy các bản ghi điểm danh trong ngày cho học sinh này
+                // Kiểm tra xem đã có bản ghi điểm danh trong ngày chưa
                 const [ddRows] = await conn.query(
                     'SELECT * FROM diem_danh WHERE hoc_sinh_id = ? AND lop_hoc_id = ? AND ngay_diem_danh = ?',
                     [hoc_sinh_id, lop_hoc_id, ngay_diem_danh]
                 );
-                // HỌC SINH BÁN TRÚ
-                if (loai_hoc_sinh === 'Bán trú' && buoi === 'afternoon') {
-                    await conn.rollback();
-                    return { success: false, message: 'Học sinh bán trú không điểm danh chiều', messageType: 'error' };
-                }
-                if (loai_hoc_sinh === 'Bán trú' && buoi === 'morning') {
-                    if (ddRows.length > 0) { // Đã có điểm danh => Cập nhât
+
+                if (ddRows.length > 0) {
+                    // Đã có bản ghi → UPDATE (giữ nguyên anh_ghi_nhan nếu có)
+                    const daCoAnh = !!ddRows[0].anh_ghi_nhan;
+
+                    if (daCoAnh) {
                         await conn.query(`
-                            UPDATE diem_danh
-                            SET trang_thai = ?, ghi_chu = ?, anh_ghi_nhan = NULL
-                            WHERE diem_danh_id = ?
-                        `, [trang_thai, ghi_chu, ddRows[0].diem_danh_id]);
+                        UPDATE diem_danh
+                        SET trang_thai = ?, ghi_chu = ?
+                        WHERE diem_danh_id = ?
+                    `, [trang_thai, ghi_chu, ddRows[0].diem_danh_id]);
                     } else {
-                        // Chưa có => Thêm mới
                         await conn.query(`
-                            INSERT INTO diem_danh (hoc_sinh_id, lop_hoc_id, ngay_diem_danh, trang_thai, ghi_chu, anh_ghi_nhan)
-                            VALUES (?, ?, ?, ?, ?, NULL)
-                        `, [hoc_sinh_id, lop_hoc_id, ngay_diem_danh, trang_thai, ghi_chu]);
+                        UPDATE diem_danh
+                        SET trang_thai = ?, ghi_chu = ?, anh_ghi_nhan = NULL
+                        WHERE diem_danh_id = ?
+                    `, [trang_thai, ghi_chu, ddRows[0].diem_danh_id]);
                     }
-                }
-                // HỌC SINH KHÔNG BÁN TRÚ
-                else if (loai_hoc_sinh === 'Không bán trú') {
-                    if (buoi === 'morning') { // Nếu là buổi sáng và có danh sách rồi => UPDATE
-                        if (ddRows.length > 0) {
-                            await conn.query(`
-                                UPDATE diem_danh
-                                SET trang_thai = ?, ghi_chu = ?, anh_ghi_nhan = NULL
-                                WHERE diem_danh_id = ?
-                            `, [trang_thai, ghi_chu, ddRows[0].diem_danh_id]);
-                        }
-                        else { // Nếu chưa thì => INSERT
-                            await conn.query(`
-                                INSERT INTO diem_danh (hoc_sinh_id, lop_hoc_id, ngay_diem_danh, trang_thai, ghi_chu, anh_ghi_nhan)
-                                VALUES (?, ?, ?, ?, ?, NULL)
-                            `, [hoc_sinh_id, lop_hoc_id, ngay_diem_danh, trang_thai, ghi_chu]);
-                        }
-                    } else if (buoi === 'afternoon') {
-                        // Kiểm tra xem đã điểm danh buổi sáng chưa
-                        const [sangRows] = await conn.query(
-                            'SELECT * FROM diem_danh WHERE hoc_sinh_id = ? AND lop_hoc_id = ? AND ngay_diem_danh = ?',
-                            [hoc_sinh_id, lop_hoc_id, ngay_diem_danh]
-                        );
-
-                        if (sangRows.length === 0) {
-                            await conn.rollback();
-                            return {
-                                success: false,
-                                message: `Học sinh ${ten_hoc_sinh} chưa có kết quả điểm danh buổi sáng`,
-                                messageType: 'error'
-                            };
-                        }
-
-                        // Đã có bản ghi sáng, nên xử lý UPDATE hoặc INSERT chiều (tuỳ `ddRows`)
-                        if (ddRows.length > 0) {
-                            await conn.query(`
-                                UPDATE diem_danh
-                                SET trang_thai = ?, ghi_chu = ?, anh_ghi_nhan = NULL
-                                WHERE diem_danh_id = ?
-                            `, [trang_thai, ghi_chu, ddRows[0].diem_danh_id]);
-                        }
-                    }
+                } else {
+                    // Chưa có bản ghi → INSERT
+                    await conn.query(`
+                    INSERT INTO diem_danh (hoc_sinh_id, lop_hoc_id, ngay_diem_danh, trang_thai, ghi_chu, anh_ghi_nhan)
+                    VALUES (?, ?, ?, ?, ?, NULL)
+                `, [hoc_sinh_id, lop_hoc_id, ngay_diem_danh, trang_thai, ghi_chu]);
                 }
             }
+
             await conn.commit();
             return { success: true, message: 'Lưu điểm danh thành công', messageType: 'success' };
-        }
-        catch (error) {
+        } catch (error) {
             await conn.rollback();
             console.log(error);
             return { success: false, message: 'Lưu điểm danh thất bại', messageType: 'error' };
-        }
-        finally {
+        } finally {
             if (conn) conn.release();
         }
     }
+
     static async xuatThongTinExcel(lop_hoc_id, ngay_diem_danh) {
         const conn = await pool.getConnection();
         try {
@@ -275,6 +231,131 @@ class thucHienDiemDanhModel {
         catch (error) {
             console.log(error);
             return [];
+        }
+        finally {
+            if (conn) conn.release();
+        }
+    }
+    static async loadDuLieuKhuonMat(lop_hoc_id, ngay_diem_danh) {
+        let conn;
+        try {
+            // Kiểm tra ngày điểm danh có phải là hôm nay không
+            const today = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+            if (ngay_diem_danh !== today) {
+                throw new Error('Chỉ được phép điểm danh khuôn mặt vào ngày hiện tại');
+            }
+            conn = await pool.getConnection();
+            const [rows] = await conn.query(`
+                SELECT 
+                    hs.hoc_sinh_id,
+                    hs.ho_ten,
+                    hs.ngay_sinh,
+                    hahs.duong_dan_anh,
+                    nh.ten_nam_hoc
+                FROM hoc_sinh hs
+                JOIN hoc_sinh_lop_hoc hslh ON hs.hoc_sinh_id = hslh.hoc_sinh_id
+                JOIN lop_hoc lh ON hslh.lop_hoc_id = lh.lop_hoc_id
+                JOIN hoc_ky hk ON lh.hoc_ky_id = hk.hoc_ky_id
+                JOIN nam_hoc nh ON hk.nam_hoc_id = nh.nam_hoc_id
+                LEFT JOIN hinh_anh_hoc_sinh hahs ON hs.hoc_sinh_id = hahs.hoc_sinh_id
+                WHERE lh.lop_hoc_id = ?
+                ORDER BY hs.hoc_sinh_id, hahs.hinh_anh_hoc_sinh_id
+                `, [lop_hoc_id]);
+            // Gom 3 hình ảnh mỗi học sinh thành 1 object
+            const hocSinhMap = {};
+            rows.forEach(row => {
+                if (!hocSinhMap[row.hoc_sinh_id]) {
+                    hocSinhMap[row.hoc_sinh_id] = {
+                        hoc_sinh_id: row.hoc_sinh_id,
+                        ho_ten: row.ho_ten,
+                        ngay_sinh: row.ngay_sinh,
+                        duong_dan_anh: [],
+                        ten_nam_hoc: row.ten_nam_hoc
+                    }
+                }
+                if (row.duong_dan_anh) {
+                    hocSinhMap[row.hoc_sinh_id].duong_dan_anh.push(`${row.duong_dan_anh}`);
+                }
+            });
+            return Object.values(hocSinhMap);
+        }
+        catch (error) {
+            console.log(error);
+            throw error;
+        }
+        finally {
+            if (conn) conn.release();
+        }
+    }
+    static async ghiNhanDiemDanhKhuonMat({ hoc_sinh_id, lop_hoc_id, buoi, anh_ghi_nhan }) {
+        const conn = await pool.getConnection();
+        try {
+            await conn.beginTransaction();
+            const ngay_diem_danh = new Date().toISOString().slice(0, 10);
+
+            const [hsRows] = await conn.query(
+                'SELECT * FROM hoc_sinh WHERE hoc_sinh_id = ?',
+                [hoc_sinh_id]
+            );
+            if (hsRows.length === 0) {
+                await conn.rollback();
+                return { success: false, message: 'Không tìm thấy học sinh', messageType: 'error' };
+            }
+
+            const hocSinh = hsRows[0];
+
+            if (hocSinh.loai_hoc_sinh === 'Bán trú' && buoi === 'afternoon') {
+                await conn.rollback();
+                return { success: false, message: 'Học sinh bán trú không cần điểm danh buổi chiều', messageType: 'error' };
+            }
+
+            const [ddRows] = await conn.query(
+                'SELECT * FROM diem_danh WHERE hoc_sinh_id = ? AND lop_hoc_id = ? AND ngay_diem_danh = ?',
+                [hoc_sinh_id, lop_hoc_id, ngay_diem_danh]
+            );
+
+            if (hocSinh.loai_hoc_sinh === 'Không bán trú' && buoi === 'afternoon' && ddRows.length === 0) {
+                await conn.rollback();
+                return { success: false, message: `Học sinh ${hocSinh.ho_ten} chưa được điểm danh buổi sáng`, messageType: 'error' };
+            }
+
+            // Xử lý lưu file ảnh ghi nhận
+            let anhGhiNhanPath = null;
+            if (anh_ghi_nhan) {
+                const dir = path.join(__dirname, '../public/images/anh_ghi_nhan/thanh_cong/');
+                if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+                const tenFileAnh = `${hoc_sinh_id}_${ngay_diem_danh}.jpg`;
+                const duongDanLuu = path.join(dir, tenFileAnh);
+                const duongDanDB = `images/anh_ghi_nhan/thanh_cong/${tenFileAnh}`;
+
+                // Nếu dữ liệu là base64
+                const base64Data = anh_ghi_nhan.replace(/^data:image\/\w+;base64,/, '');
+                fs.writeFileSync(duongDanLuu, base64Data, 'base64');
+                anhGhiNhanPath = duongDanDB;
+            }
+
+            // INSERT hoặc UPDATE
+            if (ddRows.length > 0) {
+                await conn.query(`
+                UPDATE diem_danh
+                SET trang_thai = 'Có mặt', ghi_chu = '', anh_ghi_nhan = ?
+                WHERE diem_danh_id = ?
+            `, [anhGhiNhanPath, ddRows[0].diem_danh_id]);
+            } else {
+                await conn.query(`
+                INSERT INTO diem_danh (hoc_sinh_id, lop_hoc_id, ngay_diem_danh, trang_thai, ghi_chu, anh_ghi_nhan)
+                VALUES (?, ?, ?, 'Có mặt', '', ?)
+            `, [hoc_sinh_id, lop_hoc_id, ngay_diem_danh, anhGhiNhanPath]);
+            }
+
+            await conn.commit();
+            return { success: true, message: 'Điểm danh thành công', messageType: 'success' };
+        }
+        catch (error) {
+            await conn.rollback();
+            console.error('Lỗi ghi nhận điểm danh khuôn mặt:', error);
+            return { success: false, message: 'Lỗi ghi nhận điểm danh', messageType: 'error' };
         }
         finally {
             if (conn) conn.release();

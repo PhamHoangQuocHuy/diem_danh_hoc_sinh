@@ -175,23 +175,10 @@ class HocSinhController {
                     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
                     .replace(/đ/g, 'd').replace(/Đ/g, 'D')
                     .replace(/[^a-zA-Z0-9]/g, '');
-                duong_dan_anh = req.files.map((file, i) => {
-                    const ext = path.extname(file.originalname).toLowerCase();
-                    const newFileName = `${hocSinhId}_${safeHoTen}_${i + 1}${ext}`;
-                    const newPath = path.join(path.dirname(file.path), newFileName);
-                    fs.renameSync(file.path, newPath);
-                    return path.relative(path.join(__dirname, '..', 'public'), newPath).replace(/\\/g, '/');
+                duong_dan_anh = req.files.map(file => {
+                    return path.relative(path.join(__dirname, '..', 'public'), file.path).replace(/\\/g, '/');
                 });
-            }
 
-            const removed_images = req.body.removed_images ? req.body.removed_images.split(',') : [];
-
-            // Xóa ảnh cũ trên hệ thống file nếu có
-            if (removed_images.length > 0) {
-                for (const imgPath of removed_images) {
-                    const fullPath = path.join(__dirname, '..', 'public', imgPath);
-                    if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
-                }
             }
 
             // Cập nhật thông tin học sinh
@@ -200,7 +187,6 @@ class HocSinhController {
                 phu_huynh_ids: phu_huynh_ids_arr,
                 moi_quan_he: moi_quan_he_arr,
                 duong_dan_anh,
-                removed_images
             });
 
             if (!result.success) {

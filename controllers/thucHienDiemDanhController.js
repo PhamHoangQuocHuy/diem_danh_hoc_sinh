@@ -220,5 +220,65 @@ class thucHienDiemDanhController {
             return res.redirect('/thuc-hien-diem-danh?message=Lỗi khi xuất excel&messageType=error');
         }
     }
+    static async layDuLieuKhuonMat(req, res) {
+        try {
+            const { lop_hoc_id, ngay_diem_danh } = req.query;
+            if (!lop_hoc_id || !ngay_diem_danh) {
+                return res.redirect('/thuc-hien-diem-danh?message=Chưa chọn lớp hoặc ngày để điểm danh&messageType=error');
+            }
+            const data = await thucHienDiemDanhModel.loadDuLieuKhuonMat(lop_hoc_id, ngay_diem_danh);
+            res.json(data);
+        }
+        catch (err) {
+            console.log('Lỗi khi lấy dữ liệu điểm danh khuôn mặt: ', err);
+            return res.redirect('/thuc-hien-diem-danh?message=Lỗi server&messageType=error');
+        }
+    }
+    static async ghiNhanDiemDanh(req, res) {
+        try {
+
+            const { hoc_sinh_id, anh_ghi_nhan, lop_hoc_id } = req.body;
+
+            // Lấy lớp học từ token hoặc body
+            const lopHocId = req.taiKhoan?.lop_hoc_id || lop_hoc_id;
+
+            // Xác định ngày hiện tại và buổi hiện tại
+            const ngay_diem_danh = new Date().toISOString().slice(0, 10);
+            const buoi = req.query.tab === 'morning' ? 'morning' : 'afternoon';
+            //console.log('==> Điểm danh:', { hoc_sinh_id, lop_hoc_id, buoi, ngay_diem_danh });
+
+            // Gửi qua model xử lý
+            const ketQua = await thucHienDiemDanhModel.ghiNhanDiemDanhKhuonMat({
+                hoc_sinh_id,
+                lop_hoc_id: lopHocId,
+                ngay_diem_danh,
+                buoi,
+                anh_ghi_nhan
+            });
+
+            // Trả về kết quả tương tự như điểm danh thủ công
+            if (ketQua.success) {
+                return res.status(200).json({
+                    success: true,
+                    message: ketQua.message,
+                    messageType: ketQua.messageType
+                });
+            } else {
+                return res.status(400).json({
+                    success: false,
+                    message: ketQua.message,
+                    messageType: ketQua.messageType
+                });
+            }
+
+        } catch (err) {
+            console.error('Lỗi server khi ghi nhận điểm danh khuôn mặt:', err);
+            return res.status(500).json({
+                success: false,
+                message: 'Lỗi server khi ghi nhận điểm danh khuôn mặt',
+                messageType: 'error'
+            });
+        }
+    }
 }
 module.exports = thucHienDiemDanhController;
