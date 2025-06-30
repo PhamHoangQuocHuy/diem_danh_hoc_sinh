@@ -280,5 +280,32 @@ class thucHienDiemDanhController {
             });
         }
     }
+    static async ghiNhanVang(req, res) {
+        const { danh_sach_vang, lop_hoc_id, ngay_diem_danh, tab } = req.body;
+        const buoi = tab === 'afternoon' ? 'afternoon' : 'morning';
+
+        try {
+            for (const hoc_sinh_id of danh_sach_vang) {
+                await thucHienDiemDanhModel.ghiNhanVang({
+                    hoc_sinh_id,
+                    lop_hoc_id,
+                    ngay_diem_danh,
+                    buoi
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                message: 'Đã ghi nhận các học sinh vắng'
+            });
+        } catch (err) {
+            console.error('Lỗi ghi nhận vắng:', err);
+            return res.status(500).json({
+                success: false,
+                message: 'Lỗi ghi nhận học sinh vắng'
+            });
+        }
+    }
+
 }
 module.exports = thucHienDiemDanhController;

@@ -177,13 +177,13 @@ class thucHienDiemDanhModel {
                     if (daCoAnh) {
                         await conn.query(`
                         UPDATE diem_danh
-                        SET trang_thai = ?, ghi_chu = ?
+                        SET trang_thai = ?, ghi_chu = ?, thoi_gian = NOW()
                         WHERE diem_danh_id = ?
                     `, [trang_thai, ghi_chu, ddRows[0].diem_danh_id]);
                     } else {
                         await conn.query(`
                         UPDATE diem_danh
-                        SET trang_thai = ?, ghi_chu = ?, anh_ghi_nhan = NULL
+                        SET trang_thai = ?, ghi_chu = ?, anh_ghi_nhan = NULL, thoi_gian = NOW()
                         WHERE diem_danh_id = ?
                     `, [trang_thai, ghi_chu, ddRows[0].diem_danh_id]);
                     }
@@ -206,7 +206,6 @@ class thucHienDiemDanhModel {
             if (conn) conn.release();
         }
     }
-
     static async xuatThongTinExcel(lop_hoc_id, ngay_diem_danh) {
         const conn = await pool.getConnection();
         try {
@@ -339,7 +338,7 @@ class thucHienDiemDanhModel {
             if (ddRows.length > 0) {
                 await conn.query(`
                 UPDATE diem_danh
-                SET trang_thai = 'Có mặt', ghi_chu = '', anh_ghi_nhan = ?
+                SET trang_thai = 'Có mặt', ghi_chu = '', anh_ghi_nhan = ?, thoi_gian = NOW()
                 WHERE diem_danh_id = ?
             `, [anhGhiNhanPath, ddRows[0].diem_danh_id]);
             } else {
@@ -361,6 +360,36 @@ class thucHienDiemDanhModel {
             if (conn) conn.release();
         }
     }
+    static async ghiNhanVang({ hoc_sinh_id, lop_hoc_id, ngay_diem_danh, buoi }) {
+        const conn = await pool.getConnection();
+        try {
+            const [ddRows] = await conn.query(
+                'SELECT * FROM diem_danh WHERE hoc_sinh_id = ? AND lop_hoc_id = ? AND ngay_diem_danh = ?',
+                [hoc_sinh_id, lop_hoc_id, ngay_diem_danh]
+            );
+
+            if (ddRows.length > 0) {
+                // Nếu đã tồn tại → update thành Vắng
+                await conn.query(`
+                UPDATE diem_danh
+                SET trang_thai = 'Vắng', ghi_chu = '', anh_ghi_nhan = null
+                WHERE diem_danh_id = ?
+            `, [ddRows[0].diem_danh_id]);
+            } else {
+                // Nếu chưa tồn tại → insert mới
+                await conn.query(`
+                INSERT INTO diem_danh (hoc_sinh_id, lop_hoc_id, ngay_diem_danh, trang_thai, ghi_chu, anh_ghi_nhan)
+                VALUES (?, ?, ?, 'Vắng', '', null)
+            `, [hoc_sinh_id, lop_hoc_id, ngay_diem_danh]);
+            }
+        } catch (error) {
+            console.error('Lỗi ghi nhận vắng:', error);
+            throw error;
+        } finally {
+            if (conn) conn.release();
+        }
+    }
+
 }
 
 module.exports = thucHienDiemDanhModel;

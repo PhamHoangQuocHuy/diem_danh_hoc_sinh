@@ -244,12 +244,20 @@
                                         class="custom-radio custom-radio-green" <%=(diemdanh.trang_thai==='Có mặt' ||
                                         (!diemdanh.trang_thai && ngay_diem_danh===new Date().toISOString().slice(0,10)))
                                         ? 'checked' : '' %> >
-
+                                    <!-- MẶC ĐỊNH LÀ CÓ MẶT -->
+                                    <!-- <input type="radio" name="trang_thai_<%= diemdanh.hoc_sinh_id %>" value="present"
+                                        class="custom-radio custom-radio-green" <%=diemdanh.trang_thai==='Có mặt'
+                                        ? 'checked' : '' %> > -->
                                 </td>
                                 <td class="px-3 py-2 border-r border-gray-200 text-center">
                                     <input type="radio" name="trang_thai_<%= diemdanh.hoc_sinh_id %>" value="absent"
                                         class="custom-radio custom-radio-red" <%=diemdanh.trang_thai==='Vắng'
                                         ? 'checked' : '' %> >
+                                    <!-- <input type="radio" name="trang_thai_<%= diemdanh.hoc_sinh_id %>" value="absent"
+                                        class="custom-radio custom-radio-red" <%=(diemdanh.trang_thai==='Vắng' ||
+                                        (!diemdanh.trang_thai && ngay_diem_danh===new Date().toISOString().slice(0,10)))
+                                        ? 'checked' : '' %> > -->
+                                    <!-- MẶC ĐỊNH LÀ VẮNG -->
                                 </td>
                                 <td class="px-3 py-2 border-r border-gray-200 text-center">
                                     <input type="radio" name="trang_thai_<%= diemdanh.hoc_sinh_id %>" value="Học sáng"
@@ -376,9 +384,43 @@
     }
 
     function closeFaceModal() {
-        document.getElementById('faceModal').classList.add('hidden');
-        stopCamera();
-        location.reload();
+        // Lấy danh sách tất cả học sinh trong lớp
+        const allStudentInputs = document.querySelectorAll('input[name^="trang_thai_"]');
+        const allStudentIds = new Set();
+
+        allStudentInputs.forEach(input => {
+            const idMatch = input.name.match(/trang_thai_(\d+)/);
+            if (idMatch) {
+                allStudentIds.add(idMatch[1]);
+            }
+        });
+
+        // Tìm các học sinh chưa được điểm danh (không nằm trong recognizedStudents)
+        const absentStudents = [...allStudentIds].filter(id => !recognizedStudents.has(id));
+
+        const lopHocId = document.querySelector('input[name="lop_hoc_id"]').value;
+        const ngayDiemDanh = document.querySelector('input[name="ngay_diem_danh"]').value;
+        const activeTab = new URLSearchParams(window.location.search).get('tab') || 'morning';
+
+        // Gửi danh sách học sinh vắng lên server
+        fetch(`/thuc-hien-diem-danh/ghi-nhan-vang?tab=${activeTab}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                danh_sach_vang: absentStudents,
+                lop_hoc_id: lopHocId,
+                ngay_diem_danh: ngayDiemDanh
+            })
+        }).then(() => {
+            // Tắt camera và reload sau khi cập nhật xong
+            stopCamera();
+            document.getElementById('faceModal').classList.add('hidden');
+            location.reload();
+        }).catch(err => {
+            console.error('Lỗi khi gửi danh sách vắng:', err);
+            stopCamera();
+            document.getElementById('faceModal').classList.add('hidden');
+        });
     }
     function stopCamera() {
         const video = document.getElementById('video');
@@ -398,3 +440,4 @@
 <% function formatDate(dateStr) { if (!dateStr) return '' ; const d=new Date(dateStr); const
     day=String(d.getDate()).padStart(2, '0' ); const month=String(d.getMonth() + 1).padStart(2, '0' ); const
     year=d.getFullYear(); return `${day}/${month}/${year}`; } %>
+    

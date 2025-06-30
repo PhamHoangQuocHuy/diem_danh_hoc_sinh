@@ -1,10 +1,11 @@
 const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
+const recognizedStudents = new Set();
 
 canvas.width = 640;
 canvas.height = 480;
-canvas.style.border = '2px solid #00FFFF';
+//canvas.style.border = '2px solid #00FFFF';
 
 let knownFaces = [];
 let canScan = true;
@@ -109,8 +110,6 @@ const runFaceDetection = () => {
         }
 
         // Nếu không phải nhiều khuôn mặt → reset cờ
-        
-
         if (detections.length === 1) {
             warningShown = false;
 
@@ -126,7 +125,6 @@ const runFaceDetection = () => {
 
     }, 100);
 };
-
 //  Tìm khuôn mặt gần nhất và tính độ chính xác
 const findBestMatch = (descriptor) => {
     let bestMatch = null;
@@ -168,8 +166,6 @@ const drawFaceBox = (box, bestMatch, accuracy) => {
 
 //  Ghi nhận điểm danh & tiếp tục quét ngay sau khi nhấn OK
 const markAttendance = async (student) => {
-    //console.log('Điểm danh:', student.name);
-
     // Chụp ảnh từ video
     const snapshotCanvas = document.createElement('canvas');
     snapshotCanvas.width = video.videoWidth;
@@ -189,7 +185,7 @@ const markAttendance = async (student) => {
             ngay_diem_danh: document.querySelector('input[name="ngay_diem_danh"]').value,
         })
     });
-    //console.log('Gửi điểm danh:', student.id, base64Image.slice(0, 50));
+    recognizedStudents.add(String(student.id));
     //  PAUSE VIDEO sau khi điểm danh
     video.pause();
     canScan = false;
@@ -200,7 +196,6 @@ const markAttendance = async (student) => {
         lastRecognizedId = null; //  Đảm bảo hệ thống nhận diện lại từ đầu
         canScan = true; //  Bật lại chế độ quét
         video.play(); //  Tiếp tục video sau khi delay
-        console.log('Đã bật lại chế độ quét sau khi nhấn OK');
     }, 2000);
 };
 
