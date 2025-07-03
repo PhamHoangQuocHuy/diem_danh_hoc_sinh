@@ -221,7 +221,7 @@ class thucHienDiemDanhModel {
                 FROM diem_danh dd
                 JOIN hoc_sinh hs ON dd.hoc_sinh_id = hs.hoc_sinh_id
                 JOIN lop_hoc lh ON dd.lop_hoc_id = lh.lop_hoc_id
-                WHERE dd.lop_hoc_id = ?
+                WHERE dd.lop_hoc_id = ? AND hs.daXoa = 0
                 AND dd.ngay_diem_danh = ?
                 `, [lop_hoc_id, ngay_diem_danh]);
 
@@ -257,7 +257,7 @@ class thucHienDiemDanhModel {
                 JOIN hoc_ky hk ON lh.hoc_ky_id = hk.hoc_ky_id
                 JOIN nam_hoc nh ON hk.nam_hoc_id = nh.nam_hoc_id
                 LEFT JOIN hinh_anh_hoc_sinh hahs ON hs.hoc_sinh_id = hahs.hoc_sinh_id
-                WHERE lh.lop_hoc_id = ?
+                WHERE lh.lop_hoc_id = ? AND hs.daXoa = 0
                 ORDER BY hs.hoc_sinh_id, hahs.hinh_anh_hoc_sinh_id
                 `, [lop_hoc_id]);
             // Gom 3 hình ảnh mỗi học sinh thành 1 object
@@ -369,6 +369,11 @@ class thucHienDiemDanhModel {
             );
 
             if (ddRows.length > 0) {
+                const diemDanh = ddRows[0];
+                if (diemDanh.anh_ghi_nhan && diemDanh.trang_thai === 'Có mặt') {
+                //console.log(`Bỏ qua học sinh ${hoc_sinh_id} vì đã có ảnh điểm danh`);
+                return;
+            }
                 // Nếu đã tồn tại → update thành Vắng
                 await conn.query(`
                 UPDATE diem_danh

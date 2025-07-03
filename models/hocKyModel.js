@@ -65,7 +65,7 @@ class HocKyModel {
             if (result.affectedRows > 0) {
                 await conn.commit();
 
-                
+
             } else {
                 await conn.rollback();
                 return { success: false, message: 'Lỗi khi thêm học kỳ', messageType: 'error' };
@@ -115,6 +115,28 @@ class HocKyModel {
                 await conn.rollback();
                 return { success: false, message: 'Vui lòng điền đầy đủ thông tin', messageType: 'error' };
             }
+            // Kiểm tra nếu đã có lớp thuộc học kỳ này => không cho phép sửa nam_hoc_id
+            const [checkLop] = await conn.query(
+                'SELECT 1 FROM lop_hoc WHERE hoc_ky_id = ?',
+                [id]
+            );
+            if (checkLop.length > 0) {
+                // Lấy nam_hoc_id cũ của học kỳ
+                const [oldNamHoc] = await conn.query(
+                    'SELECT nam_hoc_id FROM hoc_ky WHERE hoc_ky_id = ?',
+                    [id]
+                );
+                const oldNamHocId = oldNamHoc[0]?.nam_hoc_id;
+
+                if (oldNamHocId !== nam_hoc_id) {
+                    await conn.rollback();
+                    return {
+                        success: false,
+                        message: 'Không thể thay đổi năm học vì học kỳ này đã có lớp học',
+                        messageType: 'error'
+                    };
+                }
+            }
 
             // Ràng buộc 1: Ngày bắt đầu không được >= ngày kết thúc
             const startDate = new Date(ngay_bat_dau);
@@ -163,9 +185,9 @@ class HocKyModel {
 
             // Cập nhật học kỳ
             const sql = `
-            UPDATE hoc_ky 
-            SET ten_hoc_ky = ?, nam_hoc_id = ?, ngay_bat_dau = ?, ngay_ket_thuc = ?
-            WHERE hoc_ky_id = ?`;
+                UPDATE hoc_ky 
+                SET ten_hoc_ky = ?, nam_hoc_id = ?, ngay_bat_dau = ?, ngay_ket_thuc = ?
+                WHERE hoc_ky_id = ?`;
             const [result] = await conn.query(sql, [ten_hoc_ky, nam_hoc_id, ngay_bat_dau, ngay_ket_thuc, id]);
 
             if (result.affectedRows === 0) {

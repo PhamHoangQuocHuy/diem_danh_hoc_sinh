@@ -125,6 +125,7 @@ const runFaceDetection = () => {
 
     }, 100);
 };
+
 //  Tìm khuôn mặt gần nhất và tính độ chính xác
 const findBestMatch = (descriptor) => {
     let bestMatch = null;

@@ -28,7 +28,7 @@ class diemDanhModel {
             FROM hoc_sinh_lop_hoc hslh
             JOIN hoc_sinh hs ON hs.hoc_sinh_id = hslh.hoc_sinh_id
             WHERE hslh.lop_hoc_id = ? AND hs.daXoa = 0
-            ORDER BY hs.ho_ten
+            ORDER BY hs.hoc_sinh_id ASC
         `, [lop_hoc_id]);
             return rows;
         } catch (error) {

@@ -42,6 +42,18 @@ class NamHocModel {
         }
         const conn = await pool.getConnection();
         try {
+            // Kiểm tra tên năm học đã tồn tại trong cùng trường => Lỗi
+            const [existRows] = await conn.query(
+                'SELECT 1 FROM nam_hoc WHERE ten_nam_hoc = ? AND truong_hoc_id = ?',
+                [ten_nam_hoc, truong_hoc_id]
+            );
+            if (existRows.length > 0) {
+                return {
+                    success: false,
+                    message: 'Tên năm học đã tồn tại trong trường này',
+                    messageType: 'error'
+                };
+            }
             const [result] = await conn.query('INSERT INTO nam_hoc (ten_nam_hoc, truong_hoc_id) VALUES (?, ?)', [ten_nam_hoc, truong_hoc_id]);
             await conn.commit();
 
@@ -108,8 +120,57 @@ class NamHocModel {
         }
         const conn = await pool.getConnection();
         try {
+            // Lấy tên năm học cũ để đổi thư mục nếu cần
+            const [oldRows] = await conn.query('SELECT ten_nam_hoc FROM nam_hoc WHERE nam_hoc_id = ?', [id]);
+            if (!oldRows.length) {
+                return { success: false, message: 'Không tìm thấy năm học cần sửa', messageType: 'error' };
+            }
+            const oldTenNamHoc = oldRows[0].ten_nam_hoc;
+            // Kiểm tra ràng buộc: đã có học sinh nào thuộc năm học này chưa
+            const [rows] = await conn.query(`
+                SELECT COUNT(*) AS so_luong
+                FROM hoc_sinh_lop_hoc hslh
+                JOIN lop_hoc lh ON hslh.lop_hoc_id = lh.lop_hoc_id
+                JOIN hoc_ky hk ON lh.hoc_ky_id = hk.hoc_ky_id
+                WHERE hk.nam_hoc_id = ?
+            `, [id]);
+
+            if (rows[0].so_luong > 0) {
+                return {
+                    success: false,
+                    message: 'Không thể sửa tên năm học vì đã có học sinh trong các lớp thuộc năm học này',
+                    messageType: 'error'
+                };
+            }
+            // Kiểm tra cùng tên năm học và cùng trường => Lỗi
+            const [existRows] = await conn.query(
+                'SELECT 1 FROM nam_hoc WHERE ten_nam_hoc = ? AND truong_hoc_id = ? AND nam_hoc_id != ?',
+                [ten_nam_hoc, truong_hoc_id, id]
+            );
+            if (existRows.length > 0) {
+                return {
+                    success: false,
+                    message: 'Tên năm học đã tồn tại trong trường này',
+                    messageType: 'error'
+                };
+            }
             const [result] = await conn.query('UPDATE nam_hoc SET ten_nam_hoc = ?, truong_hoc_id = ? WHERE nam_hoc_id = ?', [ten_nam_hoc, truong_hoc_id, id]);
             await conn.commit();
+            try {
+                if (fs.existsSync(oldPath)) {
+                    fs.renameSync(oldPath, newPath);
+                } else {
+                    // Nếu thư mục cũ không tồn tại thì tạo mới thư mục mới
+                    fs.mkdirSync(newPath, { recursive: true });
+                }
+            } catch (fsError) {
+                console.error('Lỗi khi đổi tên thư mục:', fsError);
+                return {
+                    success: false,
+                    message: 'Sửa năm học thành công nhưng lỗi khi đổi tên thư mục',
+                    messageType: 'error'
+                };
+            }
             return { success: true, message: 'Sửa năm học thành công', messageType: 'success' };
         } catch (error) {
             await conn.rollback();

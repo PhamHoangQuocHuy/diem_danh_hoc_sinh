@@ -247,16 +247,6 @@ class LopHocModel {
                 AND nh.nam_hoc_id = ?
                 AND lh.ten_lop != ?
             `, [giao_vien_id, nam_hoc_id, ten_lop]);
-            // Ràng buộc không trùng giáo viên không đổi lại được
-            // const [lopDangChuNhiem] = await conn.query(`
-            //     SELECT lh.lop_hoc_id
-            //     FROM lop_hoc lh
-            //     JOIN hoc_ky hk ON lh.hoc_ky_id = hk.hoc_ky_id
-            //     JOIN nam_hoc nh ON hk.nam_hoc_id = nh.nam_hoc_id
-            //     WHERE lh.giao_vien_id = ?
-            //     AND nh.nam_hoc_id = ?
-            //     AND lh.lop_hoc_id != ?
-            // `, [giao_vien_id, nam_hoc_id, id]);
 
 
             if (lopDangChuNhiem.length > 0) {

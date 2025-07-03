@@ -420,6 +420,19 @@ class HocSinhModel {
             if (phu_huynh_ids.length !== moi_quan_he.length || moi_quan_he.some(r => !['Cha', 'Mẹ', 'Người giám hộ'].includes(r))) {
                 return { success: false, message: 'Mỗi phụ huynh phải có mối quan hệ hợp lệ!', messageType: 'error' };
             }
+            // Không cho phép có 2 người là Cha hoặc 2 người là Mẹ
+            const demQuanHe = {};
+            for (const quanHe of moi_quan_he) {
+                demQuanHe[quanHe] = (demQuanHe[quanHe] || 0) + 1;
+                if (demQuanHe[quanHe] > 1 && (quanHe === 'Cha' || quanHe === 'Mẹ')) {
+                    return {
+                        success: false,
+                        message: `Không được chọn nhiều hơn 1 người là "${quanHe}"!`,
+                        messageType: 'error'
+                    };
+                }
+            }
+
             // Kiểm tra phụ huynh tồn tại
             const [kqPhuHuynh] = await conn.query(`SELECT COUNT(*) AS total FROM phu_huynh WHERE phu_huynh_id IN (?)`, [phu_huynh_ids]);
             if (kqPhuHuynh[0].total !== phu_huynh_ids.length) {

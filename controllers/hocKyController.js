@@ -67,7 +67,7 @@ class HocKyController {
                     page: 'pages/quanLyHocKy',
                     danhSachHocKy,
                     danhSachNamHoc,
-                    message: 'Xóa học kỳ thất bại',
+                    message: `${result.message}`,
                     messageType: 'error',
                 });
             }
@@ -93,7 +93,7 @@ class HocKyController {
             if (result.success) {
                 return res.redirect(`/hoc-ky?message=Sửa học kỳ thành công&messageType=success`);
             } else {
-                return res.redirect(`/hoc-ky?message=Sửa học kỳ thất bại&messageType=error`);
+                return res.redirect(`/hoc-ky?message=${result.message}&messageType=error`);
             }
         } catch (error) {
             console.error(error);

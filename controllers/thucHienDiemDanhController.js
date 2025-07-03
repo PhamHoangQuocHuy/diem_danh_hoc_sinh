@@ -62,7 +62,7 @@ class thucHienDiemDanhController {
                 return res.render('user_index', {
                     page: 'pages/thucHienDiemDanh',
                     message: 'Không có lớp học nào tương ứng với ngày bạn chọn',
-                    messageType: 'warning',
+                    messageType: 'error',
                     danhSachDiemDanh: [],
                     danhSachLopHoc,
                     tongLopHoc: [{ tong: 0 }],
@@ -85,12 +85,12 @@ class thucHienDiemDanhController {
                 : [];
 
             // Thống kê sĩ số
-            const ngayHienTai = new Date().toISOString().slice(0, 10);
+            //const ngayHienTai = new Date().toISOString().slice(0, 10);
             const tongLopHoc = await thucHienDiemDanhModel.layTongLopHoc(activeTab);
-            const tongCoMat = await thucHienDiemDanhModel.layTongCoMat(ngayHienTai, activeTab);
-            const tongVang = await thucHienDiemDanhModel.layTongVang(ngayHienTai, activeTab);
-            const tongHocSang = await thucHienDiemDanhModel.layTongHocSang(ngayHienTai, activeTab);
-            const tongHocChieu = await thucHienDiemDanhModel.layTongHocChieu(ngayHienTai, activeTab);
+            const tongCoMat = await thucHienDiemDanhModel.layTongCoMat(ngay_diem_danh, activeTab);
+            const tongVang = await thucHienDiemDanhModel.layTongVang(ngay_diem_danh, activeTab);
+            const tongHocSang = await thucHienDiemDanhModel.layTongHocSang(ngay_diem_danh, activeTab);
+            const tongHocChieu = await thucHienDiemDanhModel.layTongHocChieu(ngay_diem_danh, activeTab);
 
             return res.render('user_index', {
                 page: 'pages/thucHienDiemDanh',
