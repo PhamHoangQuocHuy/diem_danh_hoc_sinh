@@ -451,7 +451,7 @@ class HocSinhModel {
             `, [ho_ten, ngay_sinh, gioi_tinh, dia_chi, loai_hoc_sinh, id]);
             // 6. Xử lý ảnh học sinh
             const [currentImages] = await conn.query(`SELECT hinh_anh_hoc_sinh_id, duong_dan_anh 
-                FROM hinh_anh_hoc_sinh WHERE hoc_sinh_id = ? ORDER BY hinh_anh_hoc_sinh_id ASC`, [id]);
+    FROM hinh_anh_hoc_sinh WHERE hoc_sinh_id = ? ORDER BY hinh_anh_hoc_sinh_id ASC`, [id]);
 
             let finalDuongDanAnh = duong_dan_anh;
 
@@ -464,24 +464,24 @@ class HocSinhModel {
                 return { success: false, message: 'Học sinh phải có đúng 3 ảnh!', messageType: 'error' };
             }
 
-
             const [checkThuocLop] = await conn.query(`SELECT COUNT(*) AS total FROM hoc_sinh_lop_hoc WHERE hoc_sinh_id = ?`, [id]);
             let folderPath = 'images/temp/'; // Nếu chưa thuộc lớp thì update temp thôi
             if (checkThuocLop[0].total > 0) {
                 const [namHocRows] = await conn.query(`
-                    SELECT nh.ten_nam_hoc
-                    FROM hoc_sinh_lop_hoc hslh
-                    JOIN lop_hoc lh ON lh.lop_hoc_id = hslh.lop_hoc_id
-                    JOIN hoc_ky hk ON lh.hoc_ky_id = hk.hoc_ky_id
-                    JOIN nam_hoc nh ON nh.nam_hoc_id = hk.nam_hoc_id
-                    WHERE hslh.hoc_sinh_id = ?
-                    ORDER BY nh.nam_hoc_id DESC
-                    LIMIT 1
-                    `, [id]);
+                SELECT nh.ten_nam_hoc
+                FROM hoc_sinh_lop_hoc hslh
+                JOIN lop_hoc lh ON lh.lop_hoc_id = hslh.lop_hoc_id
+                JOIN hoc_ky hk ON lh.hoc_ky_id = hk.hoc_ky_id
+                JOIN nam_hoc nh ON nh.nam_hoc_id = hk.nam_hoc_id
+                WHERE hslh.hoc_sinh_id = ?
+                ORDER BY nh.nam_hoc_id DESC
+                LIMIT 1
+                `, [id]);
                 if (namHocRows.length > 0) {
                     folderPath = `images/${namHocRows[0].ten_nam_hoc}/`;
                 }
             }
+
             const safeHoTen = ho_ten
                 .normalize('NFD')
                 .replace(/[̀-ͯ]/g, '')
@@ -491,25 +491,33 @@ class HocSinhModel {
 
             const pathPublic = path.join('public');
             const tempDir = path.join(pathPublic, 'images', 'temp');
-            // Xóa toàn bộ ảnh temp cũ của học sinh (bắt đầu bằng `${id}_`)
-            const tempFiles = fs.readdirSync(tempDir);
-            for (const file of tempFiles) {
-                if (file.startsWith(`${id}_`)) {
-                    const filePath = path.join(tempDir, file);
-                    if (fs.existsSync(filePath)) {
-                        fs.unlinkSync(filePath);
+
+            // Kiểm tra có ảnh mới được upload không
+            const hasNewImages = duong_dan_anh && duong_dan_anh.length === 3 &&
+                duong_dan_anh.some((newPath, index) => newPath !== currentImages[index].duong_dan_anh);
+
+            // Chỉ xóa ảnh temp cũ nếu có ảnh mới upload
+            if (hasNewImages) {
+                const tempFiles = fs.readdirSync(tempDir);
+                for (const file of tempFiles) {
+                    if (file.startsWith(`${id}_`)) {
+                        const filePath = path.join(tempDir, file);
+                        if (fs.existsSync(filePath)) {
+                            fs.unlinkSync(filePath);
+                        }
                     }
                 }
             }
+
             for (let i = 0; i < 3; i++) {
                 const oldImage = currentImages[i]; // trong DB
                 const newUploadedImage = finalDuongDanAnh[i]; // ảnh mới (nếu có)
                 const oldPath = oldImage.duong_dan_anh;
 
                 const newFileName = `${id}_${safeHoTen}_${i + 1}.jpg`;
-                const newRelativePath = `${folderPath}${newFileName}`;
+                let newRelativePath = `${folderPath}${newFileName}`;
                 const fullOldPath = path.join(pathPublic, oldPath);
-                const fullNewPath = path.join(pathPublic, newRelativePath);
+                let fullNewPath = path.join(pathPublic, newRelativePath);
 
                 // Ảnh mới được upload (hình path khác với ảnh cũ)
                 const isNewImageUploaded = newUploadedImage && newUploadedImage !== oldPath;
@@ -529,28 +537,53 @@ class HocSinhModel {
                         [newRelativePath, oldImage.hinh_anh_hoc_sinh_id]
                     );
                 } else {
-                    // Không đổi ảnh nhưng đổi tên học sinh
-                    if (oldPath !== newRelativePath && fs.existsSync(fullOldPath)) {
-                        fs.renameSync(fullOldPath, fullNewPath);
-
-                        await conn.execute(
-                            `UPDATE hinh_anh_hoc_sinh SET duong_dan_anh = ? WHERE hinh_anh_hoc_sinh_id = ?`,
-                            [newRelativePath, oldImage.hinh_anh_hoc_sinh_id]
-                        );
+                    // Không có ảnh mới upload
+                    if (checkThuocLop[0].total > 0) {
+                        // Học sinh thuộc lớp - chỉ đổi tên nếu tên khác
+                        if (oldPath !== newRelativePath && fs.existsSync(fullOldPath)) {
+                            fs.renameSync(fullOldPath, fullNewPath);
+                            await conn.execute(
+                                `UPDATE hinh_anh_hoc_sinh SET duong_dan_anh = ? WHERE hinh_anh_hoc_sinh_id = ?`,
+                                [newRelativePath, oldImage.hinh_anh_hoc_sinh_id]
+                            );
+                        }
+                    } else {
+                        // Học sinh chưa thuộc lớp - vẫn cần đổi tên file nếu tên học sinh đã đổi
+                        if (oldPath !== newRelativePath && fs.existsSync(fullOldPath)) {
+                            fs.renameSync(fullOldPath, fullNewPath);
+                            await conn.execute(
+                                `UPDATE hinh_anh_hoc_sinh SET duong_dan_anh = ? WHERE hinh_anh_hoc_sinh_id = ?`,
+                                [newRelativePath, oldImage.hinh_anh_hoc_sinh_id]
+                            );
+                        } else {
+                            // Không có thay đổi, giữ nguyên
+                            newRelativePath = oldPath;
+                            fullNewPath = fullOldPath;
+                        }
                     }
                 }
+
                 // Chỉ copy sang temp nếu học sinh thuộc lớp
                 if (checkThuocLop[0].total > 0 && fs.existsSync(fullNewPath)) {
                     // Tạo folder nếu chưa có (chỉ tạo 1 lần)
                     if (!fs.existsSync(tempDir)) {
                         fs.mkdirSync(tempDir, { recursive: true });
                     }
-                    // Xóa ảnh temp cũ nếu đã tồn tại
-                    if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
-                    // Copy sang temp
+
+                    // Xóa ảnh temp cũ nếu đã tồn tại (bao gồm cả tên cũ)
+                    const tempFiles = fs.readdirSync(tempDir);
+                    for (const file of tempFiles) {
+                        if (file.startsWith(`${id}_`) && file.endsWith(`_${i + 1}.jpg`)) {
+                            const oldTempPath = path.join(tempDir, file);
+                            if (fs.existsSync(oldTempPath)) {
+                                fs.unlinkSync(oldTempPath);
+                            }
+                        }
+                    }
+
+                    // Copy sang temp với tên mới
                     fs.copyFileSync(fullNewPath, tempPath);
                 }
-
             }
 
 
@@ -583,7 +616,7 @@ class HocSinhModel {
                 return { success: false, message: 'Vui lòng nhập từ khóa tìm kiếm', messageType: 'error' };
             }
 
-            const [rows] = await conn.query(`SELECT * FROM hoc_sinh WHERE ho_ten LIKE ?`, [`%${tim_kiem}%`]);
+            const [rows] = await conn.query(`SELECT * FROM hoc_sinh WHERE ho_ten LIKE ? AND daXoa = 0`, [`%${tim_kiem}%`]);
             // Bổ sung thông tin ảnh + phụ huynh cho mỗi học sinh
             const result = await Promise.all(rows.map(async (hs) => {
                 const [hinhAnh] = await conn.query(`

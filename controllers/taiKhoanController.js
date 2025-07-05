@@ -87,6 +87,7 @@ class TaiKhoanController {
                     danhSachTaiKhoan,
                     messageType: 'error',
                     formData: req.body,
+                    currentPage: 1,
                 });
             }
 
@@ -101,6 +102,7 @@ class TaiKhoanController {
                     danhSachTaiKhoan,
                     messageType: 'error',
                     formData: req.body,
+                    currentPage: 1,
                 });
             }
 
@@ -115,6 +117,7 @@ class TaiKhoanController {
                     danhSachTaiKhoan,
                     messageType: 'error',
                     formData: req.body,
+                    currentPage: 1,
                 });
             }
 
@@ -156,7 +159,7 @@ class TaiKhoanController {
                 if (tempFilePath && fs.existsSync(tempFilePath)) {
                     fs.unlinkSync(tempFilePath);
                 }
-                return res.redirect(`/tai-khoan?message=Thêm tài khoản thất bại&messageType=error`);
+                return res.redirect(`/tai-khoan?message=${result.message}&messageType=error`);
             }
             if (!result.insertId) {
                 throw new Error('Không lấy được insertId sau khi thêm tài khoản');
@@ -196,7 +199,7 @@ class TaiKhoanController {
                     //console.log('Sử dụng ảnh mặc định do lỗi xử lý ảnh upload');
                 }
             }
-            return res.redirect(`/tai-khoan?message=Thêm tài khoản thành công&messageType=success`);
+            return res.redirect(`/tai-khoan?message=${result.message}&messageType=success`);
 
         } catch (error) {
             console.error('Lỗi thêm tài khoản:', error);

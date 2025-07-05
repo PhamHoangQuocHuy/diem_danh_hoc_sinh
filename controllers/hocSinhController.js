@@ -9,7 +9,7 @@ class HocSinhController {
         try {
             const { ten_vai_tro, tai_khoan_id } = req.taiKhoan;
             const page = parseInt(req.query.page) || 1;
-            const limit = 5;
+            const limit = 10; // Số người hiển thị trong 1 trang
             const offset = (page - 1) * limit;
 
             let danhSachHocSinh = [];
@@ -55,12 +55,12 @@ class HocSinhController {
                     danhSachHocSinh: [],
                     danhSachPhuHuynh: [],
                     message: 'Có lỗi khi lấy danh sách học sinh',
-                    messageType: 'error'
+                    messageType: 'error',
+                    currentPage: 1,
                 }
             );
         }
     }
-
     static async themHocSinh(req, res) {
         const filesToDelete = [];
         try {

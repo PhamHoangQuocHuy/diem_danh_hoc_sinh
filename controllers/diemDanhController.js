@@ -86,7 +86,16 @@ class DiemDanhController {
                     if (!hs.ghi_chu) hs.ghi_chu = {};
                     if (!hs.anh_ghi_nhan) hs.anh_ghi_nhan = {};
 
-                    hs.thoi_gian[day] = record.thoi_gian || '';
+                    // Hiển thị thời gian trực tiếp từ UTC mà không điều chỉnh
+                    hs.thoi_gian[day] = record.thoi_gian
+                        ? (() => {
+                            const date = new Date(record.thoi_gian);
+                            const hours = String(date.getUTCHours()).padStart(2, '0'); // Giờ UTC
+                            const minutes = String(date.getUTCMinutes()).padStart(2, '0'); // Phút UTC
+                            const seconds = String(date.getUTCSeconds()).padStart(2, '0'); // Giây UTC
+                            return `${hours}:${minutes}:${seconds}`;
+                        })()
+                        : '';
                     hs.ghi_chu[day] = record.ghi_chu || '';
                     hs.anh_ghi_nhan[day] = record.anh_ghi_nhan || '';
 

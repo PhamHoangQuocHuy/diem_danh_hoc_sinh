@@ -111,7 +111,7 @@
                                                                         data-ngay-sinh="<%= formatDate(hs.ngay_sinh) %>"
                                                                         data-ten-lop="<%= hs.ten_lop || '' %>"
                                                                         data-ngay-diem-danh="<%= `${ngay_diem_danh.split('-')[0]}-${ngay_diem_danh.split('-')[1]}-${String(day).padStart(2, '0')}` %>"
-                                                                        data-thoi-gian="<%= hs.thoi_gian?.[day] ? hs.thoi_gian[day].toTimeString().split(' ')[0] : '' %>"
+                                                                        data-thoi-gian="<%= hs.thoi_gian?.[day] || '' %>"
                                                                         data-anh-ghi-nhan="<%= hs.anh_ghi_nhan?.[day] || '' %>"
                                                                         data-trang-thai="<%= hs.diem_danh?.[day] || '-' %>"
                                                                         data-ghi-chu="<%= hs.ghi_chu?.[day] || '' %>">
@@ -246,21 +246,27 @@
                   document.getElementById('ctdd_ho_ten').innerText = btn.dataset.hoTen;
                   document.getElementById('ctdd_ngay_sinh').innerText = btn.dataset.ngaySinh;
                   document.getElementById('ctdd_ten_lop').innerText = btn.dataset.tenLop;
-                  document.getElementById('ctdd_ngay_diem_danh').innerText = btn.dataset.ngayDiemDanh;
+
+                  // Định dạng ngày điểm danh thành dd/mm/yyyy
+                  const ngayDiemDanh = btn.dataset.ngayDiemDanh;
+                  const [year, month, day] = ngayDiemDanh.split('-');
+                  const formattedNgayDiemDanh = `${day}/${month}/${year}`;
+                  document.getElementById('ctdd_ngay_diem_danh').innerText = formattedNgayDiemDanh;
+
+                  // Hiển thị trạng thái
                   document.getElementById('ctdd_trang_thai').innerText = btn.dataset.trangThai;
+
+                  // Hiển thị ghi chú
                   document.getElementById('ctdd_ghi_chu').innerText =
                         btn.dataset.ghiChu && btn.dataset.ghiChu.trim() !== ''
                               ? btn.dataset.ghiChu
                               : 'Không có ghi chú';
 
-                  // Hiển thị giờ nếu có
+                  // Hiển thị thời gian (giữ nguyên giá trị gốc, không bị múi giờ ảnh hưởng)
                   const thoiGian = btn.dataset.thoiGian;
                   document.getElementById('ctdd_thoi_gian').innerText = thoiGian && thoiGian.includes(':')
-                        ? thoiGian
+                        ? thoiGian.split('.')[0] // Lấy phần thời gian trước dấu chấm (bỏ milliseconds nếu có)
                         : '-';
-
-
-
 
                   // Ảnh ghi nhận
                   const anh = btn.dataset.anhGhiNhan;

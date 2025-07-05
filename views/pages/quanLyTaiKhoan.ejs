@@ -506,15 +506,16 @@
 
     <!-- Phân trang -->
     <div class="pagination-container">
-        <% if (currentPage> 1) { %>
-            <a href="?page=<%= currentPage - 1 %>" class="pagination-button pagination-prev">Trang trước</a>
-            <% } %>
+        <% const current=typeof currentPage !=='undefined' ? currentPage : 1; %>
+            <% if (current> 1) { %>
+                <a href="?page=<%= currentPage - 1 %>" class="pagination-button pagination-prev">Trang trước</a>
+                <% } %>
 
-                <span class="pagination-info">Trang <%= currentPage %>/<%= totalPages %></span>
+                    <span class="pagination-info">Trang <%= currentPage %>/<%= totalPages %></span>
 
-                <% if (currentPage < totalPages) { %>
-                    <a href="?page=<%= currentPage + 1 %>" class="pagination-button pagination-next">Trang sau</a>
-                    <% } %>
+                    <% if (currentPage < totalPages) { %>
+                        <a href="?page=<%= currentPage + 1 %>" class="pagination-button pagination-next">Trang sau</a>
+                        <% } %>
     </div>
 
 </div>

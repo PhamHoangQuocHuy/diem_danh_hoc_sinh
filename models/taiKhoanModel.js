@@ -35,9 +35,23 @@ class TaiKhoanModel {
         } = taiKhoan;
         const today = new Date();
         const dob = new Date(ngaysinh);
-        if( dob > today) {
+
+        if (dob > today) {
             return { success: false, message: 'Ngày sinh không hợp lệ', messageType: 'error' };
         }
+
+        // Tính tuổi
+        const age = today.getFullYear() - dob.getFullYear();
+        const isBirthdayPassed = (
+            today.getMonth() > dob.getMonth() ||
+            (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate())
+        );
+        const exactAge = isBirthdayPassed ? age : age - 1;
+
+        if (exactAge > 100) {
+            return { success: false, message: 'Tuổi người dùng không được vượt quá 100', messageType: 'error' };
+        }
+
         const conn = await pool.getConnection();
         try {
             await conn.beginTransaction();
@@ -92,7 +106,7 @@ class TaiKhoanModel {
         }
 
         // Thực hiện truy vấn SQL với LIMIT và OFFSET
-        const [rows] = await pool.query('SELECT * FROM tai_khoan LIMIT ? OFFSET ?', [limit, offset]);
+        const [rows] = await pool.query('SELECT * FROM tai_khoan WHERE daXoa = 0 LIMIT ? OFFSET ?', [limit, offset]);
         return rows;
     }
     static async demTongTaiKhoan() {
@@ -231,7 +245,7 @@ class TaiKhoanModel {
         try {
             const [rows] = await conn.query(`
                 SELECT * FROM tai_khoan
-                WHERE ho_ten LIKE ?
+                WHERE ho_ten LIKE ? AND daXoa = 0
                 `, [`%${tim_kiem}%`])
             return rows
         }
@@ -275,7 +289,7 @@ class TaiKhoanModel {
         let query = `SELECT * FROM tai_khoan`;
         const params = []
         if (ten_vai_tro) {
-            query += ` WHERE ten_vai_tro = ?`;
+            query += ` WHERE ten_vai_tro = ? AND daXoa = 0`;
             params.push(ten_vai_tro);
         }
         try {
