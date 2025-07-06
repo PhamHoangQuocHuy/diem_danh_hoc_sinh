@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 
 class AuthModel {
     static async kiemTraDangNhap(email, mat_khau) {
-        const [rows] = await pool.query('SELECT * FROM tai_khoan WHERE email = ?', [email]);
+        const [rows] = await pool.query('SELECT * FROM tai_khoan WHERE email = ? AND daXoa = 0', [email]);
         if (rows.length === 0) {
             return { success: false, message: 'Email không tồn tại' };
         }
@@ -15,7 +15,7 @@ class AuthModel {
         return { success: true, taiKhoan };
     }
     static async layThongTinTaiKhoan(tai_khoan_id) {
-        const [rows] = await pool.query('SELECT * FROM tai_khoan WHERE tai_khoan_id = ?', [tai_khoan_id]);
+        const [rows] = await pool.query('SELECT * FROM tai_khoan WHERE tai_khoan_id = ? AND daXoa = 0', [tai_khoan_id]);
         if (rows.length === 0) {
             return null; // Không tìm thấy tài khoản
         }
