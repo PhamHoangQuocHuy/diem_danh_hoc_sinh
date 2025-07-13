@@ -225,7 +225,7 @@ class TaiKhoanController {
 
         } catch (error) {
             console.error(error);
-            res.redirect(`/tai-khoan?message=Xóa tài khoản thất bại&messageType=error`);
+            return res.redirect(`/tai-khoan?message=Xóa tài khoản thất bại&messageType=error`);
         }
     }
     static async suaTaiKhoan(req, res) {
@@ -306,13 +306,13 @@ class TaiKhoanController {
             taiKhoan.anh_dai_dien = anhDaiDien;
             await TaiKhoanModel.suaTaiKhoan(id, taiKhoan);
 
-            res.redirect('/tai-khoan?message=Cập nhật thành công&messageType=success');
+            return res.redirect('/tai-khoan?message=Cập nhật thành công&messageType=success');
         } catch (error) {
             console.error(error);
             if (tempFilePath && fs.existsSync(tempFilePath)) {
                 fs.unlinkSync(tempFilePath); // Xóa file tạm nếu có lỗi
             }
-            res.redirect(`/tai-khoan?message=Cập nhật thất bại&messageType=error`);
+            return res.redirect(`/tai-khoan?message=Cập nhật thất bại&messageType=error`);
         }
     }
     static async timTaiKhoan(req, res) {
@@ -355,7 +355,7 @@ class TaiKhoanController {
             });
         }
         catch (error) {
-            res.render('admin_index', {
+            return res.render('admin_index', {
                 page: 'pages/quanLyTaiKhoan',
                 danhSachTaiKhoan: [],
                 currentPage: page,
@@ -377,7 +377,7 @@ class TaiKhoanController {
             res.json(taiKhoan);
         } catch (error) {
             console.error(error);
-            res.status(500).json({ message: 'Lỗi server' });
+            return res.status(500).json({ message: 'Lỗi server' });
         }
     }
     static async locTheoVaiTro(req, res) {
@@ -401,7 +401,7 @@ class TaiKhoanController {
         }
         catch (error) {
             console.error();
-            res.status(500).send('Lỗi');
+            return res.status(500).send('Lỗi');
         }
     }
     static async themHangLoat(req, res) {

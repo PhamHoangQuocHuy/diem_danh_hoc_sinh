@@ -33,7 +33,7 @@ class QuenMatKhauController {
     static async hienThiDatLaiMatKhau(req, res) {
         const { token } = req.query;
         try {
-            res.render('auth/datLaiMatKhau', {
+            return res.render('auth/datLaiMatKhau', {
                 token,
                 message: req.query.message,
                 messageType: req.query.messageType

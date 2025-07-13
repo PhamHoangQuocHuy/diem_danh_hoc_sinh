@@ -85,7 +85,7 @@ const startFaceRecognition = async () => {
 
 let warningShown = false;
 
-//  Quét và nhận diện
+//  Quét và nhận diện 1 học sinh
 const runFaceDetection = () => {
     setInterval(async () => {
         if (!canScan) return;
@@ -125,7 +125,23 @@ const runFaceDetection = () => {
 
     }, 100);
 };
-
+// const runFaceDetection = () => {
+//     setInterval(async () => {
+//         if (!canScan) return;
+//         const detections = await faceapi.detectAllFaces(video)
+//             .withFaceLandmarks()
+//             .withFaceDescriptors();
+//         ctx.clearRect(0, 0, canvas.width, canvas.height);
+//         detections.forEach(async (detection) => {
+//             const { bestMatch, accuracy } = findBestMatch(detection.descriptor);
+//             drawFaceBox(detection.detection.box, bestMatch, accuracy);
+//             if (bestMatch && !recognizedStudents.has(bestMatch.id)) {
+//                 await markAttendance(bestMatch);
+//                 recognizedStudents.add(bestMatch.id);
+//             }
+//         });
+//     }, 100);
+// };
 //  Tìm khuôn mặt gần nhất và tính độ chính xác
 const findBestMatch = (descriptor) => {
     let bestMatch = null;
@@ -186,7 +202,7 @@ const markAttendance = async (student) => {
             ngay_diem_danh: document.querySelector('input[name="ngay_diem_danh"]').value,
         })
     });
-    recognizedStudents.add(String(student.id));
+    recognizedStudents.add(String(student.id)); // Thêm từng học sinh id vào biến recognizedStudents
     //  PAUSE VIDEO sau khi điểm danh
     video.pause();
     canScan = false;
@@ -200,4 +216,3 @@ const markAttendance = async (student) => {
     }, 2000);
 };
 
-//startFaceRecognition();

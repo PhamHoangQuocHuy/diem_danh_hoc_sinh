@@ -6,13 +6,13 @@ class dashboardController {
             const layout = ten_vai_tro === 'Admin' ? 'admin_index' : 'user_index';
             const thongTin = await DashboardModel.layThongTinDashboard();
             const taiKhoan = req.taiKhoan;
-            res.status(200).render(layout, {
+            return res.status(200).render(layout, {
                 page: 'pages/dashboard',
                 thongTin,
                 taiKhoan
             });
         } catch (error) {
-            res.status(500).send('Lỗi khi lấy dữ liệu dashboard');
+            return res.status(500).send('Lỗi khi lấy dữ liệu dashboard');
         }
     }
 }

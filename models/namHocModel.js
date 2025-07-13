@@ -42,6 +42,7 @@ class NamHocModel {
         }
         const conn = await pool.getConnection();
         try {
+            await conn.beginTransaction();
             // Kiểm tra tên năm học đã tồn tại trong cùng trường => Lỗi
             const [existRows] = await conn.query(
                 'SELECT 1 FROM nam_hoc WHERE ten_nam_hoc = ? AND truong_hoc_id = ?',
@@ -120,6 +121,7 @@ class NamHocModel {
         }
         const conn = await pool.getConnection();
         try {
+            await conn.beginTransaction()
             // Lấy tên năm học cũ để đổi thư mục nếu cần
             const [oldRows] = await conn.query('SELECT ten_nam_hoc FROM nam_hoc WHERE nam_hoc_id = ?', [id]);
             if (!oldRows.length) {

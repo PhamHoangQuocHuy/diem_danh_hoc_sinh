@@ -9,7 +9,7 @@ class HocSinhController {
         try {
             const { ten_vai_tro, tai_khoan_id } = req.taiKhoan;
             const page = parseInt(req.query.page) || 1;
-            const limit = 10; // Số người hiển thị trong 1 trang
+            const limit = 5; // Số người hiển thị trong 1 trang
             const offset = (page - 1) * limit;
 
             let danhSachHocSinh = [];
@@ -260,7 +260,7 @@ class HocSinhController {
                 const danhSachHocSinh = await HocSinhModel.layDanhSachHocSinh_GiaoVien(limit, offset, req.taiKhoan.tai_khoan_id);
                 const danhSachPhuHuynh = await HocSinhModel.layDanhSachPhuHuynh();
                 if (result.length > 0) {
-                    res.render('user_index', {
+                    return res.render('user_index', {
                         page: 'pages/quanLyHocSinh',
                         danhSachHocSinh: result,
                         danhSachPhuHuynh,
@@ -270,7 +270,7 @@ class HocSinhController {
                         messageType: 'success'
                     });
                 } else {
-                    res.render('user_index', {
+                    return res.render('user_index', {
                         page: 'pages/quanLyHocSinh',
                         danhSachHocSinh: [],
                         danhSachPhuHuynh: [],

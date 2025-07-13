@@ -292,7 +292,8 @@
                         <div class="flex items-end gap-2">
                             <div class="flex-grow">
                                 <label for="degree" class="block text-sm font-medium">Bằng cấp</label>
-                                <input type="text" id="degree"
+                                <input type="text" id="degree" pattern="^[a-zA-Z0-9À-ỹ\s]+$"
+                                    title="Bằng cấp chỉ được chứa chữ cái, số và khoảng trắng"
                                     class="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-500" />
                             </div>
                             <button type="button" onclick="addDegree()"

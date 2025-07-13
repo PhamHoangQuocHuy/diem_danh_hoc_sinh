@@ -3,14 +3,14 @@ class truongHocController {
     static async hienThiTruongHoc(req, res) {
         const danhSachTruongHoc = await TruongHocModel.hienthiTruongHoc();
         try {
-            res.render('admin_index', {
+            return res.render('admin_index', {
                 page: 'pages/quanLyTruongHoc',
                 danhSachTruongHoc,
                 message: req.query.message || '',
                 messageType: req.query.messageType || '',
             });
         } catch (error) {
-            res.render('admin_index', {
+            return res.render('admin_index', {
                 page: 'pages/quanLyTruongHoc',
                 danhSachTruongHoc: [],
                 message: 'Đã xảy ra lỗi khi lấy thông tin.',
@@ -32,7 +32,7 @@ class truongHocController {
         } catch (error) {
             console.log(error);
             const danhSachTruongHoc = await TruongHocModel.hienthiTruongHoc();
-            res.render('admin_index', {
+            return res.render('admin_index', {
                 page: 'pages/quanLyTruongHoc',
                 danhSachTruongHoc,
                 message: 'Có lỗi khi thêm trường học',
@@ -63,7 +63,7 @@ class truongHocController {
         } catch (error) {
             console.log(error);
             const danhSachTruongHoc = await TruongHocModel.hienthiTruongHoc();
-            res.render('admin_index', {
+            return res.render('admin_index', {
                 page: 'pages/quanLyTruongHoc',
                 danhSachTruongHoc,
                 message: 'Có lỗi khi xóa trường học',
@@ -84,7 +84,7 @@ class truongHocController {
         } catch (error) {
             console.log(error);
             const danhSachTruongHoc = await TruongHocModel.hienthiTruongHoc();
-            res.render('admin_index', {
+            return res.render('admin_index', {
                 page: 'pages/quanLyTruongHoc',
                 danhSachTruongHoc,
                 message: 'Có lỗi khi cập nhật trường học',
@@ -114,7 +114,7 @@ class truongHocController {
                     messageType: 'error',
                 });
             }
-            res.render('admin_index', {
+            return res.render('admin_index', {
                 page: 'pages/quanLyTruongHoc',
                 danhSachTruongHoc,
                 message: `Tìm thấy trường học: ${tim_kiem}`,
@@ -123,7 +123,7 @@ class truongHocController {
         } catch (error) {
             console.log(error);
             const danhSachTruongHoc = await TruongHocModel.hienthiTruongHoc();
-            res.render('admin_index', {
+            return res.render('admin_index', {
                 page: 'pages/quanLyTruongHoc',
                 danhSachTruongHoc,
                 message: 'Có lỗi khi tìm kếm trường học',

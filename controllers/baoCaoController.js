@@ -17,9 +17,9 @@ class BaoCaoController {
             };
 
             if (ten_vai_tro === 'Admin') {
-                res.render('admin_index', renderData);
+                return res.render('admin_index', renderData);
             } else {
-                res.render('user_index', renderData);
+                return res.render('user_index', renderData);
             }
         } catch (error) {
             console.error(error);

@@ -210,7 +210,7 @@ class thucHienDiemDanhController {
             // Ghi file
             xlsx.writeFile(workbook, filePath);
             // Trả file về trình duyệt
-            res.download(filePath, fileName, err => {
+            return res.download(filePath, fileName, err => {
                 if (err) console.log('Lỗi gửi file:', err);
                 fs.unlink(filePath, () => { }); // Xóa file sau khi gửi
             });

@@ -9,7 +9,7 @@ class LopHocController {
                 const danhSachHocKy = await LopHocModel.layDanhSachHocKy();
                 const danhSachNamHoc = await LopHocModel.layDanhSachNamHoc();
                 const danhSachHocSinh = await LopHocModel.layThongTinHocSinh();
-                res.render('admin_index', {
+                return res.render('admin_index', {
                     page: 'pages/quanLyLopHoc',
                     danhSachLopHoc,
                     danhSachGiaoVien,
@@ -21,7 +21,7 @@ class LopHocController {
                 });
             } catch (error) {
                 console.error(error);
-                res.render('admin_index', {
+                return res.render('admin_index', {
                     page: 'pages/quanLyLopHoc',
                     danhSachLopHoc: [],
                     danhSachGiaoVien: [],
@@ -40,7 +40,7 @@ class LopHocController {
                 const danhSachHocKy = await LopHocModel.layDanhSachHocKy();
                 const danhSachNamHoc = await LopHocModel.layDanhSachNamHoc();
                 const danhSachHocSinh = await LopHocModel.layThongTinHocSinh();
-                res.render('user_index', {
+                return res.render('user_index', {
                     page: 'pages/quanLyLopHoc',
                     danhSachLopHoc,
                     danhSachGiaoVien,
@@ -52,7 +52,7 @@ class LopHocController {
                 });
             } catch (error) {
                 console.error(error);
-                res.render('user_index', {
+                return res.render('user_index', {
                     page: 'pages/quanLyLopHoc',
                     danhSachLopHoc: [],
                     danhSachGiaoVien: [],
@@ -79,14 +79,14 @@ class LopHocController {
             }
             const result = await LopHocModel.themThongTinLopHoc({ ten_lop, giao_vien_id, hoc_ky_ids: Array.isArray(hoc_ky_ids) ? hoc_ky_ids : [hoc_ky_ids] });
             if (result.success) {
-                res.redirect(`/lop-hoc?message=Thêm lớp học thành công&messageType=success`);
+                return res.redirect(`/lop-hoc?message=Thêm lớp học thành công&messageType=success`);
             } else {
-                res.redirect(`/lop-hoc?message=${result.message}&messageType=${result.messageType}`);
+                return res.redirect(`/lop-hoc?message=${result.message}&messageType=${result.messageType}`);
             }
         }
-        catch {
+        catch (error) {
             console.error(error);
-            res.redirect(`/lop-hoc?message=Đã xảy ra lỗi khi thêm lớp học&messageType=error`);
+            return res.redirect(`/lop-hoc?message=Đã xảy ra lỗi khi thêm lớp học&messageType=error`);
         }
     }
     static async xoaLopHoc(req, res) {
@@ -94,15 +94,15 @@ class LopHocController {
             const id = req.params.id;
             const result = await LopHocModel.xoaThongTinLopHoc(id);
             if (result.success) {
-                res.redirect(`/lop-hoc?message=Xóa lớp học thành công&messageType=success`);
+                return res.redirect(`/lop-hoc?message=Xóa lớp học thành công&messageType=success`);
             }
             else {
-                res.redirect(`/lop-hoc?message=${result.message}&messageType=${result.messageType}`);
+                return res.redirect(`/lop-hoc?message=${result.message}&messageType=${result.messageType}`);
             }
         }
         catch {
             console.error(error);
-            res.redirect(`/lop-hoc?message=Đã xảy ra lỗi khi xóa lớp học&messageType=error`);
+            return res.redirect(`/lop-hoc?message=Đã xảy ra lỗi khi xóa lớp học&messageType=error`);
         }
     }
     static async suaLopHoc(req, res) {
@@ -117,16 +117,16 @@ class LopHocController {
             }
             const result = await LopHocModel.suaThongTinLopHoc(id, { ten_lop, giao_vien_id });
             if (result.success) {
-                res.redirect(`/lop-hoc?message=Cập nhật lớp học thành công&messageType=success`);
+                return res.redirect(`/lop-hoc?message=Cập nhật lớp học thành công&messageType=success`);
             }
             else {
-                res.redirect(`/lop-hoc?message=${result.message}&messageType=${result.messageType}`);
+                return res.redirect(`/lop-hoc?message=${result.message}&messageType=${result.messageType}`);
             }
 
         }
         catch (error) {
             console.error(error);
-            res.redirect(`/lop-hoc?message=Đã xảy ra lỗi khi cập nhật lớp học&messageType=error`);
+            return res.redirect(`/lop-hoc?message=Đã xảy ra lỗi khi cập nhật lớp học&messageType=error`);
         }
 
     }
@@ -141,7 +141,7 @@ class LopHocController {
             const danhSachGiaoVien = await LopHocModel.layDanhSachGiaoVien();
             const danhSachHocKy = await LopHocModel.layDanhSachHocKy();
             if (result.length > 0) {
-                res.render('admin_index', {
+                return res.render('admin_index', {
                     page: 'pages/quanLyLopHoc',
                     danhSachLopHoc,
                     danhSachGiaoVien,
@@ -150,7 +150,7 @@ class LopHocController {
                     messageType: 'success'
                 });
             } else {
-                res.render('admin_index', {
+                return res.render('admin_index', {
                     page: 'pages/quanLyLopHoc',
                     danhSachLopHoc: [],
                     danhSachGiaoVien: [],
@@ -162,7 +162,7 @@ class LopHocController {
         }
         catch (error) {
             console.error(error);
-            res.render('admin_index', {
+            return res.render('admin_index', {
                 page: 'pages/quanLyLopHoc',
                 danhSachLopHoc: [],
                 message: 'Đã xảy ra lỗi khi lấy danh sách lớp học',
@@ -189,7 +189,7 @@ class LopHocController {
         }
         catch {
             console.error(error);
-            res.redirect(`/lop-hoc?message=Đã xảy ra lỗi khi thêm học sinh&messageType=error`);
+            return res.redirect(`/lop-hoc?message=Đã xảy ra lỗi khi thêm học sinh&messageType=error`);
         }
     }
     static async themHangLoat(req, res) {
@@ -221,11 +221,11 @@ class LopHocController {
                 const danhSachHocSinhId = hocSinhList.map(hs => hs['Học sinh id']);
                 await LopHocModel.capNhatDuongDanAnhTheoNamHoc(lopHocId, danhSachHocSinhId);
             }
-            res.status(result.success ? 200 : 400).json(result);
+            return res.status(result.success ? 200 : 400).json(result);
         }
         catch (error) {
             console.log(error);
-            res.status(500).json({
+            return res.status(500).json({
                 success: false,
                 message: 'Đã xảy ra lỗi khi thêm học sinh',
                 messageType: 'error'

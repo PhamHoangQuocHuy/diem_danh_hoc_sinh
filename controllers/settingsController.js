@@ -14,14 +14,14 @@ class SettingsController {
             if (!taiKhoan) {
                 return res.status(404).send('Tài khoản không tồn tại');
             }
-            res.render('admin_index', {
+            return res.render('admin_index', {
                 taiKhoan,
                 message: null,
                 messageType: null
             });
         } catch (error) {
             console.error('Lỗi hiển thị cài đặt:', error);
-            res.status(500).send('Lỗi server');
+            return res.status(500).send('Lỗi server');
         }
     }
 
@@ -109,7 +109,7 @@ class SettingsController {
         } catch (error) {
             console.error('Lỗi cập nhật cài đặt:', error);
             if (tempFilePath && fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
-            res.status(500).send('Lỗi cập nhật thông tin');
+            return res.status(500).send('Lỗi cập nhật thông tin');
         } finally {
             if (conn) conn.release();
         }
