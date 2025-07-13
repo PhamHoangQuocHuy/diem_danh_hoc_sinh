@@ -111,24 +111,41 @@ class LopHocModel {
             const { nam_hoc_id, ten_nam_hoc } = hkNamHoc[0];
 
             // 3. Kiểm tra giáo viên đã chủ nhiệm lớp nào khác trong cùng năm học chưa
-            const [lopDangChuNhiem] = await conn.query(`
-                SELECT lh.lop_hoc_id, lh.ten_lop, hk.ten_hoc_ky, nh.ten_nam_hoc
-                FROM lop_hoc lh
-                JOIN hoc_ky hk ON lh.hoc_ky_id = hk.hoc_ky_id
-                JOIN nam_hoc nh ON hk.nam_hoc_id = nh.nam_hoc_id
-                WHERE lh.giao_vien_id = ? 
-                AND nh.nam_hoc_id = ?
-            `, [giao_vien_id, nam_hoc_id]);
+            // const [lopDangChuNhiem] = await conn.query(`
+            //     SELECT lh.lop_hoc_id, lh.ten_lop, hk.ten_hoc_ky, nh.ten_nam_hoc
+            //     FROM lop_hoc lh
+            //     JOIN hoc_ky hk ON lh.hoc_ky_id = hk.hoc_ky_id
+            //     JOIN nam_hoc nh ON hk.nam_hoc_id = nh.nam_hoc_id
+            //     WHERE lh.giao_vien_id = ? 
+            //     AND nh.nam_hoc_id = ?
+            // `, [giao_vien_id, nam_hoc_id]);
 
-            if (lopDangChuNhiem.length > 0) {
-                await conn.rollback();
-                return {
-                    success: false,
-                    message: `Giáo viên này đã chủ nhiệm lớp (${lopDangChuNhiem[0].ten_lop}) trong năm học ${ten_nam_hoc} (${lopDangChuNhiem.map(r => r.ten_hoc_ky).join(', ')})`,
-                    messageType: 'error'
-                };
+            // if (lopDangChuNhiem.length > 0) {
+            //     await conn.rollback();
+            //     return {
+            //         success: false,
+            //         message: `Giáo viên này đã chủ nhiệm lớp (${lopDangChuNhiem[0].ten_lop}) trong năm học ${ten_nam_hoc} (${lopDangChuNhiem.map(r => r.ten_hoc_ky).join(', ')})`,
+            //         messageType: 'error'
+            //     };
+            // }
+            for (const hoc_ky_id of hoc_ky_ids) {
+                const [lopChuNhiemTrongHocKy] = await conn.query(`
+                    SELECT lh.lop_hoc_id, lh.ten_lop, hk.ten_hoc_ky, nh.ten_nam_hoc
+                    FROM lop_hoc lh
+                    JOIN hoc_ky hk ON lh.hoc_ky_id = hk.hoc_ky_id
+                    JOIN nam_hoc nh ON hk.nam_hoc_id = nh.nam_hoc_id
+                    WHERE lh.giao_vien_id = ? AND lh.hoc_ky_id = ?
+                `, [giao_vien_id, hoc_ky_id]);
+
+                if (lopChuNhiemTrongHocKy.length > 0) {
+                    await conn.rollback();
+                    return {
+                        success: false,
+                        message: `Giáo viên này đã chủ nhiệm lớp (${lopChuNhiemTrongHocKy[0].ten_lop}) trong ${lopChuNhiemTrongHocKy[0].ten_hoc_ky} năm học ${lopChuNhiemTrongHocKy[0].ten_nam_hoc}`,
+                        messageType: 'error'
+                    };
+                }
             }
-
 
             // 4. Kiểm tra trùng lớp trong mỗi học kỳ
             for (const hoc_ky_id of hoc_ky_ids) {

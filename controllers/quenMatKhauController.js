@@ -17,10 +17,10 @@ class QuenMatKhauController {
                 process.env.JWT_ACCESS_SECRET,
                 { expiresIn: '1h' }
             );
-            const resetLink = `http://localhost:3001/dat-lai-mat-khau?token=${token}`;
+            const resetLink = `http://localhost:3001/quen-mat-khau/dat-lai-mat-khau?token=${token}`;
             await guiEmailQuenMatKhau({
                 to: email,
-                name: taiKhoan.hoTen,
+                name: taiKhoan.ho_ten,
                 link: resetLink
             });
             return res.redirect('/quen-mat-khau?message=Liên kết đã được gửi&messageType=success');

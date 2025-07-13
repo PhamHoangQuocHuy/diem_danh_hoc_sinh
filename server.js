@@ -60,7 +60,7 @@ app.get('/quen-mat-khau', (req, res) => { // Quên mật khẩu
     const { message, messageType } = req.query;
     res.render('auth/quenMatKhau', { message, messageType });
 });
-app.use('/', quenMatKhauRoutes);
+app.use('/quen-mat-khau', quenMatKhauRoutes);
 
 
 
