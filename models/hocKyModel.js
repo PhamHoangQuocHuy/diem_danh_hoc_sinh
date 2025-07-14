@@ -56,21 +56,21 @@ class HocKyModel {
                 await conn.rollback();
                 return { success: false, message: 'Tên học kỳ chỉ được là Học kỳ 1 hoặc Học kỳ 2', messageType: 'error' };
             }
-            // Ràng buộc 3: Kiểm tra trùng thời gian học kỳ khác trong cùng năm học
+            // Ràng buộc 3: Kiểm tra giao hoặc trùng thời gian học kỳ trong toàn bộ bảng (không chỉ năm học hiện tại)
             const [overlapCheck] = await conn.query(`
                 SELECT * FROM hoc_ky
-                WHERE nam_hoc_id = ?
-                AND NOT (ngay_ket_thuc < ? OR ngay_bat_dau > ?)
-            `, [nam_hoc_id, ngay_bat_dau, ngay_ket_thuc]);
-            // Nếu có học kỳ khác trùng thời gian với học kỳ mới
+                WHERE NOT (ngay_ket_thuc < ? OR ngay_bat_dau > ?)
+            `, [ngay_bat_dau, ngay_ket_thuc]);
+
             if (overlapCheck.length > 0) {
                 await conn.rollback();
                 return {
                     success: false,
-                    message: 'Học kỳ mới bị trùng hoặc giao với học kỳ đã có',
+                    message: 'Học kỳ mới bị trùng hoặc giao thời gian với học kỳ đã có',
                     messageType: 'error'
                 };
             }
+
             const [result] = await conn.query(
                 'INSERT INTO hoc_ky (ten_hoc_ky, nam_hoc_id, ngay_bat_dau, ngay_ket_thuc) VALUES (?, ?, ?, ?)',
                 [ten_hoc_ky, nam_hoc_id, ngay_bat_dau, ngay_ket_thuc]
@@ -78,8 +78,7 @@ class HocKyModel {
 
             if (result.affectedRows > 0) {
                 await conn.commit();
-
-
+                return { success: true, message: 'Thêm học kỳ thành công', messageType: 'success' };
             } else {
                 await conn.rollback();
                 return { success: false, message: 'Lỗi khi thêm học kỳ', messageType: 'error' };
@@ -141,8 +140,7 @@ class HocKyModel {
                     [id]
                 );
                 const oldNamHocId = oldNamHoc[0]?.nam_hoc_id;
-
-                if (oldNamHocId !== nam_hoc_id) {
+                if (parseInt(oldNamHocId) !== parseInt(nam_hoc_id)) {
                     await conn.rollback();
                     return {
                         success: false,
@@ -196,22 +194,20 @@ class HocKyModel {
                 await conn.rollback();
                 return { success: false, message: `Học kỳ ${ten_hoc_ky} trong năm học ${tenNamHoc} đã tồn tại`, messageType: 'error' };
             }
-            // Ràng buộc 3: Kiểm tra trùng thời gian học kỳ khác trong cùng năm học
+            // Ràng buộc 3: Kiểm tra giao hoặc trùng thời gian học kỳ trong toàn bộ bảng (không chỉ năm học hiện tại)
             const [overlapCheck] = await conn.query(`
                 SELECT * FROM hoc_ky
-                WHERE nam_hoc_id = ? AND hoc_ky_id != ? 
-                AND NOT (ngay_ket_thuc < ? OR ngay_bat_dau > ?)
-            `, [nam_hoc_id, id, ngay_bat_dau, ngay_ket_thuc]);
+                WHERE NOT (ngay_ket_thuc < ? OR ngay_bat_dau > ?)
+            `, [ngay_bat_dau, ngay_ket_thuc]);
 
             if (overlapCheck.length > 0) {
                 await conn.rollback();
                 return {
                     success: false,
-                    message: 'Thời gian học kỳ này bị trùng hoặc giao với học kỳ khác',
+                    message: 'Học kỳ mới bị trùng hoặc giao thời gian với học kỳ đã có',
                     messageType: 'error'
                 };
             }
-
             // Cập nhật học kỳ
             const sql = `
                 UPDATE hoc_ky 
