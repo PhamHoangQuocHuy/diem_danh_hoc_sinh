@@ -7,7 +7,7 @@ const PORT = 3001;
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const cookieParser = require('cookie-parser');
-const AuthMiddleware = require('./middlewares/authMiddleWare');
+const AuthMiddleware = require('./middlewares/authMiddleware');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const truongHocRoutes = require('./routes/truongHocRoutes');
 const taiKhoanRoutes = require('./routes/taiKhoanRoutes');
@@ -35,7 +35,7 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.get('/admin-dashboard', AuthMiddleware.kiemTraToken, (req, res) => {
+app.get('/admin-dashboard', AuthMiddleware.kiemTraToken, AuthMiddleware.kiemTraAdmin, (req, res) => {
     res.render('admin_index');
 });
 app.get('/user-dashboard', AuthMiddleware.kiemTraToken, (req, res) => {
@@ -43,15 +43,15 @@ app.get('/user-dashboard', AuthMiddleware.kiemTraToken, (req, res) => {
 });
 // Routes
 app.use('/dashboard', AuthMiddleware.kiemTraToken, dashboardRoutes);
-app.use('/truong-hoc', AuthMiddleware.kiemTraToken, truongHocRoutes);
-app.use('/tai-khoan', AuthMiddleware.kiemTraToken, taiKhoanRoutes);
+app.use('/truong-hoc', AuthMiddleware.kiemTraToken, AuthMiddleware.kiemTraAdmin, truongHocRoutes);
+app.use('/tai-khoan', AuthMiddleware.kiemTraToken, AuthMiddleware.kiemTraAdmin, taiKhoanRoutes);
 app.use('/lop-hoc', AuthMiddleware.kiemTraToken, lopHocRoutes);
-app.use('/nam-hoc', AuthMiddleware.kiemTraToken, namHocRoutes);
-app.use('/hoc-ky', AuthMiddleware.kiemTraToken, hocKyRoutes);
+app.use('/nam-hoc', AuthMiddleware.kiemTraToken, AuthMiddleware.kiemTraAdmin, namHocRoutes);
+app.use('/hoc-ky', AuthMiddleware.kiemTraToken, AuthMiddleware.kiemTraAdmin, hocKyRoutes);
 app.use('/hoc-sinh', AuthMiddleware.kiemTraToken, hocSinhRoutes);
 app.use('/giao-vien', AuthMiddleware.kiemTraToken, giaoVienRoutes);
 app.use('/phu-huynh', AuthMiddleware.kiemTraToken, phuHuynhRoutes);
-app.use('/thuc-hien-diem-danh', AuthMiddleware.kiemTraToken, thucHienDiemDanhRoutes);
+app.use('/thuc-hien-diem-danh', AuthMiddleware.kiemTraToken, AuthMiddleware.kiemTraGiaoVien, thucHienDiemDanhRoutes);
 app.use('/diem-danh', AuthMiddleware.kiemTraToken, diemDanhRoutes);
 app.use('/bao-cao', AuthMiddleware.kiemTraToken, baoCaoRoutes);
 app.use('/settings', AuthMiddleware.kiemTraToken, settingsRoutes);

@@ -29,5 +29,17 @@ class AuthMiddleware {
         }
 
     }
+    static async kiemTraAdmin(req, res, next) {
+        if (req.ten_vai_tro !== 'Admin') {
+            return res.status(403).render('auth/login', { message: 'Bạn không có quyền truy cập trang Admin', messageType: 'error' });
+        }
+        next();
+    }
+    static async kiemTraGiaoVien(req, res, next) {
+        if (req.ten_vai_tro !== 'Giáo viên') {
+            return res.status(403).render('auth/login', { message: 'Bạn không có quyền truy cập trang Giáo viên', messageType: 'error' });
+        }
+        next();
+    }
 }
 module.exports = AuthMiddleware;
