@@ -171,6 +171,21 @@ class TaiKhoanModel {
         }
     }
     static async suaTaiKhoan(id, taiKhoan) {
+        const today = new Date();
+        const dob = new Date(taiKhoan.ngaysinh);
+        if (dob > today) {
+            return { success: false, message: 'Ngày sinh không hợp lệ', messageType: 'error' };
+        }
+        // Tính tuổi
+        const age = today.getFullYear() - dob.getFullYear();
+        const isBirthdayPassed = (
+            today.getMonth() > dob.getMonth() ||
+            (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate())
+        );
+        const exactAge = isBirthdayPassed ? age : age - 1;
+        if (exactAge > 100) {
+            return { success: false, message: 'Tuổi người dùng không được vượt quá 100', messageType: 'error' };
+        }
         const conn = await pool.getConnection();
         try {
             await conn.beginTransaction();

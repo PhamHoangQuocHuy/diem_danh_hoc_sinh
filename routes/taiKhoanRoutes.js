@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const taiKhoanController = require('../controllers/taiKhoanController');
-const AuthMiddleware = require('../middlewares/authMiddleWare');
+const AuthMiddleware = require('../middlewares/authMiddleware');
 const { upload } = require('../config/multerTaiKhoan')
 const uploadExcel = require('../config/multerExcel');
 

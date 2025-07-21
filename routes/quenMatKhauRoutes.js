@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const quenMatKhauController = require('../controllers/quenMatKhauController');
-const AuthMiddleware = require('../middlewares/authMiddleWare');
+const AuthMiddleware = require('../middlewares/authMiddleware');
 
 router.post('/gui-yeu-cau', quenMatKhauController.guiEmail);
 router.get('/dat-lai-mat-khau', quenMatKhauController.hienThiDatLaiMatKhau);

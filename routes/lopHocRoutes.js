@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const LopHocController = require('../controllers/lopHocController');
-const AuthMiddleware = require('../middlewares/authMiddleWare');
+const AuthMiddleware = require('../middlewares/authMiddleware');
 const uploadExcel = require('../config/multerExcel');
 
 router.get('/', AuthMiddleware.kiemTraToken, LopHocController.hienThiLopHoc);

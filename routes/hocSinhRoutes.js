@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const HocSinhController = require('../controllers/hocSinhController');
-const AuthMiddleware = require('../middlewares/authMiddleWare');
+const AuthMiddleware = require('../middlewares/authMiddleware');
 const uploadHocSinh = require('../config/multerHocSinh');
 const uploadExcel = require('../config/multerExcel');
 

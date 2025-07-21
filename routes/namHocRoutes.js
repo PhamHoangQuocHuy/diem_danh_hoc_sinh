@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const NamHocController = require('../controllers/namHocController');
-const AuthMiddleware = require('../middlewares/authMiddleWare');
+const AuthMiddleware = require('../middlewares/authMiddleware');
 
 router.get('/', AuthMiddleware.kiemTraToken, NamHocController.hienThiDanhSachNamHoc);
 router.post('/them', AuthMiddleware.kiemTraToken, NamHocController.themNamHoc);

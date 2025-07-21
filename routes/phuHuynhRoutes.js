@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const phuHuynhController = require('../controllers/phuHuynhController');
-const AuthMiddleware = require('../middlewares/authMiddleWare');
+const AuthMiddleware = require('../middlewares/authMiddleware');
 const { route } = require('./authRoutes');
 
 router.get('/', AuthMiddleware.kiemTraToken, phuHuynhController.hienThiPhuHuynh);

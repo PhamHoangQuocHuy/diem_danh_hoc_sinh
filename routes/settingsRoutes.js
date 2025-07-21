@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const settingsController = require('../controllers/settingsController');
-const AuthMiddleware = require('../middlewares/authMiddleWare');
+const AuthMiddleware = require('../middlewares/authMiddleware');
 const { upload } = require('../config/multerTaiKhoan')
 
 // Route để hiển thị và cập nhật thông tin cài đặt

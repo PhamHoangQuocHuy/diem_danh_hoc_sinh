@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const DiemDanhController = require('../controllers/diemDanhController');
-const AuthMiddleware = require('../middlewares/authMiddleWare');
+const AuthMiddleware = require('../middlewares/authMiddleware');
 
 router.get('/', AuthMiddleware.kiemTraToken, DiemDanhController.hienThiDiemDanh);
 router.get('/xuat-excel', AuthMiddleware.kiemTraToken, DiemDanhController.xuatExcel);
