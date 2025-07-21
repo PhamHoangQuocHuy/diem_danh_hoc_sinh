@@ -222,12 +222,12 @@ class LopHocModel {
         }
     }
     static async suaThongTinLopHoc(id, lopHoc) {
-        const { ten_lop, giao_vien_id } = lopHoc;
+        const { giao_vien_id } = lopHoc;
         let conn;
         try {
             // Kiểm tra thông tin bắt buộc
-            if (!ten_lop || !giao_vien_id) {
-                throw new Error('Thiếu thông tin bắt buộc: tên lớp hoặc giáo viên');
+            if (!giao_vien_id) {
+                throw new Error('Thiếu thông tin giáo viên');
             }
 
             conn = await pool.getConnection();
@@ -252,7 +252,7 @@ class LopHocModel {
                 throw new Error('Lớp học không tồn tại');
             }
 
-            const { hoc_ky_id, ten_hoc_ky, nam_hoc_id, ten_nam_hoc } = lopHocHienTai[0];
+            const { ten_lop, hoc_ky_id, ten_hoc_ky, nam_hoc_id, ten_nam_hoc } = lopHocHienTai[0];
 
             // Ràng buộc 1: Kiểm tra nếu giáo viên đã chủ nhiệm lớp khác trong cùng năm học (trừ lớp hiện tại)
             const [lopDangChuNhiem] = await conn.query(`
@@ -297,8 +297,8 @@ class LopHocModel {
 
             // Cập nhật thông tin lớp học
             await conn.query(
-                'UPDATE lop_hoc SET ten_lop = ?, giao_vien_id = ? WHERE lop_hoc_id = ?',
-                [ten_lop, giao_vien_id, id]
+                'UPDATE lop_hoc SET giao_vien_id = ? WHERE lop_hoc_id = ?',
+                [giao_vien_id, id]
             );
 
             await conn.commit();

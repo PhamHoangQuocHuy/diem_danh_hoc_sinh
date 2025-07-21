@@ -125,7 +125,7 @@ class TaiKhoanModel {
                 return { success: false, message: 'Tài khoản không tồn tại', messageType: 'error' };
             }
 
-            const { ten_vai_tro, anh_dai_dien } = rows[0];
+            const { ten_vai_tro } = rows[0];
 
             // 2. Kiểm tra ràng buộc đặc biệt theo vai trò
             if (ten_vai_tro === 'Admin') {
@@ -157,26 +157,9 @@ class TaiKhoanModel {
                 }
             }
 
-            if (ten_vai_tro === 'Giáo viên') {
-                await conn.execute('DELETE FROM giao_vien WHERE tai_khoan_id = ?', [id]);
-            }
-
-            if (ten_vai_tro === 'Phụ huynh') {
-                await conn.execute('DELETE FROM phu_huynh WHERE tai_khoan_id = ?', [id]);
-            }
-
             // Xóa tài khoản
-            await conn.execute('UPDATE tai_khoan SET daXoa=1 WHERE tai_khoan_id = ?', [id]);
-
-            // 4. Nếu có ảnh đại diện riêng thì xóa file
-            if (anh_dai_dien && anh_dai_dien !== 'default_avatar.jpg') {
-                const imagePath = path.join(__dirname, '..', 'images', anh_dai_dien);
-                if (fs.existsSync(imagePath)) {
-                    fs.unlinkSync(imagePath);
-                }
-            }
-
             await conn.commit();
+            const [result] = await conn.query('UPDATE tai_khoan SET daXoa = 1 WHERE tai_khoan_id = ?', [id]);
             return { success: true, message: 'Xóa tài khoản thành công', messageType: 'success' };
 
         } catch (error) {

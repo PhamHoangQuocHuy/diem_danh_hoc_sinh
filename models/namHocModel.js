@@ -37,9 +37,14 @@ class NamHocModel {
         }
         const startYear = parseInt(match[1], 10);
         const endYear = parseInt(match[2], 10);
-        if (endYear <= startYear) {
-            return { success: false, message: 'Năm học sau không được nhỏ hơn hoặc bằng năm học trước', messageType: 'error' };
+        if (endYear < startYear) {
+            return { success: false, message: 'Năm học sau không được nhỏ hơn năm học trước', messageType: 'error' };
+        } else if (endYear === startYear) {
+            return { success: false, message: 'Hai năm học không thể trùng nhau', messageType: 'error' };
+        } else if (endYear !== startYear + 1) {
+            return { success: false, message: 'Hai năm học phải liền kề nhau', messageType: 'error' };
         }
+
         const conn = await pool.getConnection();
         try {
             await conn.beginTransaction();
@@ -116,8 +121,12 @@ class NamHocModel {
         }
         const startYear = parseInt(match[1], 10);
         const endYear = parseInt(match[2], 10);
-        if (endYear <= startYear) {
-            return { success: false, message: 'Năm học sau không được nhỏ hơn hoặc bằng năm học trước', messageType: 'error' };
+        if (endYear < startYear) {
+            return { success: false, message: 'Năm học sau không được nhỏ hơn năm học trước', messageType: 'error' };
+        } else if (endYear === startYear) {
+            return { success: false, message: 'Hai năm học không thể trùng nhau', messageType: 'error' };
+        } else if (endYear !== startYear + 1) {
+            return { success: false, message: 'Hai năm học phải liền kề nhau', messageType: 'error' };
         }
         const conn = await pool.getConnection();
         try {

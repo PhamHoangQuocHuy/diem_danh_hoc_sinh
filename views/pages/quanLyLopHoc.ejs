@@ -81,8 +81,9 @@
                                     </button>
                                 </form>
                                 <% } %>
-                                    <% // Tính toán ngày điểm danh mặc định let ngayDiemDanhMacDinh='' ; const
-                                        hocKyHienTai=danhSachHocKy.find(hk=> hk.hoc_ky_id === lopHoc.hoc_ky_id);
+                                    <%  
+                                        let ngayDiemDanhMacDinh='' ; 
+                                        const hocKyHienTai=danhSachHocKy.find(hk=>hk.hoc_ky_id === lopHoc.hoc_ky_id);
                                         if (hocKyHienTai && hocKyHienTai.ngay_bat_dau) {
                                         const ngayBatDau = new Date(hocKyHienTai.ngay_bat_dau);
                                         const thang = String(ngayBatDau.getMonth() + 1).padStart(2, '0');

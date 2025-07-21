@@ -107,15 +107,14 @@ class LopHocController {
     }
     static async suaLopHoc(req, res) {
         try {
-            //console.log("Params:", req.params);
             const id = req.params.id;
-            const { ten_lop, giao_vien_id } = req.body;
+            const { giao_vien_id } = req.body;
 
             // Kiểm tra dữ liệu bắt buộc
-            if (!ten_lop || !giao_vien_id) {
+            if (!giao_vien_id) {
                 return res.redirect(`/lop-hoc?message=Vui lòng nhập đầy đủ thông tin&messageType=error`);
             }
-            const result = await LopHocModel.suaThongTinLopHoc(id, { ten_lop, giao_vien_id });
+            const result = await LopHocModel.suaThongTinLopHoc(id, { giao_vien_id });
             if (result.success) {
                 return res.redirect(`/lop-hoc?message=Cập nhật lớp học thành công&messageType=success`);
             }

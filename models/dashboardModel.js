@@ -3,7 +3,7 @@ class DashboardModel {
     static async layThongTinDashboard() {
         try {
             const [soLuongGiaoVien]= await pool.query(`SELECT COUNT(*) AS soLuong FROM giao_vien`);
-            const [soLuongHocSinh] = await pool.query(`SELECT COUNT(*) AS soLuong FROM hoc_sinh`);
+            const [soLuongHocSinh] = await pool.query(`SELECT COUNT(*) AS soLuong FROM hoc_sinh WHERE daXoa=0`);
             const [soLuongPhuHuynh] = await pool.query(`SELECT COUNT(*) AS soLuong FROM phu_huynh`);
             return {
                 soLuongGiaoVien: soLuongGiaoVien[0].soLuong || 0, 
