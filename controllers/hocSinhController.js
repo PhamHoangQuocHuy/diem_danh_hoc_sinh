@@ -76,13 +76,16 @@ class HocSinhController {
 
             const phu_huynh_ids_arr = Array.isArray(phu_huynh_ids) ? phu_huynh_ids : phu_huynh_ids ? [phu_huynh_ids] : [];
             const moi_quan_he_arr = Array.isArray(moi_quan_he) ? moi_quan_he : moi_quan_he ? [moi_quan_he] : [];
-
+            if (req.fileValidationError) {
+                return res.redirect(`/hoc-sinh?message=${req.fileValidationError}&messageType=error`);
+            }
             if (!Array.isArray(req.files) || req.files.length !== 3) {
                 const message = `Phải tải lên đúng 3 ảnh học sinh! (Hiện có: ${req.files?.length || 0})`;
                 filesToDelete.push(...(req.files || []));
                 filesToDelete.forEach(file => fs.existsSync(file.path) && fs.unlinkSync(file.path));
                 return res.redirect(`/hoc-sinh?message=${message}&messageType=error`);
             }
+            
 
             // Tạo học sinh
             const result = await HocSinhModel.themThongTinHocSinh({
@@ -162,7 +165,9 @@ class HocSinhController {
 
             const phu_huynh_ids_arr = Array.isArray(phu_huynh_ids) ? phu_huynh_ids : phu_huynh_ids ? [phu_huynh_ids] : [];
             const moi_quan_he_arr = Array.isArray(moi_quan_he) ? moi_quan_he : moi_quan_he ? [moi_quan_he] : [];
-
+            if (req.fileValidationError) {
+                return res.redirect(`/hoc-sinh?message=${req.fileValidationError}&messageType=error`);
+            }
             // Xử lý ảnh
             let duong_dan_anh = [];
             if (req.files && req.files.length > 0) {

@@ -71,54 +71,40 @@ class TaiKhoanController {
                 ten_vai_tro,
                 loai_bang_cap,
             } = req.body;
-
-            if (req.file) {
-                tempFilePath = path.join(__dirname, '../images', req.file.filename);
+            if (req.fileValidationError) {
+                return res.redirect(`/tai-khoan?message=${req.fileValidationError}&messageType=error`);
             }
+            if (req.file) {
+                const extension = path.extname(req.file.originalname).toLowerCase();
+                const allowedExtensions = ['.jpg', '.jpeg', '.png'];
+                // Nếu không đúng định dạng ảnh
+                if (!allowedExtensions.includes(extension)) {
+                    fs.unlinkSync(req.file.path);
+                    return res.redirect('/tai-khoan?message=Chỉ chấp nhận file ảnh (.jpg, .jpeg, .png)&messageType=error');
+                }
+
+                tempFilePath = path.join(__dirname, '../images', req.file.filename); 
+            } 
             // Kiểm tra email, sdt, so_cmnd
             if (await TaiKhoanModel.kiemTraEmail(email)) {
                 if (tempFilePath && fs.existsSync(tempFilePath)) {
                     fs.unlinkSync(tempFilePath);
                 }
-                const danhSachTaiKhoan = await TaiKhoanModel.hienThiTaiKhoan();
-                return res.render('admin_index', {
-                    page: 'pages/quanLyTaiKhoan',
-                    message: 'Email đã thuộc 1 tài khoản khác',
-                    danhSachTaiKhoan,
-                    messageType: 'error',
-                    formData: req.body,
-                    currentPage: 1,
-                });
+                return res.redirect(`/tai-khoan?message=Email đã thuộc 1 tài khoản khác&messageType=error`);
             }
 
             if (await TaiKhoanModel.kiemTraSoDienThoai(sdt)) {
                 if (tempFilePath && fs.existsSync(tempFilePath)) {
                     fs.unlinkSync(tempFilePath);
                 }
-                const danhSachTaiKhoan = await TaiKhoanModel.hienThiTaiKhoan();
-                return res.render('admin_index', {
-                    page: 'pages/quanLyTaiKhoan',
-                    message: 'Số điện thoại đã thuộc 1 tài khoản khác',
-                    danhSachTaiKhoan,
-                    messageType: 'error',
-                    formData: req.body,
-                    currentPage: 1,
-                });
+                return res.redirect(`/tai-khoan?message=Số điện thoại được thuộc 1 tài khoản khác&messageType=error`);
             }
 
             if (await TaiKhoanModel.kiemTraSoCMND(so_cmnd)) {
                 if (tempFilePath && fs.existsSync(tempFilePath)) {
                     fs.unlinkSync(tempFilePath);
                 }
-                const danhSachTaiKhoan = await TaiKhoanModel.hienThiTaiKhoan();
-                return res.render('admin_index', {
-                    page: 'pages/quanLyTaiKhoan',
-                    message: 'Số CMND đã thuộc 1 tài khoản khác',
-                    danhSachTaiKhoan,
-                    messageType: 'error',
-                    formData: req.body,
-                    currentPage: 1,
-                });
+                return res.redirect(`/tai-khoan?message=Số CMND được thuộc 1 tài khoản khác&messageType=error`);
             }
 
             // Bắt buộc nhập ít nhất 1 loại bằng cấp nếu là giáo viên
@@ -128,14 +114,7 @@ class TaiKhoanController {
                     if (tempFilePath && fs.existsSync(tempFilePath)) {
                         fs.unlinkSync(tempFilePath);
                     }
-                    const danhSachTaiKhoan = await TaiKhoanModel.hienThiTaiKhoan();
-                    return res.render('admin_index', {
-                        page: 'pages/quanLyTaiKhoan',
-                        message: 'Giáo viên phải có ít nhất một bằng cấp',
-                        danhSachTaiKhoan,
-                        messageType: 'error',
-                        formData: req.body,
-                    });
+                    return res.redirect(`/tai-khoan?message=Giáo viên phải có ít nhất một bằng cấp&messageType=error`);
                 }
 
                 loaiBangCapArray = Array.isArray(loai_bang_cap) ? loai_bang_cap : [loai_bang_cap];
@@ -259,9 +238,20 @@ class TaiKhoanController {
 
             let oldAvatar = req.body.current_anh_dai_dien || 'default_avatar.jpg';
             let anhDaiDien = oldAvatar;
+            if (req.fileValidationError) {
+                return res.redirect(`/tai-khoan?message=${req.fileValidationError}&messageType=error`);
+            }
             if (req.file) {
                 tempFilePath = path.join(__dirname, '../images', req.file.filename);
                 const extension = path.extname(req.file.originalname).toLowerCase();
+                // Kiểm tra file ảnh
+                const allowedExtensions = ['.png', '.jpg', '.jpeg', '.gif'];
+                if (!allowedExtensions.includes(extension)) {
+                    if (tempFilePath && fs.existsSync(tempFilePath)) {
+                        fs.unlinkSync(tempFilePath); // Xóa file tạm nếu không hợp lệ
+                    }
+                    return res.redirect(`/tai-khoan?message=Chỉ chấp nhận ảnh định dạng png, jpg, jpeg, gif&messageType=error`);
+                }
                 const cleanName = toAlias(taiKhoan.ho_ten);
                 if (oldAvatar === 'default_avatar.jpg') {
                     anhDaiDien = `${id}_${cleanName}${extension}`;
@@ -280,7 +270,7 @@ class TaiKhoanController {
             // Thêm anhDaiDien vào taiKhoan để cập nhật
             taiKhoan.anh_dai_dien = anhDaiDien;
             const result = await TaiKhoanModel.suaTaiKhoan(id, taiKhoan);
-            if(!result.success) {
+            if (!result.success) {
                 return res.redirect(`/tai-khoan?message=${result.message}&messageType=${result.messageType}`);
             }
             return res.redirect('/tai-khoan?message=Cập nhật thành công&messageType=success');
